@@ -11,6 +11,16 @@ This guide will help you set up and populate the education articles section.
 5. Copy and paste the content from `supabase/migrations/create_education_articles.sql`
 6. Click **Run** to execute the migration
 
+### Already created the table?
+
+If you already created the table before this update, you need to fix the difficulty constraint:
+
+1. Go to **SQL Editor**
+2. Copy and paste the content from `supabase/migrations/fix_difficulty_constraint.sql`
+3. Click **Run**
+
+This adds support for `beginner_to_intermediate` and `intermediate_to_advanced` difficulty levels.
+
 ## Step 2: Populate Articles
 
 After creating the table, run the seeder script:

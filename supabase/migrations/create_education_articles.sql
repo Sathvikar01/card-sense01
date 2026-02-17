@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.education_articles (
   title TEXT NOT NULL,
   summary TEXT NOT NULL,
   category TEXT NOT NULL,
-  difficulty TEXT NOT NULL CHECK (difficulty IN ('beginner', 'intermediate', 'advanced', 'beginner_to_intermediate')),
+  difficulty TEXT NOT NULL CHECK (difficulty IN ('beginner', 'intermediate', 'advanced', 'beginner_to_intermediate', 'intermediate_to_advanced')),
   content TEXT NOT NULL,
   read_time_minutes INTEGER NOT NULL DEFAULT 1,
   tags TEXT[] DEFAULT '{}',

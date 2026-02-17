@@ -40,7 +40,9 @@ export default async function EducationPage() {
   const getDifficultyColor = (difficulty: string) => {
     const colors = {
       beginner: 'bg-green-100 text-green-800',
+      beginner_to_intermediate: 'bg-emerald-100 text-emerald-800',
       intermediate: 'bg-yellow-100 text-yellow-800',
+      intermediate_to_advanced: 'bg-orange-100 text-orange-800',
       advanced: 'bg-red-100 text-red-800'
     }
     return colors[difficulty as keyof typeof colors] || 'bg-gray-100 text-gray-800'
