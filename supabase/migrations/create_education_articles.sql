@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.education_articles (
   title TEXT NOT NULL,
   summary TEXT NOT NULL,
   category TEXT NOT NULL,
-  difficulty TEXT NOT NULL CHECK (difficulty IN ('beginner', 'intermediate', 'advanced', 'beginner_to_intermediate', 'intermediate_to_advanced')),
+  difficulty TEXT NOT NULL CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
   content TEXT NOT NULL,
   read_time_minutes INTEGER NOT NULL DEFAULT 1,
   tags TEXT[] DEFAULT '{}',
@@ -26,12 +26,14 @@ CREATE INDEX IF NOT EXISTS idx_education_articles_slug ON public.education_artic
 ALTER TABLE public.education_articles ENABLE ROW LEVEL SECURITY;
 
 -- Create policy to allow public read access to published articles
+DROP POLICY IF EXISTS "Allow public read access to published articles" ON public.education_articles;
 CREATE POLICY "Allow public read access to published articles"
   ON public.education_articles
   FOR SELECT
   USING (is_published = true);
 
 -- Create policy to allow authenticated users to read all articles
+DROP POLICY IF EXISTS "Allow authenticated users to read all articles" ON public.education_articles;
 CREATE POLICY "Allow authenticated users to read all articles"
   ON public.education_articles
   FOR SELECT
@@ -39,6 +41,7 @@ CREATE POLICY "Allow authenticated users to read all articles"
   USING (true);
 
 -- Create policy to allow service role full access
+DROP POLICY IF EXISTS "Allow service role full access" ON public.education_articles;
 CREATE POLICY "Allow service role full access"
   ON public.education_articles
   FOR ALL

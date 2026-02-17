@@ -256,12 +256,24 @@ async function seedEducation() {
         const tags = extractTags(article, categoryKey)
         const summary = createSummary(article.content.introduction)
 
+        // Normalize difficulty to match database constraint
+        const normalizeDifficulty = (d: string): string => {
+          const map: Record<string, string> = {
+            beginner: 'beginner',
+            beginner_to_intermediate: 'intermediate',
+            intermediate: 'intermediate',
+            intermediate_to_advanced: 'advanced',
+            advanced: 'advanced',
+          }
+          return map[d] || 'intermediate'
+        }
+
         const articleRecord = {
           slug,
           title: article.title,
           summary,
           category: categoryKey,
-          difficulty: article.difficulty,
+          difficulty: normalizeDifficulty(article.difficulty),
           content: markdown,
           read_time_minutes: readTime,
           tags,
