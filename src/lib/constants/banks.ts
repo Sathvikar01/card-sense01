@@ -1,0 +1,68 @@
+export const INDIAN_BANKS = [
+  'HDFC Bank',
+  'State Bank of India (SBI)',
+  'ICICI Bank',
+  'Axis Bank',
+  'American Express (Amex)',
+  'Kotak Mahindra Bank',
+  'RBL Bank',
+  'IDFC First Bank',
+  'AU Small Finance Bank',
+  'IndusInd Bank',
+  'Yes Bank',
+  'Standard Chartered',
+  'HSBC',
+  'Citibank',
+  'Bank of Baroda',
+  'Punjab National Bank (PNB)',
+  'Canara Bank',
+  'IDBI Bank',
+  'Federal Bank',
+  'South Indian Bank',
+  'OneCard (by FPL Technologies)',
+  'Slice (by North East Small Finance Bank)',
+  'Fi Money (Federal Bank partnership)',
+  'Jupiter (Federal Bank partnership)',
+  'Other',
+] as const;
+
+export type IndianBank = (typeof INDIAN_BANKS)[number];
+
+// Bank logos/colors (optional for UI)
+export const BANK_COLORS: Record<string, string> = {
+  'HDFC Bank': '#004C8F',
+  'State Bank of India (SBI)': '#22409A',
+  'ICICI Bank': '#F37920',
+  'Axis Bank': '#800020',
+  'American Express (Amex)': '#006FCF',
+  'Kotak Mahindra Bank': '#ED232A',
+  'RBL Bank': '#002D72',
+  'IDFC First Bank': '#C4161C',
+  'AU Small Finance Bank': '#FF6B00',
+  'IndusInd Bank': '#E31836',
+  'Yes Bank': '#00338D',
+  'Standard Chartered': '#007A33',
+  'HSBC': '#DB0011',
+  'Citibank': '#056DAE',
+  'Bank of Baroda': '#F15A29',
+  'Punjab National Bank (PNB)': '#E98D37',
+  'Canara Bank': '#C8102E',
+  'IDBI Bank': '#2E3092',
+  'Federal Bank': '#FFD100',
+  'South Indian Bank': '#0033A0',
+  'OneCard (by FPL Technologies)': '#000000',
+  'Slice (by North East Small Finance Bank)': '#7C3AED',
+  'Fi Money (Federal Bank partnership)': '#FFD100',
+  'Jupiter (Federal Bank partnership)': '#FFD100',
+  'Other': '#6B7280',
+};
+
+// Major banks for quick filters
+export const MAJOR_BANKS = [
+  'HDFC Bank',
+  'State Bank of India (SBI)',
+  'ICICI Bank',
+  'Axis Bank',
+  'American Express (Amex)',
+  'Kotak Mahindra Bank',
+] as const;

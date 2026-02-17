@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CardSense India Launcher</title>
+  <style>
+    :root {
+      --bg: #f7f8fc;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 10% 10%, #e0ecff 0%, var(--bg) 60%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(640px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+      padding: 28px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .status {
+      margin: 18px 0 22px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fbfcfe;
+      color: #334155;
+      font-size: 0.95rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn.secondary {
+      border-color: var(--border);
+      color: #1f2937;
+      background: #ffffff;
+    }
+
+    .btn.secondary:hover {
+      background: #f9fafb;
+    }
+
+    code {
+      display: inline-block;
+      background: #f3f4f6;
+      border-radius: 6px;
+      padding: 1px 6px;
+      margin: 0 2px;
+      font-size: 0.9em;
+    }
+  </style>
+  <script defer>
+    window.addEventListener('DOMContentLoaded', () => {
+      const statusEl = document.getElementById('server-status');
+      if (!statusEl) return;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+      fetch('http://localhost:3000', { mode: 'no-cors', signal: controller.signal })
+        .then(() => {
+          statusEl.textContent = 'Development server detected on http://localhost:3000';
+        })
+        .catch(() => {
+          statusEl.textContent = 'Server not reachable. Run `npm run dev` in cardsense-india.';
+        })
+        .finally(() => clearTimeout(timeoutId));
+    });
+  </script>
+</head>
+<body>
+  <main class="card">
+    <h1>CardSense India</h1>
+    <p>Optimized launcher page. Use this page to jump into the Next.js app quickly.</p>
+
+    <div id="server-status" class="status">Checking local development server...</div>
+
+    <div class="actions">
+      <a class="btn primary" href="http://localhost:3000">Open App</a>
+      <a class="btn secondary" href="http://localhost:3000/signup">Sign Up</a>
+      <a class="btn secondary" href="http://localhost:3000/dashboard">Dashboard</a>
+    </div>
+
+    <p>Need to start locally? Run <code>npm install</code> then <code>npm run dev</code>.</p>
+  </main>
+</body>
+</html>
