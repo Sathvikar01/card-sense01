@@ -47,7 +47,7 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
 
   return (
     <div className="sticky top-0 z-40 px-4 pt-3 sm:px-6 lg:px-8">
-      <div className="cardsense-panel flex h-16 items-center gap-3 rounded-2xl border px-3 sm:px-4">
+      <div className="flex h-16 items-center gap-3 rounded-2xl border border-white/30 bg-white/50 px-3 shadow-lg shadow-black/[0.03] backdrop-blur-2xl sm:px-4">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
           <Menu className="h-6 w-6" />
         </Button>
@@ -60,9 +60,9 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative rounded-xl">
             <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-violet-500 ring-2 ring-white" />
           </Button>
 
           <DropdownMenu>
@@ -72,13 +72,15 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
                 className="h-10 rounded-full px-0 sm:h-11 sm:px-1"
                 aria-label="Open profile menu"
               >
-                <Avatar className="h-9 w-9 border border-border/70">
+                <Avatar className="h-9 w-9 border-2 border-violet-200/50 ring-2 ring-violet-100/30">
                   <AvatarImage src="" alt={displayName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">{initials}</AvatarFallback>
+                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-xs font-semibold">
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-60" align="end">
+            <DropdownMenuContent className="w-60 rounded-xl border-white/40 bg-white/80 backdrop-blur-2xl" align="end">
               <DropdownMenuLabel>
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium">{displayName}</p>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Sparkles, CreditCard, TrendingUp, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
@@ -18,7 +19,7 @@ export function MobileNav() {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-3 md:hidden">
-      <nav className="cardsense-panel flex h-16 items-center justify-around rounded-2xl border px-1">
+      <nav className="flex h-[68px] items-center justify-around rounded-2xl border border-white/30 bg-white/60 px-1 shadow-xl shadow-black/[0.05] backdrop-blur-2xl">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
 
@@ -27,17 +28,21 @@ export function MobileNav() {
               key={item.name}
               href={item.href}
               className={cn(
-                'relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[0.68rem] font-medium transition-colors',
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                'relative flex h-full flex-1 flex-col items-center justify-center gap-1 rounded-xl text-[0.65rem] font-medium transition-colors',
+                isActive ? 'text-violet-600' : 'text-muted-foreground'
               )}
             >
-              <item.icon
-                className={cn('h-[18px] w-[18px]', isActive ? 'text-primary' : 'text-muted-foreground')}
-              />
-              {item.name}
               {isActive && (
-                <span className="absolute bottom-1.5 h-[3px] w-4 rounded-full bg-primary" />
+                <motion.div
+                  layoutId="mobile-nav-active"
+                  className="absolute inset-1 rounded-xl bg-violet-50/70"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
               )}
+              <item.icon
+                className={cn('relative z-10 h-[18px] w-[18px]', isActive ? 'text-violet-600' : 'text-muted-foreground')}
+              />
+              <span className="relative z-10">{item.name}</span>
             </Link>
           )
         })}

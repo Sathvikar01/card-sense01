@@ -1,171 +1,339 @@
-import Link from 'next/link'
-import { ArrowRight, CreditCard, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react'
+'use client'
 
-const navItems = ['Advisor', 'Log In', 'Catalog', 'India']
+import Link from 'next/link'
+import { ArrowRight, CreditCard, Sparkles, ShieldCheck, TrendingUp, Zap, Star } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CreditCardVisual } from '@/components/cards/credit-card-visual'
+import { ParticleField } from '@/components/shared/particle-field'
+
+const navItems = [
+  { label: 'Features', href: '#features' },
+  { label: 'Catalog', href: '/cards' },
+  { label: 'Log In', href: '/login' },
+]
 
 const valuePoints = [
   {
-    title: 'Professional Recommendations',
-    description: 'Clear, practical top card suggestions built from your profile and goals.',
+    title: 'AI-Powered Matching',
+    description: 'Our Gemini-powered engine analyzes your spending patterns, income, and goals to find your perfect card match.',
     icon: Sparkles,
+    gradient: 'from-violet-500/10 to-purple-500/10',
+    iconColor: 'text-violet-600',
   },
   {
     title: 'Real Reward Math',
-    description: 'See annual value, fee impact, and reasoned card ranking before applying.',
+    description: 'See annual value, fee impact, and category-wise reward breakdown before you apply. No guesswork.',
     icon: TrendingUp,
+    gradient: 'from-emerald-500/10 to-green-500/10',
+    iconColor: 'text-emerald-600',
   },
   {
-    title: 'Safe Eligibility Path',
-    description: 'Avoid mismatch picks and focus on cards you can realistically get approved for.',
+    title: 'Smart Eligibility',
+    description: 'Avoid rejections. Get cards you can realistically get approved for based on your CIBIL score and profile.',
     icon: ShieldCheck,
+    gradient: 'from-blue-500/10 to-cyan-500/10',
+    iconColor: 'text-blue-600',
   },
+]
+
+const showcaseCards = [
+  { id: 'hdfc-regalia-gold', rotate: -12, x: -60, y: 20, delay: 0 },
+  { id: 'icici-amazon-pay', rotate: 5, x: 40, y: -30, delay: 0.1 },
+  { id: 'hdfc-diners-club-black', rotate: -3, x: -20, y: 60, delay: 0.2 },
+]
+
+const stats = [
+  { value: '50+', label: 'Indian Cards' },
+  { value: 'AI', label: 'Powered Analysis' },
+  { value: '2 min', label: 'To Recommendations' },
 ]
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-border/70 bg-background/85 backdrop-blur-xl">
+    <div className="min-h-screen overflow-hidden">
+      {/* Header */}
+      <header className="relative z-50 border-b border-white/10 bg-white/60 backdrop-blur-2xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
+            <motion.div
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25"
+              whileHover={{ scale: 1.05, rotate: -5 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <CreditCard className="h-5 w-5" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-foreground">CARDSENSE</span>
+            </motion.div>
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              CARD<span className="text-gradient-primary">SENSE</span>
+            </span>
           </Link>
 
-          <nav className="hidden items-center gap-9 md:flex">
+          <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (
-              <span key={item} className="text-sm font-medium text-muted-foreground">
-                {item}
-              </span>
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/signup" className="hidden text-sm font-semibold text-muted-foreground sm:inline-flex">
-              Start Free
+            <Link href="/login" className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex">
+              Sign In
             </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25"
-            >
-              Start Free
+            <Link href="/signup">
+              <motion.div
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25"
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </motion.div>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="px-4 pb-16 pt-12 sm:px-6 lg:px-8 lg:pt-16">
-        <section className="mx-auto grid w-full max-w-7xl gap-12 lg:grid-cols-[1.06fr_0.94fr] lg:items-center">
-          <div className="space-y-7">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
-                <CreditCard className="h-6 w-6" />
-              </div>
-              <p className="text-4xl font-semibold tracking-tight text-foreground">CARDSENSE</p>
-            </div>
-
-            <h1 className="cardsense-hero-title max-w-xl text-5xl leading-[1.02] text-foreground lg:text-6xl">
-              Practical Card Intelligence
-            </h1>
-
-            <p className="max-w-xl text-2xl leading-relaxed text-muted-foreground">
-              A professional AI-powered credit card advisor for precise and confident decisions.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25"
-              >
-                Get My Card Picks
-              </Link>
-              <Link
-                href="/cards"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-7 py-3 text-lg font-semibold text-foreground"
-              >
-                Explore Card Catalog
-              </Link>
-            </div>
+      {/* Hero Section */}
+      <main>
+        <section className="relative px-4 pb-16 pt-16 sm:px-6 lg:px-8 lg:pt-24">
+          {/* Ambient background */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="ambient-orb left-[10%] top-[10%] h-[400px] w-[400px] bg-violet-400/20" />
+            <div className="ambient-orb right-[10%] top-[20%] h-[350px] w-[350px] bg-purple-400/15" style={{ animationDelay: '-7s' }} />
+            <div className="ambient-orb bottom-[10%] left-[30%] h-[300px] w-[300px] bg-blue-400/10" style={{ animationDelay: '-14s' }} />
           </div>
 
-          <div className="relative min-h-[420px] lg:min-h-[460px]">
-            <div className="cardsense-card absolute inset-x-8 top-10 p-4">
-              <div className="rounded-xl border border-border/70 bg-secondary/55 p-3">
-                <div className="mb-3 h-9 rounded-lg border border-border/70 bg-background/70" />
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-md bg-background px-2 py-1.5 text-xs font-semibold text-foreground">87%</div>
-                  <div className="rounded-md bg-background px-2 py-1.5 text-xs text-muted-foreground">Coverage</div>
-                  <div className="rounded-md bg-background px-2 py-1.5 text-xs text-muted-foreground">Perks</div>
-                </div>
-              </div>
+          <div className="relative mx-auto grid w-full max-w-7xl gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            {/* Left: Text content */}
+            <div className="space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center gap-2 rounded-full border border-violet-200/60 bg-violet-50/80 px-4 py-1.5 backdrop-blur-sm"
+              >
+                <Zap className="h-3.5 w-3.5 text-violet-600" />
+                <span className="text-xs font-semibold text-violet-700 tracking-wide">AI-Powered Credit Card Intelligence</span>
+              </motion.div>
 
-              <div className="mt-4 rounded-2xl border border-border/70 bg-gradient-to-br from-[#163d90] via-[#1f5cc5] to-[#2f78eb] p-4 text-white">
-                <div className="text-right text-xs tracking-[0.12em]">CARDSENSE</div>
-                <div className="mt-8 text-sm opacity-90">**** **** **** 2209</div>
-                <div className="mt-2 text-sm opacity-90">VALID THRU 07/30</div>
-              </div>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="cardsense-hero-title max-w-xl text-5xl leading-[1.05] text-foreground lg:text-[3.5rem]"
+              >
+                Find your{' '}
+                <span className="text-gradient-primary">perfect card</span>
+                {' '}in seconds
+              </motion.h1>
 
-              <div className="mt-4 space-y-2">
-                {['Dining', 'Travel', 'Shopping', 'Utilities'].map((item, index) => (
-                  <div key={item} className="flex items-center justify-between rounded-lg border border-border/70 bg-background px-3 py-2 text-sm">
-                    <span className="text-muted-foreground">{item}</span>
-                    <span className="font-semibold text-foreground">{(22 - index).toFixed(1)}k</span>
+              <motion.p
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                className="max-w-lg text-lg leading-relaxed text-muted-foreground"
+              >
+                Professional AI advisor that analyzes your profile, spending habits, and goals to recommend the best Indian credit cards with real reward calculations.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                className="flex flex-wrap items-center gap-4"
+              >
+                <Link href="/signup">
+                  <motion.div
+                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-violet-500/25"
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Get My Card Picks
+                    <Sparkles className="h-4 w-4" />
+                  </motion.div>
+                </Link>
+                <Link href="/cards">
+                  <motion.div
+                    className="inline-flex items-center gap-2 rounded-2xl border border-border/80 bg-white/60 px-8 py-4 text-base font-semibold text-foreground backdrop-blur-sm"
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Browse Catalog
+                  </motion.div>
+                </Link>
+              </motion.div>
+
+              {/* Stats */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
+                className="flex items-center gap-8 pt-4"
+              >
+                {stats.map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             </div>
 
-            <div className="cardsense-card absolute right-0 top-28 w-44 p-4">
-              <p className="text-4xl font-bold text-foreground">Rs 18,200</p>
-              <p className="mt-1 text-sm text-muted-foreground">Projected yearly value</p>
-            </div>
+            {/* Right: Floating card showcase */}
+            <div className="relative hidden min-h-[500px] lg:block">
+              <ParticleField className="opacity-60" particleCount={25} />
 
-            <div className="cardsense-card absolute bottom-3 right-3 w-56 p-4">
-              <div className="mx-auto h-28 w-28 rounded-full bg-[conic-gradient(#3b82f6_0_34%,#8ab6f7_34%_58%,#d8e6fb_58%_100%)] p-3">
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-center">
+              {showcaseCards.map((card, idx) => (
+                <motion.div
+                  key={card.id}
+                  className="absolute"
+                  initial={{ opacity: 0, y: 60, rotate: 0 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    rotate: card.rotate,
+                    x: card.x,
+                  }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 80,
+                    damping: 20,
+                    delay: 0.4 + card.delay,
+                  }}
+                  style={{
+                    top: `${15 + idx * 28}%`,
+                    left: `${10 + idx * 20}%`,
+                    zIndex: 3 - idx,
+                  }}
+                >
+                  <motion.div
+                    animate={{
+                      y: [0, -8, 0],
+                    }}
+                    transition={{
+                      duration: 4 + idx,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: idx * 0.5,
+                    }}
+                  >
+                    <CreditCardVisual
+                      cardId={card.id}
+                      size="md"
+                      interactive
+                    />
+                  </motion.div>
+                </motion.div>
+              ))}
+
+              {/* Floating badge */}
+              <motion.div
+                className="absolute bottom-[15%] right-[5%] z-10 rounded-2xl border border-white/40 bg-white/70 px-5 py-3 shadow-xl backdrop-blur-xl"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1, type: 'spring', stiffness: 200, damping: 20 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white">
+                    <Star className="h-5 w-5" />
+                  </div>
                   <div>
-                    <p className="text-2xl font-bold text-foreground">25%</p>
-                    <p className="text-xs text-muted-foreground">Reward Mix</p>
+                    <p className="text-lg font-bold text-foreground">Rs 18,200</p>
+                    <p className="text-xs text-muted-foreground">Avg. yearly value saved</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto mt-16 grid w-full max-w-7xl gap-5 md:grid-cols-3">
-          {valuePoints.map((point) => {
-            const Icon = point.icon
-            return (
-              <article key={point.title} className="cardsense-card p-6">
-                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h2 className="text-xl font-semibold text-foreground">{point.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{point.description}</p>
-              </article>
-            )
-          })}
+        {/* Feature Cards */}
+        <section id="features" className="relative px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-12 text-center"
+            >
+              <h2 className="cardsense-hero-title text-3xl text-foreground lg:text-4xl">
+                Why CardSense?
+              </h2>
+              <p className="mx-auto mt-3 max-w-lg text-base text-muted-foreground">
+                Built for the Indian credit card ecosystem. Powered by advanced AI.
+              </p>
+            </motion.div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {valuePoints.map((point, idx) => {
+                const Icon = point.icon
+                return (
+                  <motion.article
+                    key={point.title}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  >
+                    <motion.div
+                      className="cardsense-card h-full p-7"
+                      whileHover={{ y: -6 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    >
+                      <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${point.gradient}`}>
+                        <Icon className={`h-6 w-6 ${point.iconColor}`} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground">{point.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{point.description}</p>
+                    </motion.div>
+                  </motion.article>
+                )
+              })}
+            </div>
+          </div>
         </section>
 
-        <section className="mx-auto mt-16 w-full max-w-7xl">
-          <div className="cardsense-card flex flex-col items-start justify-between gap-5 rounded-3xl p-8 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                Ready to start
-              </p>
-              <p className="cardsense-hero-title mt-2 text-3xl text-foreground">
-                Get your professional top 3 card picks now.
-              </p>
-            </div>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+        {/* CTA Section */}
+        <section className="relative px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-10 sm:p-14"
             >
-              Create Free Account
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+              <ParticleField className="opacity-40" particleCount={20} color="rgba(255, 255, 255, 0.2)" />
+
+              <div className="relative z-10 flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
+                <div>
+                  <p className="text-sm font-medium uppercase tracking-[0.2em] text-white/60">
+                    Ready to start
+                  </p>
+                  <p className="cardsense-hero-title mt-3 text-3xl text-white sm:text-4xl">
+                    Get your top 3 card picks
+                  </p>
+                  <p className="mt-2 max-w-md text-sm text-white/70">
+                    Free AI-powered recommendations tailored to your Indian credit profile.
+                  </p>
+                </div>
+                <Link href="/signup">
+                  <motion.div
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-violet-700 shadow-xl"
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Create Free Account
+                    <ArrowRight className="h-5 w-5" />
+                  </motion.div>
+                </Link>
+              </div>
+            </motion.div>
           </div>
         </section>
       </main>

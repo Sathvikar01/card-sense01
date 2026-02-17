@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic'
-import { Sparkles, CreditCard } from 'lucide-react'
+import { CreditCard, Wallet, BarChart3 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,7 +25,7 @@ const CibilScoreGauge = dynamic(
     loading: () => (
       <Card>
         <CardContent className="p-8">
-          <div className="h-40 animate-pulse rounded-xl bg-muted/55" />
+          <div className="h-40 shimmer rounded-xl" />
         </CardContent>
       </Card>
     ),
@@ -41,7 +41,7 @@ const SpendingSummaryChart = dynamic(
     loading: () => (
       <Card>
         <CardContent className="p-8">
-          <div className="h-[300px] animate-pulse rounded-xl bg-muted/55" />
+          <div className="h-[300px] shimmer rounded-xl" />
         </CardContent>
       </Card>
     ),
@@ -57,7 +57,7 @@ const RecentRecommendations = dynamic(
     loading: () => (
       <Card>
         <CardContent className="p-8">
-          <div className="h-40 animate-pulse rounded-xl bg-muted/55" />
+          <div className="h-40 shimmer rounded-xl" />
         </CardContent>
       </Card>
     ),
@@ -142,6 +142,12 @@ async function getDashboardData() {
   }
 }
 
+const statCardStyles = [
+  { gradient: 'from-violet-500/8 to-purple-500/5', iconBg: 'from-violet-500 to-purple-600', iconColor: 'text-white' },
+  { gradient: 'from-emerald-500/8 to-green-500/5', iconBg: 'from-emerald-500 to-green-600', iconColor: 'text-white' },
+  { gradient: 'from-blue-500/8 to-cyan-500/5', iconBg: 'from-blue-500 to-cyan-600', iconColor: 'text-white' },
+]
+
 export default async function DashboardPage() {
   const { profile, recommendations, monthlySpending, currentMonthTotal, totalCards } =
     await getDashboardData()
@@ -149,11 +155,33 @@ export default async function DashboardPage() {
   const cibilScore = profile?.credit_score || null
   const lastUpdated = profile?.updated_at || null
 
+  const statCards = [
+    {
+      title: 'Monthly Spend',
+      value: `Rs. ${currentMonthTotal.toLocaleString('en-IN')}`,
+      subtitle: 'This month',
+      icon: Wallet,
+    },
+    {
+      title: 'Cards Owned',
+      value: totalCards.toString(),
+      subtitle: 'Active cards',
+      icon: CreditCard,
+    },
+    {
+      title: 'Recommendations',
+      value: recommendations.length.toString(),
+      subtitle: 'AI recommendations',
+      icon: BarChart3,
+    },
+  ]
+
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="mt-1 text-muted-foreground">
+        <h1 className="cardsense-hero-title text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="mt-1.5 text-muted-foreground">
           {profile?.full_name
             ? `Welcome back, ${profile.full_name.split(' ')[0]}.`
             : 'Welcome back.'}{' '}
@@ -161,19 +189,21 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* CIBIL Score */}
         <div className="md:col-span-2 lg:col-span-1">
           {cibilScore ? (
             <CibilScoreGauge score={cibilScore} lastUpdated={lastUpdated || undefined} />
           ) : (
-            <Card>
+            <Card className="overflow-hidden border-white/30 bg-white/50 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">CIBIL Score</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="py-8 text-center text-muted-foreground">
                   <p className="mb-2 text-sm">No CIBIL score recorded</p>
-                  <a href="/profile" className="text-xs text-primary underline hover:text-primary/85">
+                  <a href="/profile" className="text-xs font-medium text-violet-600 underline hover:text-violet-500">
                     Update your score
                   </a>
                 </div>
@@ -182,42 +212,31 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Spend</CardTitle>
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Rs. {currentMonthTotal.toLocaleString('en-IN')}</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cards Owned</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCards}</div>
-            <p className="text-xs text-muted-foreground">Active cards</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recommendations</CardTitle>
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{recommendations.length}</div>
-            <p className="text-xs text-muted-foreground">AI recommendations</p>
-          </CardContent>
-        </Card>
+        {/* Stat Cards */}
+        {statCards.map((stat, idx) => {
+          const Icon = stat.icon
+          const style = statCardStyles[idx]
+          return (
+            <Card key={stat.title} className={`overflow-hidden border-white/30 bg-gradient-to-br ${style.gradient} backdrop-blur-xl`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${style.iconBg} shadow-lg`}>
+                  <Icon className={`h-4 w-4 ${style.iconColor}`} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                <p className="mt-0.5 text-xs text-muted-foreground">{stat.subtitle}</p>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
+      {/* Quick Actions */}
       <QuickActions />
 
+      {/* Main Content Grid */}
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <RecentRecommendations recommendations={recommendations} />
