@@ -1,8 +1,6 @@
 import dynamic from 'next/dynamic'
-import { CreditCard, Wallet, BarChart3, ArrowUpRight, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import type { Recommendation } from '@/types/recommendation'
 
@@ -23,7 +21,7 @@ const CibilScoreGauge = dynamic(
   () => import('@/components/dashboard/cibil-score-gauge').then((m) => ({ default: m.CibilScoreGauge })),
   {
     loading: () => (
-      <div className="stat-card-premium p-6">
+      <div className="dash-card p-6">
         <div className="h-40 shimmer rounded-xl" />
       </div>
     ),
@@ -37,7 +35,7 @@ const SpendingSummaryChart = dynamic(
     })),
   {
     loading: () => (
-      <div className="stat-card-premium p-6">
+      <div className="dash-card p-6">
         <div className="h-[300px] shimmer rounded-xl" />
       </div>
     ),
@@ -51,7 +49,7 @@ const RecentRecommendations = dynamic(
     })),
   {
     loading: () => (
-      <div className="stat-card-premium p-6">
+      <div className="dash-card p-6">
         <div className="h-40 shimmer rounded-xl" />
       </div>
     ),
@@ -136,147 +134,156 @@ async function getDashboardData() {
   }
 }
 
-const statCardConfig = [
-  {
-    gradient: 'from-violet-500/8 to-purple-500/5',
-    iconBg: 'from-violet-500 to-purple-600',
-    accent: 'text-violet-600',
-  },
-  {
-    gradient: 'from-emerald-500/8 to-green-500/5',
-    iconBg: 'from-emerald-500 to-green-600',
-    accent: 'text-emerald-600',
-  },
-  {
-    gradient: 'from-blue-500/8 to-cyan-500/5',
-    iconBg: 'from-blue-500 to-cyan-600',
-    accent: 'text-blue-600',
-  },
-]
-
 export default async function DashboardPage() {
   const { profile, recommendations, monthlySpending, currentMonthTotal, totalCards } =
     await getDashboardData()
 
   const cibilScore = profile?.credit_score || null
-  const lastUpdated = profile?.updated_at || null
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
-
-  const statCards = [
-    {
-      title: 'Monthly Spend',
-      value: `Rs. ${currentMonthTotal.toLocaleString('en-IN')}`,
-      subtitle: 'This month',
-      icon: Wallet,
-    },
-    {
-      title: 'Cards Owned',
-      value: totalCards.toString(),
-      subtitle: 'Active cards',
-      icon: CreditCard,
-    },
-    {
-      title: 'AI Recommendations',
-      value: recommendations.length.toString(),
-      subtitle: 'Personalized picks',
-      icon: BarChart3,
-    },
-  ]
 
   const greetingHour = new Date().getHours()
   const greeting =
     greetingHour < 12 ? 'Good morning' : greetingHour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div className="space-y-8">
-      {/* ====== Welcome Banner ====== */}
-      <div className="dashboard-welcome p-8 sm:p-10">
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.15em] text-white/50">
-              {greeting}
-            </p>
-            <h1 className="cardsense-hero-title mt-1 text-2xl font-bold text-white sm:text-3xl">
-              Welcome back, {firstName}
-            </h1>
-            <p className="mt-2 max-w-md text-sm text-white/60">
-              Here&apos;s your credit card overview. Keep your profile updated for sharper recommendations.
-            </p>
+    <div className="space-y-7">
+      {/* ====== Welcome Hero ====== */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 p-8 sm:p-10">
+        {/* Mesh gradient blobs */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-violet-600/20 blur-[80px]" />
+          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-indigo-500/15 blur-[60px]" />
+          <div className="absolute right-1/3 top-0 h-40 w-40 rounded-full bg-purple-500/10 blur-[60px]" />
+          {/* Grid lines */}
+          <svg className="absolute inset-0 h-full w-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dash-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dash-grid)" />
+          </svg>
+        </div>
+
+        <div className="relative z-10">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/60">
+            {greeting}
+          </p>
+          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+            Welcome back, {firstName}
+          </h1>
+          <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/40">
+            Your personalized credit card command center. Keep your profile fresh for sharper recommendations.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <a
+              href="/beginner"
+              className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition-all hover:bg-violet-400 hover:shadow-violet-500/40"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10.2 1.5l4.3 4.3-11 11L.2 13.5l11-11z" fill="currentColor" opacity="0.9" /><path d="M12 0l1 2.5L15.5 3.5 13 4.5 12 7 11 4.5 8.5 3.5 11 2.5z" fill="currentColor" opacity="0.6" /></svg>
+              New Recommendation
+            </a>
+            <a
+              href="/advisor"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-all hover:bg-white/10"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C6.5 2 5.2 2.8 4.6 4 3.1 4.3 2 5.6 2 7.2c0 1.3.7 2.4 1.7 3 0 .2-.1.5-.1.8 0 1.7 1.3 3 3 3h2.8c1.7 0 3-1.3 3-3 0-.3 0-.5-.1-.8 1-.6 1.7-1.7 1.7-3 0-1.6-1.1-2.9-2.6-3.2C10.8 2.8 9.5 2 8 2z" stroke="currentColor" strokeWidth="1.2" fill="none" /><path d="M8 5v6M6 7.5h4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" /></svg>
+              AI Advisor
+            </a>
           </div>
-          <a
-            href="/beginner"
-            className="inline-flex items-center gap-2 self-start rounded-xl bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-          >
-            <Sparkles className="h-4 w-4" />
-            New Recommendation
-          </a>
         </div>
       </div>
 
-      {/* ====== Stats Grid ====== */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* ====== Bento Stats Grid ====== */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* CIBIL Score */}
-        <div className="md:col-span-2 lg:col-span-1">
+        <div className="dash-card relative overflow-hidden p-6">
+          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/8 blur-[30px]" />
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">CIBIL Score</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L2 3.5v4c0 3.5 2.6 6.3 6 7.5 3.4-1.2 6-4 6-7.5v-4L8 1z" stroke="white" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+          </div>
           {cibilScore ? (
-            <CibilScoreGauge score={cibilScore} lastUpdated={lastUpdated || undefined} />
+            <div className="mt-3">
+              <p className="text-3xl font-bold text-foreground">{cibilScore}</p>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-500 transition-all duration-700"
+                  style={{ width: `${Math.min(((cibilScore - 300) / 600) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-[0.65rem] text-muted-foreground">
+                {cibilScore >= 750 ? 'Excellent' : cibilScore >= 650 ? 'Good' : 'Needs improvement'}
+              </p>
+            </div>
           ) : (
-            <div className="stat-card-premium p-6">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">CIBIL Score</p>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
-                  <ArrowUpRight className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">No score recorded</p>
-                <a
-                  href="/profile"
-                  className="mt-2 inline-block text-xs font-medium text-violet-600 underline hover:text-violet-500"
-                >
-                  Update your score
-                </a>
-              </div>
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground">Not recorded</p>
+              <a href="/profile" className="mt-1 inline-block text-xs font-medium text-violet-600 hover:text-violet-500">
+                Add your score
+              </a>
             </div>
           )}
         </div>
 
-        {/* Stat Cards */}
-        {statCards.map((stat, idx) => {
-          const Icon = stat.icon
-          const config = statCardConfig[idx]
-          return (
-            <div
-              key={stat.title}
-              className="stat-card-premium p-6"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${config.iconBg} shadow-lg`}
-                >
-                  <Icon className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div className="mt-4">
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{stat.subtitle}</p>
-              </div>
+        {/* Monthly Spend */}
+        <div className="dash-card relative overflow-hidden p-6">
+          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/8 blur-[30px]" />
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Monthly Spend</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-green-500">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="2" stroke="white" strokeWidth="1.3" fill="none" /><path d="M1 6h14" stroke="white" strokeWidth="1.3" /><circle cx="12" cy="9.5" r="1" fill="white" /><path d="M4 3V2a1 1 0 011-1h6a1 1 0 011 1v1" stroke="white" strokeWidth="1" opacity="0.5" /></svg>
             </div>
-          )
-        })}
+          </div>
+          <div className="mt-3">
+            <p className="text-3xl font-bold text-foreground">
+              <span className="text-lg font-medium text-muted-foreground">Rs.</span> {currentMonthTotal.toLocaleString('en-IN')}
+            </p>
+            <p className="mt-1 text-[0.65rem] text-muted-foreground">Current billing cycle</p>
+          </div>
+        </div>
+
+        {/* Cards Owned */}
+        <div className="dash-card relative overflow-hidden p-6">
+          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/8 blur-[30px]" />
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Cards Owned</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-400 to-cyan-500">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="5" width="12" height="8" rx="2" stroke="white" strokeWidth="1.3" fill="none" /><rect x="3" y="3" width="10" height="2" rx="1" fill="white" opacity="0.3" /><rect x="4" y="1" width="8" height="2" rx="1" fill="white" opacity="0.15" /><line x1="2" y1="8" x2="14" y2="8" stroke="white" strokeWidth="1" opacity="0.4" /></svg>
+            </div>
+          </div>
+          <div className="mt-3">
+            <p className="text-3xl font-bold text-foreground">{totalCards}</p>
+            <p className="mt-1 text-[0.65rem] text-muted-foreground">Active credit cards</p>
+          </div>
+        </div>
+
+        {/* AI Picks */}
+        <div className="dash-card relative overflow-hidden p-6">
+          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-500/8 blur-[30px]" />
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">AI Picks</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" fill="white" opacity="0.9" /><path d="M12.5 1l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z" fill="white" opacity="0.5" /></svg>
+            </div>
+          </div>
+          <div className="mt-3">
+            <p className="text-3xl font-bold text-foreground">{recommendations.length}</p>
+            <p className="mt-1 text-[0.65rem] text-muted-foreground">Personalized recommendations</p>
+          </div>
+        </div>
       </div>
 
       {/* ====== Quick Actions ====== */}
       <QuickActions />
 
-      {/* ====== Main Content Grid ====== */}
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div>
-          <RecentRecommendations recommendations={recommendations} />
-        </div>
-        <div>
-          <SpendingSummaryChart data={monthlySpending} />
-        </div>
+      {/* ====== Main Content ====== */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RecentRecommendations recommendations={recommendations} />
+        <SpendingSummaryChart data={monthlySpending} />
       </div>
     </div>
   )

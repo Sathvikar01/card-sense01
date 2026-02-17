@@ -3,26 +3,20 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Sparkles,
-  Brain,
-  CreditCard,
-  TrendingUp,
-  BookOpen,
-  User,
-  LayoutDashboard,
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { CardSenseIcon } from '@/components/shared/logo'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Beginner Advisor', href: '/beginner', icon: Sparkles },
-  { name: 'Smart Advisor', href: '/advisor', icon: Brain },
-  { name: 'Browse Cards', href: '/cards', icon: CreditCard },
-  { name: 'Spending Tracker', href: '/spending', icon: TrendingUp },
-  { name: 'Education', href: '/education', icon: BookOpen },
-  { name: 'Profile', href: '/profile', icon: User },
+  { name: 'Dashboard', href: '/dashboard', icon: DashboardSVG },
+  { name: 'Beginner Advisor', href: '/beginner', icon: WandNavSVG },
+  { name: 'Smart Advisor', href: '/advisor', icon: BrainNavSVG },
+  { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
+  { name: 'Spending Tracker', href: '/spending', icon: ChartNavSVG },
+  { name: 'Education', href: '/education', icon: BookNavSVG },
+  { name: 'Profile', href: '/profile', icon: PersonNavSVG },
 ]
 
 export function Sidebar() {
@@ -40,15 +34,14 @@ export function Sidebar() {
         {/* Brand */}
         <Link href="/" className="relative z-10 flex items-center gap-3 rounded-xl px-2 py-2">
           <motion.div
-            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <CreditCard className="h-6 w-6" />
+            <CardSenseIcon size={44} />
           </motion.div>
           <div>
             <p className="text-lg font-bold tracking-tight text-foreground">
-              CARD<span className="text-gradient-primary">SENSE</span>
+              Card<span className="text-gradient-primary">Sense</span>
             </p>
             <p className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">India Advisor</p>
           </div>
@@ -61,6 +54,7 @@ export function Sidebar() {
         <nav className="relative z-10 mt-5 flex-1 space-y-0.5">
           {navigation.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+            const IconComp = item.icon
 
             return (
               <Link
@@ -72,12 +66,12 @@ export function Sidebar() {
                   isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <item.icon
-                  className={cn(
-                    'mr-3 h-[18px] w-[18px] shrink-0 transition-colors duration-200',
-                    isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
-                  )}
-                />
+                <span className={cn(
+                  'mr-3 shrink-0 transition-colors duration-200',
+                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                )}>
+                  <IconComp active={isActive} />
+                </span>
                 <span className="flex-1">{item.name}</span>
                 {isActive && (
                   <>
@@ -99,7 +93,9 @@ export function Sidebar() {
         <div className="relative z-10 mt-4 overflow-hidden rounded-2xl border border-violet-100/40 bg-gradient-to-br from-violet-50/60 to-purple-50/40 px-4 py-3.5 backdrop-blur-sm">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-              <Sparkles className="h-4 w-4 text-white" />
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" fill="white" opacity="0.9" />
+              </svg>
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">Smarter over time</p>
@@ -111,5 +107,75 @@ export function Sidebar() {
         </div>
       </div>
     </div>
+  )
+}
+
+/* ===== Custom nav SVG icons ===== */
+
+function DashboardSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1" y="1" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+      <rect x="10" y="1" width="7" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+      <rect x="10" y="7" width="7" height="10" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+      <rect x="1" y="10" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+    </svg>
+  )
+}
+
+function WandNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M11.5 2l5 5-12.5 12.5L-.5 14 11.5 2z" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} transform="scale(0.85) translate(1.5,1)" />
+      <path d="M13 1l.8 2 2 .8-2 .8L13 6.6l-.8-2-2-.8 2-.8z" fill="currentColor" opacity="0.5" />
+    </svg>
+  )
+}
+
+function BrainNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M9 3C7.3 3 5.8 3.9 5.1 5.3 3.4 5.6 2 7.1 2 9c0 1.5.8 2.8 2 3.5 0 .3-.1.6-.1.9C3.9 15.3 5.4 17 7.4 17h3.2c2 0 3.5-1.7 3.5-3.6 0-.3 0-.6-.1-.9 1.2-.7 2-2 2-3.5 0-1.9-1.4-3.4-3.1-3.7C12.2 3.9 10.7 3 9 3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+      <path d="M9 6.5v6M7 9h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.45" />
+    </svg>
+  )
+}
+
+function CardNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="4" width="15" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+      <line x1="1.5" y1="7.5" x2="16.5" y2="7.5" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="4" y="10" width="4" height="1.5" rx="0.75" fill="currentColor" opacity="0.35" />
+    </svg>
+  )
+}
+
+function ChartNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M2 15h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <rect x="3" y="8" width="3" height="7" rx="1" stroke="currentColor" strokeWidth="1.2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+      <rect x="7.5" y="4" width="3" height="11" rx="1" stroke="currentColor" strokeWidth="1.2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+      <rect x="12" y="6" width="3" height="9" rx="1" stroke="currentColor" strokeWidth="1.2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
+    </svg>
+  )
+}
+
+function BookNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M2 3h5.5c.8 0 1.5.7 1.5 1.5V15l-.1-.1C8.1 14.3 7 14 6 14H2V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+      <path d="M16 3h-5.5c-.8 0-1.5.7-1.5 1.5V15l.1-.1c.8-.6 1.9-.9 2.9-.9H16V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+    </svg>
+  )
+}
+
+function PersonNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <circle cx="9" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+      <path d="M2.5 16.5c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   )
 }
