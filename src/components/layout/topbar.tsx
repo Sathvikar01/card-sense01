@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Bell, LogOut, Settings, User } from 'lucide-react'
+import { Menu, Bell, LogOut, Settings, User, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import {
@@ -47,16 +47,17 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
 
   return (
     <div className="sticky top-0 z-40 px-4 pt-3 sm:px-6 lg:px-8">
-      <div className="flex h-16 items-center gap-3 rounded-2xl border border-white/30 bg-white/50 px-3 shadow-lg shadow-black/[0.03] backdrop-blur-2xl sm:px-4">
+      <div className="flex h-16 items-center gap-3 rounded-2xl border border-white/30 bg-white/50 px-3 shadow-lg shadow-black/[0.03] backdrop-blur-2xl sm:px-5">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
           <Menu className="h-6 w-6" />
         </Button>
 
-        <div className="hidden min-w-0 flex-1 md:block">
-          <p className="truncate text-sm font-medium text-foreground">Welcome, {displayName}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            Keep profile and spending updated for sharper card recommendations.
-          </p>
+        {/* Search-like display bar (desktop) */}
+        <div className="hidden flex-1 md:block">
+          <div className="flex max-w-sm items-center gap-2 rounded-xl border border-border/40 bg-white/40 px-3 py-1.5">
+            <Search className="h-3.5 w-3.5 text-muted-foreground/60" />
+            <span className="text-xs text-muted-foreground/60">Search cards, pages...</span>
+          </div>
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
@@ -65,19 +66,22 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-violet-500 ring-2 ring-white" />
           </Button>
 
+          <div className="mx-1 h-6 w-[1px] bg-border/40" />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-10 rounded-full px-0 sm:h-11 sm:px-1"
+                className="h-10 gap-2 rounded-full px-1.5 sm:h-11 sm:px-2"
                 aria-label="Open profile menu"
               >
-                <Avatar className="h-9 w-9 border-2 border-violet-200/50 ring-2 ring-violet-100/30">
+                <Avatar className="h-8 w-8 border-2 border-violet-200/50 ring-2 ring-violet-100/30">
                   <AvatarImage src="" alt={displayName} />
                   <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
+                <span className="hidden text-sm font-medium text-foreground sm:inline">{displayName.split(' ')[0]}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-60 rounded-xl border-white/40 bg-white/80 backdrop-blur-2xl" align="end">

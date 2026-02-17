@@ -15,7 +15,7 @@ export function CardGrid({ cards, loading }: CardGridProps) {
     return (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="space-y-4 rounded-2xl border border-white/30 bg-white/40 p-5 backdrop-blur-xl">
+          <div key={index} className="stat-card-premium space-y-4 p-5">
             <div className="mx-auto h-[126px] w-[200px] shimmer rounded-xl" />
             <div className="space-y-2">
               <div className="h-3 w-1/3 shimmer rounded" />
@@ -43,9 +43,9 @@ export function CardGrid({ cards, loading }: CardGridProps) {
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="mb-5 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {cards.length} {cards.length === 1 ? 'card' : 'cards'}
+          Showing <span className="font-medium text-foreground">{cards.length}</span> {cards.length === 1 ? 'card' : 'cards'}
         </p>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

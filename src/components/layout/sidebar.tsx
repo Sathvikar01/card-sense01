@@ -10,6 +10,7 @@ import {
   BookOpen,
   User,
   LayoutDashboard,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -33,7 +34,7 @@ export function Sidebar() {
         {/* Gradient glow at top */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-violet-500/8 via-purple-500/4 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-violet-500/8 via-purple-500/4 to-transparent"
         />
 
         {/* Brand */}
@@ -46,13 +47,18 @@ export function Sidebar() {
             <CreditCard className="h-6 w-6" />
           </motion.div>
           <div>
-            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground/70">CardSense</p>
-            <p className="text-lg font-semibold text-foreground">India Advisor</p>
+            <p className="text-lg font-bold tracking-tight text-foreground">
+              CARD<span className="text-gradient-primary">SENSE</span>
+            </p>
+            <p className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">India Advisor</p>
           </div>
         </Link>
 
+        {/* Divider */}
+        <div className="relative z-10 mx-2 mt-5 h-[1px] bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+
         {/* Navigation */}
-        <nav className="relative z-10 mt-8 flex-1 space-y-1">
+        <nav className="relative z-10 mt-5 flex-1 space-y-0.5">
           {navigation.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
 
@@ -68,18 +74,21 @@ export function Sidebar() {
               >
                 <item.icon
                   className={cn(
-                    'mr-3 h-5 w-5 shrink-0 transition-colors duration-200',
+                    'mr-3 h-[18px] w-[18px] shrink-0 transition-colors duration-200',
                     isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                   )}
                 />
-                {item.name}
+                <span className="flex-1">{item.name}</span>
                 {isActive && (
-                  <motion.div
-                    layoutId="sidebar-active-bg"
-                    className="absolute inset-0 rounded-xl border border-violet-200/40 bg-violet-50/50"
-                    style={{ zIndex: -1 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
+                  <>
+                    <ChevronRight className="h-3.5 w-3.5 text-primary/50" />
+                    <motion.div
+                      layoutId="sidebar-active-bg"
+                      className="absolute inset-0 rounded-xl border border-violet-200/40 bg-violet-50/50"
+                      style={{ zIndex: -1 }}
+                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    />
+                  </>
                 )}
               </Link>
             )
@@ -87,11 +96,18 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom tip */}
-        <div className="relative z-10 mt-4 rounded-2xl border border-violet-100/40 bg-gradient-to-br from-violet-50/60 to-purple-50/40 px-3 py-3 text-xs text-muted-foreground backdrop-blur-sm">
-          <p className="font-medium text-foreground">Smarter over time</p>
-          <p className="mt-1 leading-relaxed">
-            Recommendations improve as you add spending data and update your profile.
-          </p>
+        <div className="relative z-10 mt-4 overflow-hidden rounded-2xl border border-violet-100/40 bg-gradient-to-br from-violet-50/60 to-purple-50/40 px-4 py-3.5 backdrop-blur-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+              <Sparkles className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-foreground">Smarter over time</p>
+              <p className="mt-0.5 text-[0.68rem] leading-relaxed text-muted-foreground">
+                Add spending data for sharper card matches.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
