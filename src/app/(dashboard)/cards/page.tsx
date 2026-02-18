@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CardFilters } from '@/components/cards/card-filters'
 import { Search, SlidersHorizontal } from 'lucide-react'
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { CreditCardListItem } from '@/types/credit-card'
 
 export default function CardsPage() {
@@ -21,7 +21,6 @@ export default function CardsPage() {
   const [cardType, setCardType] = useState(searchParams.get('type') || '')
   const [maxFee, setMaxFee] = useState(searchParams.get('maxFee') || '')
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'popularity')
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('search') || '')
 
   const abortRef = useRef<AbortController | null>(null)
@@ -166,9 +165,9 @@ export default function CardsPage() {
           />
         </div>
 
-        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="relative">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="relative md:hidden">
               <SlidersHorizontal className="h-4 w-4 mr-2" />
               Filters
               {activeFiltersCount > 0 && (
@@ -177,9 +176,8 @@ export default function CardsPage() {
                 </span>
               )}
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80">
-            <SheetTitle className="sr-only">Filters</SheetTitle>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-80 p-0">
             <CardFilters
               bank={bank}
               cardType={cardType}
@@ -191,8 +189,8 @@ export default function CardsPage() {
               onSortByChange={setSortBy}
               onClearFilters={handleClearFilters}
             />
-          </SheetContent>
-        </Sheet>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

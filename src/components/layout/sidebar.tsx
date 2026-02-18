@@ -16,6 +16,7 @@ const navigation = [
   { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
   { name: 'Spending Tracker', href: '/spending', icon: ChartNavSVG },
   { name: 'Education', href: '/education', icon: BookNavSVG },
+  { name: 'AI Chat', href: '/chat', icon: ChatNavSVG },
   { name: 'Profile', href: '/profile', icon: PersonNavSVG },
 ]
 
@@ -28,7 +29,7 @@ export function Sidebar() {
         {/* Gradient glow at top */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-violet-500/8 via-purple-500/4 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#d4a017]/8 via-[#e8c04a]/4 to-transparent"
         />
 
         {/* Brand */}
@@ -41,7 +42,7 @@ export function Sidebar() {
           </motion.div>
           <div>
             <p className="text-lg font-bold tracking-tight text-foreground">
-              Card<span className="text-gradient-primary">Sense</span>
+              Card<span className="text-gradient-gold">Sense</span>
             </p>
             <p className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">India Advisor</p>
           </div>
@@ -78,7 +79,7 @@ export function Sidebar() {
                     <ChevronRight className="h-3.5 w-3.5 text-primary/50" />
                     <motion.div
                       layoutId="sidebar-active-bg"
-                      className="absolute inset-0 rounded-xl border border-violet-200/40 bg-violet-50/50"
+                      className="absolute inset-0 rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/50"
                       style={{ zIndex: -1 }}
                       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     />
@@ -90,9 +91,9 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom tip */}
-        <div className="relative z-10 mt-4 overflow-hidden rounded-2xl border border-violet-100/40 bg-gradient-to-br from-violet-50/60 to-purple-50/40 px-4 py-3.5 backdrop-blur-sm">
+        <div className="relative z-10 mt-4 overflow-hidden rounded-2xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/60 to-[#fdf3d7]/40 px-4 py-3.5 backdrop-blur-sm">
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" fill="white" opacity="0.9" />
               </svg>
@@ -167,6 +168,15 @@ function BookNavSVG({ active }: { active?: boolean }) {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M2 3h5.5c.8 0 1.5.7 1.5 1.5V15l-.1-.1C8.1 14.3 7 14 6 14H2V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
       <path d="M16 3h-5.5c-.8 0-1.5.7-1.5 1.5V15l.1-.1c.8-.6 1.9-.9 2.9-.9H16V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+    </svg>
+  )
+}
+
+function ChatNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M15 2H3a1.5 1.5 0 00-1.5 1.5v8.5A1.5 1.5 0 003 13.5h2v2.5l3.5-2.5H15a1.5 1.5 0 001.5-1.5V3.5A1.5 1.5 0 0015 2z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} strokeLinejoin="round" />
+      <path d="M5.5 7h7M5.5 9.5h4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   )
 }

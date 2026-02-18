@@ -148,16 +148,16 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* ====== Welcome Hero ====== */}
-      <div className="relative overflow-hidden rounded-3xl border border-violet-100/40 bg-gradient-to-br from-violet-50/80 via-white to-purple-50/60 p-8 sm:p-10">
+      <div className="relative overflow-hidden rounded-3xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/80 via-white to-[#fdf3d7]/40 p-8 sm:p-10">
         {/* Subtle mesh gradient blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-violet-500/10 blur-[80px]" />
-          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-indigo-400/8 blur-[60px]" />
-          <div className="absolute right-1/3 top-0 h-40 w-40 rounded-full bg-purple-400/6 blur-[60px]" />
+          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-[#d4a017]/8 blur-[80px]" />
+          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-[#e8c04a]/6 blur-[60px]" />
+          <div className="absolute right-1/3 top-0 h-40 w-40 rounded-full bg-[#d4a017]/5 blur-[60px]" />
         </div>
 
         <div className="relative z-10">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-500/70">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#b8860b]/70">
             {greeting}
           </p>
           <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
@@ -170,14 +170,14 @@ export default async function DashboardPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="/beginner"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/35 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#b8860b]/25 transition-all hover:shadow-[#b8860b]/35 hover:-translate-y-0.5"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v6m0 0v6m0-6h6m-6 0H2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
               New Recommendation
             </a>
             <a
               href="/advisor"
-              className="inline-flex items-center gap-2 rounded-xl border border-violet-200/50 bg-white/60 px-5 py-2.5 text-sm font-medium text-violet-700 backdrop-blur-sm transition-all hover:bg-white/80 hover:border-violet-300/50"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#d4a017]/40 bg-white/60 px-5 py-2.5 text-sm font-medium text-[#7a5500] backdrop-blur-sm transition-all hover:bg-white/80 hover:border-[#d4a017]/60"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C6.5 2 5.2 2.8 4.6 4 3.1 4.3 2 5.6 2 7.2c0 1.3.7 2.4 1.7 3 0 .2-.1.5-.1.8 0 1.7 1.3 3 3 3h2.8c1.7 0 3-1.3 3-3 0-.3 0-.5-.1-.8 1-.6 1.7-1.7 1.7-3 0-1.6-1.1-2.9-2.6-3.2C10.8 2.8 9.5 2 8 2z" stroke="currentColor" strokeWidth="1.2" fill="none" /><path d="M8 5v6M6 7.5h4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" /></svg>
               AI Advisor

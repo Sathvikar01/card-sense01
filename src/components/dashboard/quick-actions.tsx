@@ -10,8 +10,8 @@ const quickActions = [
     description: 'Run profile-based card matching',
     icon: SparkQaSVG,
     href: '/beginner',
-    iconGradient: 'from-violet-500 to-purple-600',
-    hoverGlow: 'group-hover:shadow-violet-500/10',
+    iconGradient: 'from-[#b8860b] to-[#d4a017]',
+    hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
   {
     title: 'Track Spending',
@@ -34,8 +34,8 @@ const quickActions = [
     description: 'Refresh eligibility score',
     icon: ShieldQaSVG,
     href: '/profile',
-    iconGradient: 'from-amber-500 to-orange-600',
-    hoverGlow: 'group-hover:shadow-amber-500/10',
+    iconGradient: 'from-[#b8860b] to-[#d4a017]',
+    hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
 ]
 
@@ -51,7 +51,7 @@ export function QuickActions() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-violet-600 hover:text-violet-500 hover:bg-violet-50/50"
+            className="gap-1.5 text-[#b8860b] hover:text-[#d4a017] hover:bg-[#fdf3d7]/50"
           >
             <BrainQaSVG />
             AI Advisor
@@ -81,7 +81,7 @@ export function QuickActions() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center text-xs font-medium text-violet-600 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1">
+                <div className="mt-3 flex items-center text-xs font-medium text-[#b8860b] opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1">
                   Open
                   <ArrowRightQaSVG />
                 </div>
@@ -93,7 +93,7 @@ export function QuickActions() {
 
       <div className="mt-4 sm:hidden">
         <Link href="/advisor">
-          <Button className="w-full gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20">
+          <Button className="w-full gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] shadow-lg shadow-[#b8860b]/20">
             <BrainQaSVG />
             Talk to AI Advisor
           </Button>

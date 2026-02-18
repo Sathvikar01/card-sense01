@@ -21,8 +21,8 @@ const valuePoints = [
     description: 'Our Gemini-powered engine analyzes your spending patterns, income, and goals to find your perfect card match from 50+ options.',
     detail: 'Powered by Google Gemini',
     icon: Cpu,
-    iconBg: 'from-violet-500 to-purple-600',
-    accentBorder: 'group-hover:border-violet-200/80',
+    iconBg: 'from-[#b8860b] to-[#d4a017]',
+    accentBorder: 'group-hover:border-[#d4a017]/30',
   },
   {
     title: 'Real Reward Math',
@@ -130,7 +130,7 @@ export default function HomePage() {
               <CardSenseIcon size={40} />
             </motion.div>
             <span className="text-xl font-bold tracking-tight text-foreground">
-              Card<span className="text-gradient-primary">Sense</span>
+              Card<span className="text-gradient-gold">Sense</span>
             </span>
           </Link>
 
@@ -165,7 +165,7 @@ export default function HomePage() {
             </button>
             <motion.button
               onClick={() => openAuth('/dashboard')}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25"
+            className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#b8860b]/25"
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -184,7 +184,7 @@ export default function HomePage() {
             className="pointer-events-none absolute inset-0 transition-all duration-300"
             style={{
               background: mounted
-                ? `radial-gradient(ellipse 600px 400px at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(139, 92, 246, 0.08) 0%, transparent 70%)`
+                ? `radial-gradient(ellipse 600px 400px at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(212, 160, 23, 0.08) 0%, transparent 70%)`
                 : 'transparent',
             }}
           />
@@ -192,12 +192,12 @@ export default function HomePage() {
           {/* Floating background elements */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <motion.div
-              className="absolute -left-20 top-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-violet-200/30 to-transparent blur-3xl"
+              className="absolute -left-20 top-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-[#d4a017]/20 to-transparent blur-3xl"
               animate={{ y: [0, 30, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
-              className="absolute -right-10 top-1/3 h-48 w-48 rounded-full bg-gradient-to-bl from-purple-200/25 to-transparent blur-2xl"
+              className="absolute -right-10 top-1/3 h-48 w-48 rounded-full bg-gradient-to-bl from-[#e8c04a]/20 to-transparent blur-2xl"
               animate={{ y: [0, -20, 0], scale: [1, 0.95, 1] }}
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
             />
@@ -206,7 +206,7 @@ export default function HomePage() {
               animate={{ y: [0, 15, 0], x: [0, 10, 0] }}
               transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
             />
-            <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle, #7c3aed 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+            <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle, #d4a017 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
           </div>
 
           <div className="relative mx-auto max-w-7xl">
@@ -216,10 +216,10 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-violet-100 bg-white/90 px-5 py-2.5 shadow-sm shadow-violet-500/5"
+                className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-[#d4a017]/20 bg-white/90 px-5 py-2.5 shadow-sm shadow-[#b8860b]/5"
               >
-                <CreditCard className="h-4 w-4 text-violet-600" />
-                <span className="text-sm font-medium text-violet-900">50+ Indian Credit Cards</span>
+                <CreditCard className="h-4 w-4 text-[#b8860b]" />
+                <span className="text-sm font-medium text-[#7a5500]">50+ Indian Credit Cards</span>
               </motion.div>
 
               {/* Title with staggered reveal */}
@@ -263,17 +263,17 @@ export default function HomePage() {
               >
                 <motion.button
                   onClick={() => openAuth('/dashboard')}
-                  className="group relative inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-violet-500/20"
+                  className="group relative inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-8 py-4 text-base font-semibold text-white shadow-xl shadow-[#b8860b]/20"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#e8c04a] opacity-0 transition-opacity group-hover:opacity-100" />
                   <span className="relative">Get Started</span>
                   <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </motion.button>
                 <motion.button
                   onClick={() => openAuth('/cards')}
-                  className="group inline-flex items-center gap-2.5 rounded-2xl border-2 border-border/60 bg-white px-8 py-4 text-base font-semibold text-foreground transition-colors hover:border-violet-200 hover:bg-violet-50/50"
+                  className="group inline-flex items-center gap-2.5 rounded-2xl border-2 border-border/60 bg-white px-8 py-4 text-base font-semibold text-foreground transition-colors hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/50"
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -332,7 +332,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                 className="flex flex-col items-center text-center"
               >
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#fdf3d7] to-[#fdf3d7]">
                   {stat.svg}
                 </div>
                 <p className="text-3xl font-bold text-foreground">{stat.value}</p>
@@ -353,7 +353,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               className="mb-14 text-center"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-600">Why CardSense</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Why CardSense</p>
               <h2 className="cardsense-hero-title mt-3 text-3xl text-foreground lg:text-4xl">
                 Built for the Indian credit card ecosystem
               </h2>
@@ -383,13 +383,13 @@ export default function HomePage() {
                         <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${point.iconBg} shadow-lg`}>
                           <Icon className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-5xl font-black text-violet-100" style={{ fontFamily: 'var(--font-display)' }}>
+                        <span className="text-5xl font-black text-[#fdf3d7]" style={{ fontFamily: 'var(--font-display)' }}>
                           {String(idx + 1).padStart(2, '0')}
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold text-foreground">{point.title}</h3>
                       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{point.description}</p>
-                      <p className="mt-4 text-xs font-medium text-violet-500/80">{point.detail}</p>
+                      <p className="mt-4 text-xs font-medium text-[#b8860b]/80">{point.detail}</p>
                     </motion.div>
                   </motion.div>
                 )
@@ -409,7 +409,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               className="mb-14 text-center"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">How It Works</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b8860b]">How It Works</p>
               <h2 className="cardsense-hero-title mt-3 text-3xl text-foreground lg:text-4xl">
                 Three steps to your ideal card
               </h2>
@@ -426,13 +426,13 @@ export default function HomePage() {
                   className="relative"
                 >
                   <div className="cardsense-card p-7">
-                    <span className="text-4xl font-black text-gradient-primary opacity-40">{step.number}</span>
+                    <span className="text-4xl font-black text-gradient-gold opacity-40">{step.number}</span>
                     <h3 className="mt-3 text-lg font-semibold text-foreground">{step.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
                   </div>
                   {idx < steps.length - 1 && (
                     <div className="absolute -right-4 top-1/2 z-10 hidden -translate-y-1/2 md:block">
-                      <ArrowRight className="h-5 w-5 text-violet-300" />
+                      <ArrowRight className="h-5 w-5 text-[#d4a017]/60" />
                     </div>
                   )}
                 </motion.div>
@@ -449,7 +449,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-10 sm:p-14"
+              className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#7a5500] via-[#b8860b] to-[#8a6200] p-10 sm:p-14"
             >
               <ParticleField className="opacity-40" particleCount={20} color="rgba(255, 255, 255, 0.2)" />
               <div className="relative z-10 flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
@@ -464,7 +464,7 @@ export default function HomePage() {
                 </div>
                 <motion.button
                   onClick={() => openAuth('/dashboard')}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-violet-700 shadow-xl"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-[#7a5500] shadow-xl"
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -500,10 +500,10 @@ export default function HomePage() {
 function CardIconSVG() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="5" width="20" height="14" rx="3" stroke="#7c3aed" strokeWidth="1.5" />
-      <rect x="2" y="5" width="20" height="5" rx="3" fill="#7c3aed" opacity="0.15" />
-      <line x1="2" y1="10" x2="22" y2="10" stroke="#7c3aed" strokeWidth="1.5" />
-      <rect x="5" y="13" width="6" height="2" rx="1" fill="#7c3aed" opacity="0.5" />
+      <rect x="2" y="5" width="20" height="14" rx="3" stroke="#d4a017" strokeWidth="1.5" />
+      <rect x="2" y="5" width="20" height="5" rx="3" fill="#d4a017" opacity="0.15" />
+      <line x1="2" y1="10" x2="22" y2="10" stroke="#d4a017" strokeWidth="1.5" />
+      <rect x="5" y="13" width="6" height="2" rx="1" fill="#d4a017" opacity="0.5" />
     </svg>
   )
 }
@@ -511,10 +511,10 @@ function CardIconSVG() {
 function UsersIconSVG() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle cx="9" cy="8" r="3.5" stroke="#7c3aed" strokeWidth="1.5" />
-      <path d="M2 19c0-3.3 2.7-6 6-6h2c3.3 0 6 2.7 6 6" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="17" cy="9" r="2.5" stroke="#7c3aed" strokeWidth="1.2" opacity="0.5" />
-      <path d="M18 14.5c2 .5 4 2.5 4 4.5" stroke="#7c3aed" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+      <circle cx="9" cy="8" r="3.5" stroke="#d4a017" strokeWidth="1.5" />
+      <path d="M2 19c0-3.3 2.7-6 6-6h2c3.3 0 6 2.7 6 6" stroke="#d4a017" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="17" cy="9" r="2.5" stroke="#d4a017" strokeWidth="1.2" opacity="0.5" />
+      <path d="M18 14.5c2 .5 4 2.5 4 4.5" stroke="#d4a017" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
     </svg>
   )
 }
@@ -522,9 +522,9 @@ function UsersIconSVG() {
 function SpeedIconSVG() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#7c3aed" strokeWidth="1.5" />
-      <path d="M12 6v6l4.5 2.5" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="12" r="1.5" fill="#7c3aed" opacity="0.4" />
+      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#d4a017" strokeWidth="1.5" />
+      <path d="M12 6v6l4.5 2.5" stroke="#d4a017" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="1.5" fill="#d4a017" opacity="0.4" />
     </svg>
   )
 }

@@ -22,7 +22,7 @@ export function CardSenseLogo({ className, size = 'md', variant = 'full', dark =
       <CardSenseIcon size={s.icon} dark={dark} />
       {variant === 'full' && (
         <span className={cn(s.text, 'font-bold tracking-tight', dark ? 'text-white' : 'text-foreground')}>
-          Card<span className={dark ? 'text-violet-300' : 'text-gradient-primary'}>Sense</span>
+          Card<span className={dark ? 'text-yellow-300' : 'text-gradient-gold'}>Sense</span>
         </span>
       )}
     </span>
@@ -53,7 +53,7 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
           <stop offset="100%" stopColor="#d4a017" stopOpacity="0.6" />
         </linearGradient>
         <filter id="cs-glow">
-          <feGaussianBlur stdDeviation="1.5" result="blur" />
+          <feGaussianBlur stdDeviation="0" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -89,25 +89,25 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
       <line x1="10" y1="21.5" x2="20" y2="21.5" stroke="#1a1a1a" strokeWidth="0.5" opacity="0.4" />
 
       {/* Pulse / sense waves */}
-      <g filter="url(#cs-glow)" opacity="0.95">
+      <g opacity="0.95">
         <path
           d="M30 24 Q33 19, 37 18"
           stroke="url(#cs-pulse-grad)"
-          strokeWidth="1.8"
+          strokeWidth="2"
           strokeLinecap="round"
           fill="none"
         />
         <path
           d="M30 24 Q34 22, 40 22"
           stroke="url(#cs-pulse-grad)"
-          strokeWidth="1.8"
+          strokeWidth="2"
           strokeLinecap="round"
           fill="none"
         />
         <path
           d="M30 24 Q33 29, 37 30"
           stroke="url(#cs-pulse-grad)"
-          strokeWidth="1.8"
+          strokeWidth="2"
           strokeLinecap="round"
           fill="none"
         />

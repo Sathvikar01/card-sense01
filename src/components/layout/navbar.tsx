@@ -48,6 +48,7 @@ const mobileNav = [
   { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
   { name: 'Spending', href: '/spending', icon: ChartNavSVG },
   { name: 'Education', href: '/education', icon: BookNavSVG },
+  { name: 'AI Chat', href: '/chat', icon: ChatNavSVG },
   { name: 'Profile', href: '/profile', icon: PersonNavSVG },
 ]
 
@@ -96,7 +97,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
               <CardSenseIcon size={34} />
             </motion.div>
             <span className="text-lg font-bold tracking-tight text-foreground">
-              Card<span className="text-gradient-primary">Sense</span>
+              Card<span className="text-gradient-gold">Sense</span>
             </span>
           </Link>
 
@@ -118,7 +119,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                   {isActive && (
                     <motion.div
                       layoutId="navbar-active-indicator"
-                      className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-600"
+                      className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a017]"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -128,24 +129,22 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
 
             {/* Advisor Dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  data-active={isAdvisorActive ? 'true' : 'false'}
-                  className={cn(
-                    'cardsense-navbar-link relative flex items-center gap-1 px-3 py-2 outline-none',
-                    isAdvisorActive && 'text-primary'
-                  )}
-                >
-                  Advisor
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                  {isAdvisorActive && (
-                    <motion.div
-                      layoutId="navbar-active-indicator"
-                      className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-600"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </button>
+              <DropdownMenuTrigger
+                data-active={isAdvisorActive ? 'true' : 'false'}
+                className={cn(
+                  'cardsense-navbar-link relative flex items-center gap-1 px-3 py-2 outline-none',
+                  isAdvisorActive && 'text-primary'
+                )}
+              >
+                Advisor
+                <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                {isAdvisorActive && (
+                  <motion.div
+                    layoutId="navbar-active-indicator"
+                    className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a017]"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 rounded-xl border-border/40 bg-white/90 p-1 backdrop-blur-2xl" align="start" sideOffset={12}>
                 {advisorNav.map((item) => {
@@ -157,7 +156,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                       onClick={() => router.push(item.href)}
                       className={cn(
                         'flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5',
-                        isItemActive && 'bg-violet-50/60'
+                        isItemActive && 'bg-[#fdf3d7]/60'
                       )}
                     >
                       <span className={cn(
@@ -187,9 +186,9 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                   className="h-10 gap-2 rounded-full px-1.5 sm:h-11 sm:px-2"
                   aria-label="Open profile menu"
                 >
-                  <Avatar className="h-8 w-8 border-2 border-violet-200/50 ring-2 ring-violet-100/30">
+                  <Avatar className="h-8 w-8 border-2 border-[#d4a017]/40 ring-2 ring-[#d4a017]/15">
                     <AvatarImage src="" alt={displayName} />
-                    <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-xs font-semibold text-white">
+                    <AvatarFallback className="bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-xs font-semibold text-white">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -232,7 +231,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
               <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
                 <CardSenseIcon size={34} />
                 <span className="text-lg font-bold tracking-tight text-foreground">
-                  Card<span className="text-gradient-primary">Sense</span>
+                  Card<span className="text-gradient-gold">Sense</span>
                 </span>
               </Link>
             </SheetTitle>
@@ -249,7 +248,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                     className={cn(
                       'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-violet-50/70 text-primary'
+                        ? 'bg-[#fdf3d7]/70 text-primary'
                         : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                     )}
                   >
@@ -265,9 +264,9 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
 
           {/* Bottom tip */}
           <div className="mt-auto border-t border-border/30 p-4">
-            <div className="overflow-hidden rounded-2xl border border-violet-100/40 bg-gradient-to-br from-violet-50/60 to-purple-50/40 px-4 py-3.5">
+              <div className="overflow-hidden rounded-2xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/60 to-[#fdf3d7]/40 px-4 py-3.5">
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                     <path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="white" strokeWidth="1.2" fill="none" />
                     <path d="M5 8h6M5 5.5h6M5 10.5h3" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.8" />
@@ -344,6 +343,15 @@ function BookNavSVG({ active }: { active?: boolean }) {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M2 3h5.5c.8 0 1.5.7 1.5 1.5V15l-.1-.1C8.1 14.3 7 14 6 14H2V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
       <path d="M16 3h-5.5c-.8 0-1.5.7-1.5 1.5V15l.1-.1c.8-.6 1.9-.9 2.9-.9H16V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+    </svg>
+  )
+}
+
+function ChatNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M15 2H3a1.5 1.5 0 00-1.5 1.5v8.5A1.5 1.5 0 003 13.5h2v2.5l3.5-2.5H15a1.5 1.5 0 001.5-1.5V3.5A1.5 1.5 0 0015 2z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} strokeLinejoin="round" />
+      <path d="M5.5 7h7M5.5 9.5h4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   )
 }

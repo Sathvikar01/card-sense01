@@ -45,6 +45,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --color-gold: #b8860b;
+  --color-gold-mid: #d4a017;
+  --color-gold-light: #e8c04a;
+  --color-gold-pale: #fdf3d7;
 }
 
 :root {
@@ -657,16 +661,18 @@
   }
 
   .text-gradient-primary {
-    background: linear-gradient(135deg, oklch(0.55 0.18 270), oklch(0.60 0.16 300));
+    background: linear-gradient(135deg, #b8860b, #d4a017, #e8c04a, #d4a017);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, #c9a84c, #f2d06b, #c9953a);
+    background: linear-gradient(135deg, #b8860b, #d4a017, #e8c04a, #d4a017);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    -webkit-text-stroke: 0.3px #2a2a2a;
+    paint-order: stroke fill;
   }
 }

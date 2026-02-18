@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, ArrowRight, Calendar } from 'lucide-react'
+import { ArrowRight, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
@@ -17,22 +17,22 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
     return (
       <div className="stat-card-premium p-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
+            <StarIcon />
           </div>
           <h3 className="text-base font-semibold text-foreground">Recent Recommendations</h3>
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-center pb-4 text-muted-foreground">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50">
-            <Sparkles className="h-8 w-8 text-violet-300" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fdf3d7]">
+            <StarIconLg />
           </div>
           <p className="text-sm font-medium text-foreground">No recommendations yet</p>
           <p className="mt-1 text-center text-xs text-muted-foreground">
             Start with beginner flow to generate your first shortlist.
           </p>
           <Link href="/beginner">
-            <Button className="mt-5 gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20">
+            <Button className="mt-5 gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] shadow-lg shadow-[#b8860b]/20">
               Get Your First Recommendation
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -60,7 +60,7 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
   const getFlowTypeClass = (type: string) => {
     switch (type) {
       case 'beginner':
-        return 'bg-violet-50 text-violet-700 border-violet-200/50'
+        return 'bg-[#fdf3d7] text-[#7a5500] border-[#d4a017]/30'
       case 'experienced':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200/50'
       case 'chat':
@@ -74,13 +74,13 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
     <div className="stat-card-premium p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
+            <StarIcon />
           </div>
           <h3 className="text-base font-semibold text-foreground">Recent Recommendations</h3>
         </div>
         <Link href="/recommendations">
-          <Button variant="ghost" size="sm" className="gap-1 text-violet-600 hover:text-violet-500 hover:bg-violet-50/50">
+          <Button variant="ghost" size="sm" className="gap-1 text-[#b8860b] hover:text-[#d4a017] hover:bg-[#fdf3d7]/50">
             View All
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -118,7 +118,7 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
                         })}
                       </div>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-violet-500" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-[#b8860b]" />
                   </div>
 
                   {topCard && (
@@ -162,12 +162,28 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
 
       {recommendations.length > 3 && (
         <Link href="/recommendations">
-          <Button variant="outline" className="mt-4 w-full gap-2 rounded-xl border-violet-200/50 hover:bg-violet-50/50">
+          <Button variant="outline" className="mt-4 w-full gap-2 rounded-xl border-[#d4a017]/30 hover:bg-[#fdf3d7]/50">
             View All Recommendations
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
       )}
     </div>
+  )
+}
+
+function StarIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1l1.8 4.2L14 6l-3.5 3.4.8 4.6L8 11.8 4.7 14l.8-4.6L2 6l4.2-.8z" fill="white" opacity="0.9" />
+    </svg>
+  )
+}
+
+function StarIconLg() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <path d="M16 3l3.2 7.8L27 12l-6.5 6.3 1.5 8.7L16 23.5l-6 3.5 1.5-8.7L5 12l7.8-1.2z" stroke="#b8860b" strokeWidth="1.5" fill="none" opacity="0.7" />
+    </svg>
   )
 }
