@@ -70,7 +70,7 @@ export default function CardsPage() {
         if (normalizedFilters.maxFee) params.set('maxFee', normalizedFilters.maxFee)
         if (normalizedFilters.sortBy) params.set('sortBy', normalizedFilters.sortBy)
         params.set('fields', 'summary')
-        params.set('limit', '60')
+        params.set('limit', '200')
         params.set('offset', '0')
 
         const response = await fetch('/api/cards?' + params.toString(), {
@@ -191,6 +191,17 @@ export default function CardsPage() {
             />
           </PopoverContent>
         </Popover>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {loading ? 'Loading cards…' : (
+            <>
+              Showing <span className="font-semibold text-foreground">{cards.length}</span> card{cards.length !== 1 ? 's' : ''}
+              {activeFiltersCount > 0 && ' (filtered)'}
+            </>
+          )}
+        </p>
       </div>
 
       <div>
