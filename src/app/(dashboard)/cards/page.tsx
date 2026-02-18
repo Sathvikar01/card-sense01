@@ -167,7 +167,7 @@ export default function CardsPage() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="relative md:hidden">
+            <Button variant="outline" className="relative shrink-0">
               <SlidersHorizontal className="h-4 w-4 mr-2" />
               Filters
               {activeFiltersCount > 0 && (
@@ -177,7 +177,7 @@ export default function CardsPage() {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 p-0">
+          <PopoverContent align="end" className="w-80 p-0 max-h-[80vh] overflow-y-auto">
             <CardFilters
               bank={bank}
               cardType={cardType}
@@ -193,26 +193,8 @@ export default function CardsPage() {
         </Popover>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="hidden md:block md:col-span-1">
-          <div className="sticky top-6">
-            <CardFilters
-              bank={bank}
-              cardType={cardType}
-              maxFee={maxFee}
-              sortBy={sortBy}
-              onBankChange={(value) => handleFilterChange('bank', value)}
-              onCardTypeChange={(value) => handleFilterChange('cardType', value)}
-              onMaxFeeChange={(value) => handleFilterChange('maxFee', value)}
-              onSortByChange={setSortBy}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-        </div>
-
-        <div className="md:col-span-3">
-          <CardGrid cards={cards} loading={loading} />
-        </div>
+      <div>
+        <CardGrid cards={cards} loading={loading} />
       </div>
     </div>
   )
