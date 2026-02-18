@@ -1,5 +1,4 @@
-import { Sidebar } from '@/components/layout/sidebar'
-import { Topbar } from '@/components/layout/topbar'
+import { Navbar } from '@/components/layout/navbar'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { DashboardRoutePrefetch } from '@/components/layout/dashboard-route-prefetch'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -28,24 +27,18 @@ export default async function DashboardLayout({
       <div className="cardsense-shell min-h-screen">
         <DashboardRoutePrefetch />
 
-        {/* Sidebar - Desktop only */}
-        <Sidebar />
+        {/* Unified Navbar - replaces Sidebar + Topbar */}
+        <Navbar userName={userName} userEmail={userEmail} />
 
-        {/* Main content area */}
-        <div className="md:pl-72 flex min-h-screen flex-col">
-          {/* Topbar */}
-          <Topbar userName={userName} userEmail={userEmail} />
-
-          {/* Page content */}
-          <main className="flex-1 pb-20 md:pb-8">
-            <div className="py-6">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-                <DbHealthBanner />
-                {children}
-              </div>
+        {/* Main content area - full width, no sidebar offset */}
+        <main className="flex-1 pb-20 md:pb-8">
+          <div className="pt-6 pb-6">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <DbHealthBanner />
+              {children}
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
 
         {/* Mobile Navigation - Mobile only */}
         <MobileNav />

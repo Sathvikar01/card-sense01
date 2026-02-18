@@ -4,27 +4,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CardFilters } from '@/components/cards/card-filters'
 import { Search, SlidersHorizontal } from 'lucide-react'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import type { CreditCardListItem } from '@/types/credit-card'
-
-const SORT_OPTIONS = [
-  { value: 'popularity', label: 'Most Popular' },
-  { value: 'fee_low', label: 'Fee: Low to High' },
-  { value: 'fee_high', label: 'Fee: High to Low' },
-  { value: 'name', label: 'Name: A to Z' },
-]
 
 export default function CardsPage() {
   const router = useRouter()
@@ -182,27 +166,9 @@ export default function CardsPage() {
           />
         </div>
 
-        <div className="hidden md:block w-48">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Sort By</SelectLabel>
-                {SORT_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
         <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" className="md:hidden relative">
+            <Button variant="outline" className="relative">
               <SlidersHorizontal className="h-4 w-4 mr-2" />
               Filters
               {activeFiltersCount > 0 && (
@@ -213,6 +179,7 @@ export default function CardsPage() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-80">
+            <SheetTitle className="sr-only">Filters</SheetTitle>
             <CardFilters
               bank={bank}
               cardType={cardType}

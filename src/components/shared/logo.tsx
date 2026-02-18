@@ -41,17 +41,16 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
     >
       <defs>
         <linearGradient id="cs-card-grad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="50%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#6d28d9" />
+          <stop offset="0%" stopColor="#1a1a1a" />
+          <stop offset="100%" stopColor="#2d2d2d" />
         </linearGradient>
         <linearGradient id="cs-accent-grad" x1="18" y1="14" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#c4b5fd" />
-          <stop offset="100%" stopColor="#ede9fe" />
+          <stop offset="0%" stopColor="#f5c842" />
+          <stop offset="100%" stopColor="#d4a017" />
         </linearGradient>
         <linearGradient id="cs-pulse-grad" x1="20" y1="20" x2="40" y2="34" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#f5f3ff" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#ddd6fe" stopOpacity="0.6" />
+          <stop offset="0%" stopColor="#f5c842" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#d4a017" stopOpacity="0.6" />
         </linearGradient>
         <filter id="cs-glow">
           <feGaussianBlur stdDeviation="1.5" result="blur" />
@@ -62,7 +61,7 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
         </filter>
       </defs>
 
-      {/* Card body - rounded rectangle, slightly rotated for dynamism */}
+      {/* Card body */}
       <rect
         x="4"
         y="8"
@@ -83,14 +82,14 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
         opacity="0.08"
       />
 
-      {/* Chip - custom geometric, not a standard icon */}
-      <rect x="10" y="18" width="10" height="7" rx="1.5" fill="url(#cs-accent-grad)" opacity="0.85" />
-      <line x1="12.5" y1="18" x2="12.5" y2="25" stroke="#7c3aed" strokeWidth="0.5" opacity="0.3" />
-      <line x1="17.5" y1="18" x2="17.5" y2="25" stroke="#7c3aed" strokeWidth="0.5" opacity="0.3" />
-      <line x1="10" y1="21.5" x2="20" y2="21.5" stroke="#7c3aed" strokeWidth="0.5" opacity="0.3" />
+{/* Chip */}
+      <rect x="10" y="18" width="10" height="7" rx="1.5" fill="url(#cs-accent-grad)" opacity="0.9" />
+      <line x1="12.5" y1="18" x2="12.5" y2="25" stroke="#1a1a1a" strokeWidth="0.5" opacity="0.4" />
+      <line x1="17.5" y1="18" x2="17.5" y2="25" stroke="#1a1a1a" strokeWidth="0.5" opacity="0.4" />
+      <line x1="10" y1="21.5" x2="20" y2="21.5" stroke="#1a1a1a" strokeWidth="0.5" opacity="0.4" />
 
-      {/* Pulse / sense waves - three arcs emanating from right side */}
-      <g filter="url(#cs-glow)" opacity="0.9">
+      {/* Pulse / sense waves */}
+      <g filter="url(#cs-glow)" opacity="0.95">
         <path
           d="M30 24 Q33 19, 37 18"
           stroke="url(#cs-pulse-grad)"
@@ -115,11 +114,11 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
       </g>
 
       {/* Core sense dot */}
-      <circle cx="30" cy="24" r="2.5" fill="white" opacity="0.95" />
-      <circle cx="30" cy="24" r="1.2" fill="#7c3aed" opacity="0.7" />
+      <circle cx="30" cy="24" r="2.5" fill="#f5c842" opacity="0.95" />
+      <circle cx="30" cy="24" r="1.2" fill="#1a1a1a" opacity="0.7" />
 
       {/* Card number dots row */}
-      <g opacity="0.35">
+      <g opacity="0.3">
         <circle cx="12" cy="31" r="1" fill="white" />
         <circle cx="15.5" cy="31" r="1" fill="white" />
         <circle cx="19" cy="31" r="1" fill="white" />
@@ -131,7 +130,7 @@ export function CardSenseIcon({ size = 36, dark = false, className }: { size?: n
       </g>
 
       {/* Bottom edge highlight */}
-      <rect x="4" y="36" width="40" height="4" rx="4" fill="black" opacity="0.1" />
+      <rect x="4" y="36" width="40" height="4" rx="4" fill="black" opacity="0.15" />
     </svg>
   )
 }

@@ -145,7 +145,7 @@ export function CardFilters({
           </Select>
         </div>
 
-        <div className="space-y-2 md:hidden">
+        <div className="space-y-2">
           <Label htmlFor="sortBy">Sort By</Label>
           <Select value={sortBy} onValueChange={onSortByChange}>
             <SelectTrigger id="sortBy">

@@ -146,47 +146,38 @@ export default async function DashboardPage() {
     greetingHour < 12 ? 'Good morning' : greetingHour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       {/* ====== Welcome Hero ====== */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 p-8 sm:p-10">
-        {/* Mesh gradient blobs */}
+      <div className="relative overflow-hidden rounded-3xl border border-violet-100/40 bg-gradient-to-br from-violet-50/80 via-white to-purple-50/60 p-8 sm:p-10">
+        {/* Subtle mesh gradient blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-violet-600/20 blur-[80px]" />
-          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-indigo-500/15 blur-[60px]" />
-          <div className="absolute right-1/3 top-0 h-40 w-40 rounded-full bg-purple-500/10 blur-[60px]" />
-          {/* Grid lines */}
-          <svg className="absolute inset-0 h-full w-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dash-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dash-grid)" />
-          </svg>
+          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-violet-500/10 blur-[80px]" />
+          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-indigo-400/8 blur-[60px]" />
+          <div className="absolute right-1/3 top-0 h-40 w-40 rounded-full bg-purple-400/6 blur-[60px]" />
         </div>
 
         <div className="relative z-10">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/60">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-500/70">
             {greeting}
           </p>
-          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
             Welcome back, {firstName}
           </h1>
-          <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/40">
+          <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
             Your personalized credit card command center. Keep your profile fresh for sharper recommendations.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="/beginner"
-              className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition-all hover:bg-violet-400 hover:shadow-violet-500/40"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/35 hover:-translate-y-0.5"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10.2 1.5l4.3 4.3-11 11L.2 13.5l11-11z" fill="currentColor" opacity="0.9" /><path d="M12 0l1 2.5L15.5 3.5 13 4.5 12 7 11 4.5 8.5 3.5 11 2.5z" fill="currentColor" opacity="0.6" /></svg>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v6m0 0v6m0-6h6m-6 0H2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
               New Recommendation
             </a>
             <a
               href="/advisor"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-all hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-xl border border-violet-200/50 bg-white/60 px-5 py-2.5 text-sm font-medium text-violet-700 backdrop-blur-sm transition-all hover:bg-white/80 hover:border-violet-300/50"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C6.5 2 5.2 2.8 4.6 4 3.1 4.3 2 5.6 2 7.2c0 1.3.7 2.4 1.7 3 0 .2-.1.5-.1.8 0 1.7 1.3 3 3 3h2.8c1.7 0 3-1.3 3-3 0-.3 0-.5-.1-.8 1-.6 1.7-1.7 1.7-3 0-1.6-1.1-2.9-2.6-3.2C10.8 2.8 9.5 2 8 2z" stroke="currentColor" strokeWidth="1.2" fill="none" /><path d="M8 5v6M6 7.5h4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" /></svg>
               AI Advisor
@@ -267,7 +258,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">AI Picks</p>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" fill="white" opacity="0.9" /><path d="M12.5 1l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z" fill="white" opacity="0.5" /></svg>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="white" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
           </div>
           <div className="mt-3">
