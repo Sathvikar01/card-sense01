@@ -1,17 +1,23 @@
 'use client'
 
 import type { CreditCardListItem } from '@/types/credit-card'
-import { TrendingUp, Award, ArrowRight } from 'lucide-react'
+import { TrendingUp, Award, ArrowRight, GitCompare } from 'lucide-react'
 import { CardDetailLink } from './card-detail-link'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { CreditCardVisual } from './credit-card-visual'
 import { motion } from 'framer-motion'
+import { useAnalysisStore } from '@/store/use-analysis-store'
+import { cn } from '@/lib/utils'
 
 interface CardTileProps {
   card: CreditCardListItem
 }
 
 export function CardTile({ card }: CardTileProps) {
+  const { comparedCardIds, toggleCompareCard } = useAnalysisStore()
+  const isCompared = comparedCardIds.includes(card.id)
+  const maxReached = comparedCardIds.length >= 3 && !isCompared
   const formatCardType = (type: string) => {
     return type
       .split('_')
@@ -28,9 +34,44 @@ export function CardTile({ card }: CardTileProps) {
     <motion.div
       whileHover={{ y: -6 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="relative"
     >
+      {/* Compare toggle — sits above the link so it doesn't navigate */}
+      <Button
+        type="button"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation()
+          if (!maxReached) toggleCompareCard(card.id, card)
+        }}
+        disabled={maxReached}
+        title={
+          maxReached
+            ? 'Max 3 cards for comparison'
+            : isCompared
+            ? 'Remove from comparison'
+            : 'Add to comparison'
+        }
+        className={cn(
+          'absolute right-3 top-3 z-10 h-7 gap-1 rounded-full px-2 text-[0.6rem] font-semibold shadow-md transition-all',
+          isCompared
+            ? 'bg-[#b8860b] text-white hover:bg-[#a07808] border-transparent'
+            : maxReached
+            ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50 border'
+            : 'bg-white/90 text-foreground border border-border/50 hover:border-[#b8860b] hover:text-[#b8860b] backdrop-blur-sm'
+        )}
+      >
+        <GitCompare className="h-3 w-3" />
+        {isCompared ? 'Added' : 'Compare'}
+      </Button>
+
       <CardDetailLink cardId={card.id} className="group block">
-        <div className="stat-card-premium overflow-hidden transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-violet-500/5">
+        <div
+          className={cn(
+            'stat-card-premium overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:shadow-violet-500/5',
+            isCompared && 'ring-2 ring-[#b8860b]/40 ring-offset-1'
+          )}
+        >
           {/* Card visual */}
           <div className="flex justify-center bg-gradient-to-b from-violet-50/30 to-transparent px-6 pb-2 pt-6">
             <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank_name} interactive />

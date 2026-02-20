@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CardFilters } from '@/components/cards/card-filters'
+import { CompareBar } from '@/components/cards/compare-bar'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import {
   Sheet,
@@ -238,6 +239,9 @@ export default function CardsPage() {
       <div>
         <CardGrid cards={cards} loading={loading} />
       </div>
+
+      {/* Floating comparison bar */}
+      <CompareBar />
     </div>
   )
 }
