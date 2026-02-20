@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, Wallet } from 'lucide-react'
+import { Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -24,13 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 
 const financialInfoSchema = z.object({
@@ -135,12 +128,12 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
           const error = (await response.json()) as { message?: string; error?: string }
           message = error.message || error.error || message
         } catch {
-          // Ignore response parsing failures and fall back to generic message.
+          // Ignore
         }
         throw new Error(message)
       }
 
-      toast.success('Financial information updated successfully')
+      toast.success('Financial information updated')
       onUpdate?.()
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -153,169 +146,182 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wallet className="h-5 w-5 text-green-600" />
-          Financial Information
-        </CardTitle>
-        <CardDescription>
-          Help us recommend the best credit cards based on your financial profile
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Employment Type */}
-            <FormField
-              control={form.control}
-              name="employment_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employment Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employment type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {EMPLOYMENT_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Employer Name */}
-            <FormField
-              control={form.control}
-              name="employer_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employer/Business Name</FormLabel>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* Employment Type */}
+          <FormField
+            control={form.control}
+            name="employment_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">
+                  Employment Type
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Input placeholder="Enter employer or business name" {...field} />
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {EMPLOYMENT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {/* Annual Income */}
-            <FormField
-              control={form.control}
-              name="annual_income"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Annual Income (₹)</FormLabel>
-                  <FormControl>
+          {/* Employer Name */}
+          <FormField
+            control={form.control}
+            name="employer_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">
+                  Employer / Business
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., TCS, Infosys" className="h-10" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Annual Income */}
+          <FormField
+            control={form.control}
+            name="annual_income"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">
+                  Annual Income ({'\u20B9'})
+                </FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground select-none">{'\u20B9'}</span>
                     <Input
                       type="number"
                       placeholder="e.g., 600000"
+                      className="h-10 pl-8"
                       {...field}
                       onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       value={field.value || ''}
                     />
-                  </FormControl>
-                  <FormDescription>
-                    Your gross annual income helps determine card eligibility
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </div>
+                </FormControl>
+                <FormDescription className="text-[0.7rem]">Gross annual income for card eligibility</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {/* Primary Bank */}
+          {/* Primary Bank */}
+          <FormField
+            control={form.control}
+            name="primary_bank"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">
+                  Primary Bank
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select bank" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {POPULAR_BANKS.map((bank) => (
+                      <SelectItem key={bank} value={bank}>
+                        {bank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="text-[0.7rem]">Pre-approved cards may be available</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Fixed Deposit Toggle */}
+        <FormField
+          control={form.control}
+          name="has_fixed_deposit"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/60 bg-muted/30 p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-sm font-medium text-foreground">Fixed Deposit (FD)</FormLabel>
+                <FormDescription className="text-[0.7rem]">
+                  FD-backed credit cards are easier to get approved
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        {/* FD Amount (conditional) */}
+        {hasFD && (
+          <div className="grid gap-5 sm:grid-cols-2">
             <FormField
               control={form.control}
-              name="primary_bank"
+              name="fd_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Primary Bank</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your primary bank" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {POPULAR_BANKS.map((bank) => (
-                        <SelectItem key={bank} value={bank}>
-                          {bank}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Some banks offer pre-approved cards to existing customers
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Fixed Deposit Toggle */}
-            <FormField
-              control={form.control}
-              name="has_fixed_deposit"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Fixed Deposit (FD)</FormLabel>
-                    <FormDescription>
-                      Do you have a fixed deposit with any bank?
-                    </FormDescription>
-                  </div>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    FD Amount ({'\u20B9'})
+                  </FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {/* FD Amount (conditional) */}
-            {hasFD && (
-              <FormField
-                control={form.control}
-                name="fd_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fixed Deposit Amount (₹)</FormLabel>
-                    <FormControl>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground select-none">{'\u20B9'}</span>
                       <Input
                         type="number"
                         placeholder="e.g., 100000"
+                        className="h-10 pl-8"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         value={field.value || ''}
                       />
-                    </FormControl>
-                    <FormDescription>
-                      FD-backed credit cards are easier to get approved
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
-            {/* Submit Button */}
-            <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+        {/* Submit */}
+        <div className="flex justify-end pt-2">
+          <Button
+            type="submit"
+            disabled={isSaving}
+            size="sm"
+            className="gap-2 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-sm hover:shadow-md"
+          >
+            {isSaving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   )
 }

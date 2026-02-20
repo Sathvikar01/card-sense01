@@ -237,11 +237,21 @@ export interface SavedAdvisorCard {
   usageStrategy: string
 }
 
+export interface ProfileSummaryData {
+  monthlyIncome?: number
+  creditScore?: string
+  persona?: string
+  primaryGoal?: string
+  topSpending?: string[]
+  age?: number
+  employment?: string
+}
+
 export interface SavedAdvisorResult {
   cards: SavedAdvisorCard[]
   analysis: string
   persona: UserPersona | null
-  profileSummary: string
+  profileSummary: string | ProfileSummaryData
 }
 
 /* ------------------------------------------------------------------ */

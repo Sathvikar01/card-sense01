@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('spending_transactions')
-      .select('id, amount, category, merchant_name, transaction_date, description, card_used')
+      .select('id, amount, category, merchant_name, transaction_date, description')
       .eq('user_id', user.id)
       .order('transaction_date', { ascending: false })
 
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { amount, category, merchant_name, transaction_date, description, card_used } = body
+    const { amount, category, merchant_name, transaction_date, description } = body
 
     const { data, error } = await supabase
       .from('spending_transactions')
@@ -96,14 +96,15 @@ export async function POST(request: Request) {
         merchant_name,
         transaction_date,
         description,
-        card_used,
         source: 'manual'
       })
-      .select('id, amount, category, merchant_name, transaction_date, description, card_used')
+      .select('id, amount, category, merchant_name, transaction_date, description')
       .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      const errMsg = String(error.message || error.code || error)
+      console.error('Spending insert error:', errMsg)
+      return NextResponse.json({ error: errMsg }, { status: 500 })
     }
 
     return NextResponse.json({ transaction: data })

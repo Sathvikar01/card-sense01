@@ -17,9 +17,9 @@ const navItems = [
 
 const valuePoints = [
   {
-    title: 'AI-Powered Matching',
-    description: 'Our Gemini-powered engine analyzes your spending patterns, income, and goals to find your perfect card match from 50+ options.',
-    detail: 'Powered by Google Gemini',
+    title: 'Smart Matching',
+    description: 'Our scoring engine analyzes your spending patterns, income, and goals to find your perfect card match from 50+ options.',
+    detail: 'Rule-based scoring',
     icon: Cpu,
     iconBg: 'from-[#b8860b] to-[#d4a017]',
     accentBorder: 'group-hover:border-[#d4a017]/30',
@@ -74,7 +74,7 @@ const steps = [
   },
   {
     number: '02',
-    title: 'AI Analyzes Options',
+    title: 'Engine Analyzes Options',
     description: 'Our engine compares 50+ Indian cards, calculating real reward value for your specific profile.',
   },
   {
@@ -459,7 +459,7 @@ export default function HomePage() {
                     Get your top 3 card picks
                   </p>
                   <p className="mt-2 max-w-md text-sm text-white/70">
-                    Free AI-powered recommendations tailored to your Indian credit profile.
+                    Free personalized recommendations tailored to your Indian credit profile.
                   </p>
                 </div>
                 <motion.button
@@ -485,7 +485,7 @@ export default function HomePage() {
               <button onClick={() => openAuth('/education')} className="transition-colors hover:text-foreground">Education</button>
               <button onClick={() => openAuth('/dashboard')} className="transition-colors hover:text-foreground">Sign In</button>
             </div>
-            <p className="text-xs text-muted-foreground">Built with AI. Not a financial advisor.</p>
+            <p className="text-xs text-muted-foreground">Not a financial advisor. Built for education.</p>
           </div>
         </footer>
       </main>

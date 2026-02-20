@@ -1,16 +1,31 @@
 'use client'
 
-import { useState } from 'react'
-import { MessageCircle, X, Send } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { MessageCircle, X, Send, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import ReactMarkdown from 'react-markdown'
+
+const INITIAL_MESSAGE = { role: 'assistant' as const, text: 'Hi! I\'m your CardSense AI assistant. Ask me anything about credit cards, rewards, or your finances.' }
 
 export function ChatbotWidget() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
-    { role: 'assistant', text: 'Hi! I\'m your CardSense AI assistant. Ask me anything about credit cards, rewards, or your finances.' },
+    INITIAL_MESSAGE,
   ])
   const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (open) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, open])
+
+  const handleClearChat = () => {
+    setMessages([INITIAL_MESSAGE])
+    setInput('')
+  }
 
   async function handleSend() {
     const trimmed = input.trim()
@@ -23,7 +38,7 @@ export function ChatbotWidget() {
     try {
       // Send conversation history (exclude the initial greeting)
       const historyForApi = messages
-        .slice(1) // skip the initial assistant greeting
+        .slice(1)
         .map((m) => ({ role: m.role, text: m.text }))
 
       const res = await fetch('/api/ai/chat', {
@@ -54,9 +69,21 @@ export function ChatbotWidget() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white">
             <span className="font-semibold text-sm">CardSense Assistant</span>
-            <button onClick={() => setOpen(false)} aria-label="Close chat">
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              {messages.length > 1 && (
+                <button
+                  onClick={handleClearChat}
+                  aria-label="Clear chat"
+                  className="p-1 rounded-md hover:bg-white/20 transition-colors"
+                  title="Clear chat"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button onClick={() => setOpen(false)} aria-label="Close chat" className="p-1 rounded-md hover:bg-white/20 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -73,24 +100,31 @@ export function ChatbotWidget() {
                       : 'bg-muted text-foreground'
                   }`}
                 >
-                  {msg.text}
+                  {msg.role === 'assistant' ? (
+                    <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&>h1]:text-base [&>h2]:text-sm [&>h3]:text-sm [&>h1]:font-semibold [&>h2]:font-semibold [&>h3]:font-semibold [&>pre]:bg-muted/30 [&>pre]:rounded-lg [&>pre]:p-2 [&>pre]:text-xs [&>code]:text-xs [&>code]:bg-muted/30 [&>code]:px-1 [&>code]:rounded [&>ul]:pl-4 [&>ol]:pl-4 [&_li]:my-0.5 [&>blockquote]:border-l-2 [&>blockquote]:border-primary/40 [&>blockquote]:pl-3 [&>blockquote]:italic [&>blockquote]:text-muted-foreground [&>hr]:my-2 [&>table]:text-xs">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
               </div>
             ))}
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-muted rounded-xl px-3 py-2 text-muted-foreground animate-pulse">
-                  Thinking…
+                  Thinking...
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
           <div className="flex items-center gap-2 border-t px-3 py-2">
             <input
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              placeholder="Ask something…"
+              placeholder="Ask something..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}

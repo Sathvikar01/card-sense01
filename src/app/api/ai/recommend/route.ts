@@ -709,6 +709,13 @@ const ruleBasedRecommendations = (
     ranked = [...ranked, ...extra]
   }
 
+  // Apply rank-based bonus so the best card clearly stands out
+  const RANK_BONUS = [7, 3, 0] as const
+  ranked = ranked.map((entry, index) => ({
+    ...entry,
+    score: Math.max(35, Math.min(96, entry.score + (RANK_BONUS[index] ?? 0))),
+  }))
+
   const usedRelaxedEligibility = strictEligibleCards.length === 0
 
   return {

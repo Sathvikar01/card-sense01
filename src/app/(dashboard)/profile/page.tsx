@@ -42,13 +42,13 @@ export default async function ProfilePage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+          <p className="text-muted-foreground mt-1">
             Manage your account and preferences
           </p>
         </div>
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="text-red-800">
+        <div className="rounded-xl border border-red-200/60 bg-red-50/30 p-4">
+          <p className="text-red-700 text-sm">
             Failed to load profile. Please try again later.
           </p>
         </div>

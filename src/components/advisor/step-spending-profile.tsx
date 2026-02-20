@@ -3,7 +3,9 @@
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
+import { Input } from '@/components/ui/input'
+
+const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 const SPENDING_CATEGORIES = [
   { key: 'groceries', label: 'Groceries', sublabel: 'Supermarkets, kirana, BigBasket' },
@@ -85,31 +87,25 @@ export function SpendingProfileStep() {
           <Label className="text-sm font-medium text-foreground">
             Estimate monthly spend on each
           </Label>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {store.topSpendingCategories.map((catKey) => {
               const cat = SPENDING_CATEGORIES.find((c) => c.key === catKey)
               if (!cat) return null
               const amount = store.spendingAmounts[catKey] ?? 5000
               return (
-                <div key={catKey} className="space-y-2 rounded-xl border border-border/60 p-4 bg-muted/20">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground">{cat.label}</p>
-                    <span className="text-sm font-semibold tabular-nums text-primary">
-                      INR {amount.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <Slider
-                    value={[amount]}
-                    onValueChange={([v]) => store.updateSpendingAmount(catKey, v)}
-                    min={0}
-                    max={100000}
-                    step={1000}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>0</span>
-                    <span>50K</span>
-                    <span>1L</span>
+                <div key={catKey} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 p-4 bg-muted/20">
+                  <p className="text-sm font-medium text-foreground">{cat.label}</p>
+                  <div className="relative w-36 shrink-0">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">INR</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={500}
+                      value={amount || ''}
+                      onChange={(e) => store.updateSpendingAmount(catKey, Number(e.target.value) || 0)}
+                      placeholder="0"
+                      className={cn('pl-10 h-9 rounded-lg text-sm tabular-nums', HIDE_SPINNERS)}
+                    />
                   </div>
                 </div>
               )
@@ -167,29 +163,24 @@ export function SpendingProfileStep() {
 
       {/* Desired credit limit */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-foreground">
-            Minimum credit limit you need
-          </Label>
-          <span className="text-sm font-semibold tabular-nums text-primary">
-            INR {store.desiredCreditLimit.toLocaleString('en-IN')}
-          </span>
-        </div>
+        <Label className="text-sm font-medium text-foreground">
+          Minimum credit limit you need
+        </Label>
         <p className="text-xs text-muted-foreground -mt-1">
           A good target is 2x-3x your monthly card spend to keep utilization under 30-40%.
         </p>
-        <Slider
-          value={[store.desiredCreditLimit]}
-          onValueChange={([v]) => store.updateField('desiredCreditLimit', v)}
-          min={10000}
-          max={1000000}
-          step={10000}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>10K</span>
-          <span>5L</span>
-          <span>10L</span>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
+          <Input
+            type="number"
+            min={10000}
+            max={10000000}
+            step={10000}
+            value={store.desiredCreditLimit || ''}
+            onChange={(e) => store.updateField('desiredCreditLimit', Number(e.target.value) || 10000)}
+            placeholder="e.g. 100000"
+            className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
+          />
         </div>
       </div>
     </div>

@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { CardDetailLink } from '@/components/cards/card-detail-link'
-import { LayoutGrid, List, TrendingUp, Award, ArrowRight } from 'lucide-react'
+import { LayoutGrid, List, TrendingUp, Award, ArrowRight, GitCompare, Wallet, Shield, Target, Briefcase, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAnalysisStore } from '@/store/use-analysis-store'
 import { motion } from 'framer-motion'
 import type { UserPersona } from '@/lib/store/advisor-store'
-import type { SavedAdvisorCard, SavedAdvisorResult } from '@/lib/store/advisor-store'
+import type { SavedAdvisorCard, SavedAdvisorResult, ProfileSummaryData } from '@/lib/store/advisor-store'
 
 /* ------------------------------------------------------------------ */
 /*  Re-export types under the names used by the advisor page          */
@@ -103,7 +105,7 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
               <span className="flex items-center justify-center h-6 w-6 rounded-md bg-muted text-[11px] font-bold text-muted-foreground tabular-nums">
                 {rank}
               </span>
-              <h3 className="text-base font-semibold text-foreground truncate">{card.name}</h3>
+              <h3 className="text-base font-semibold text-foreground">{card.name}</h3>
             </div>
             <p className="text-sm text-muted-foreground">{card.bank}</p>
           </div>
@@ -123,7 +125,7 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
             <p className="text-sm font-semibold text-foreground mt-0.5">{card.rewardRate}%</p>
           </div>
           <div className="rounded-lg bg-muted/30 p-2.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Est. Value / yr</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Est. Value/yr</p>
             <p className="text-sm font-semibold text-primary mt-0.5">
               {card.estimatedAnnualValue > 0 ? `INR ${card.estimatedAnnualValue.toLocaleString('en-IN')}` : '--'}
             </p>
@@ -325,6 +327,151 @@ function EligibilityBadgeDot({ level }: { level: AdvisorCardResult['eligibilityM
 }
 
 /* ------------------------------------------------------------------ */
+/*  Profile summary card                                               */
+/* ------------------------------------------------------------------ */
+
+const SPENDING_PILL_COLORS: Record<string, string> = {
+  dining: 'bg-orange-100 text-orange-800 border-orange-200',
+  shopping: 'bg-pink-100 text-pink-800 border-pink-200',
+  online_shopping: 'bg-pink-100 text-pink-800 border-pink-200',
+  travel: 'bg-blue-100 text-blue-800 border-blue-200',
+  groceries: 'bg-green-100 text-green-800 border-green-200',
+  entertainment: 'bg-purple-100 text-purple-800 border-purple-200',
+  fuel: 'bg-amber-100 text-amber-800 border-amber-200',
+  utilities: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  bills: 'bg-violet-100 text-violet-800 border-violet-200',
+  rent: 'bg-violet-100 text-violet-800 border-violet-200',
+  healthcare: 'bg-red-100 text-red-800 border-red-200',
+  education: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  other: 'bg-gray-100 text-gray-800 border-gray-200',
+}
+
+function getCreditScoreStyle(scoreStr: string | undefined) {
+  if (!scoreStr) return { dot: 'bg-slate-400', iconBg: 'bg-slate-100 text-slate-600', text: 'text-slate-600', label: '' }
+  const num = parseInt(scoreStr.replace(/\D/g, ''), 10)
+  if (isNaN(num)) return { dot: 'bg-slate-400', iconBg: 'bg-slate-100 text-slate-600', text: 'text-slate-600', label: 'No history' }
+  if (num >= 800) return { dot: 'bg-green-500', iconBg: 'bg-green-100 text-green-600', text: 'text-green-700', label: 'Excellent' }
+  if (num >= 750) return { dot: 'bg-emerald-500', iconBg: 'bg-emerald-100 text-emerald-600', text: 'text-emerald-700', label: 'Very Good' }
+  if (num >= 700) return { dot: 'bg-lime-500', iconBg: 'bg-lime-100 text-lime-700', text: 'text-lime-700', label: 'Good' }
+  if (num >= 650) return { dot: 'bg-amber-500', iconBg: 'bg-amber-100 text-amber-600', text: 'text-amber-700', label: 'Fair' }
+  if (num >= 600) return { dot: 'bg-orange-500', iconBg: 'bg-orange-100 text-orange-600', text: 'text-orange-700', label: 'Needs Work' }
+  return { dot: 'bg-red-500', iconBg: 'bg-red-100 text-red-600', text: 'text-red-700', label: 'Low' }
+}
+
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
+  const scoreStyle = getCreditScoreStyle(data.creditScore)
+  const hasAnyData = data.monthlyIncome || data.creditScore || data.age || data.employment || data.persona || (data.topSpending && data.topSpending.length > 0)
+  if (!hasAnyData) return null
+
+  const secondaryItems: { icon: React.ReactNode; iconBg: string; label: string; value: string }[] = []
+  if (data.age) {
+    secondaryItems.push({
+      icon: <User className="h-3.5 w-3.5" />,
+      iconBg: 'bg-blue-100 text-blue-600',
+      label: 'Age',
+      value: `${data.age} years`,
+    })
+  }
+  if (data.employment) {
+    secondaryItems.push({
+      icon: <Briefcase className="h-3.5 w-3.5" />,
+      iconBg: 'bg-amber-100 text-amber-600',
+      label: 'Employment',
+      value: cap(data.employment),
+    })
+  }
+  if (data.persona) {
+    secondaryItems.push({
+      icon: <Target className="h-3.5 w-3.5" />,
+      iconBg: 'bg-primary/10 text-primary',
+      label: 'Profile',
+      value: cap(data.persona),
+    })
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-muted/20 p-5 space-y-4">
+      {/* Header */}
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Your Profile</p>
+
+      {/* Tier 1: Primary stats */}
+      {(data.monthlyIncome || data.creditScore) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {data.monthlyIncome && (
+            <div className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                <Wallet className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Monthly Income</p>
+                <p className="text-base font-bold text-foreground tabular-nums mt-0.5">
+                  ₹{data.monthlyIncome.toLocaleString('en-IN')}
+                </p>
+                <p className="text-[10px] text-muted-foreground">per month</p>
+              </div>
+            </div>
+          )}
+          {data.creditScore && (
+            <div className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', scoreStyle.iconBg)}>
+                <Shield className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Credit Score</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-base font-bold text-foreground tabular-nums">{data.creditScore}</p>
+                  <span className={cn('h-2 w-2 rounded-full shrink-0', scoreStyle.dot)} />
+                </div>
+                <p className={cn('text-[10px] font-medium', scoreStyle.text)}>{scoreStyle.label}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tier 2: Secondary stats */}
+      {secondaryItems.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {secondaryItems.map((item) => (
+            <div key={item.label} className="flex items-center gap-2.5 rounded-xl border border-border/40 bg-background/50 px-3 py-2.5">
+              <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-md', item.iconBg)}>
+                {item.icon}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide leading-none">{item.label}</p>
+                <p className="text-xs font-semibold text-foreground mt-0.5 leading-tight truncate">{item.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tier 3: Spending categories */}
+      {data.topSpending && data.topSpending.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Top spending categories</p>
+          <div className="flex flex-wrap gap-1.5">
+            {data.topSpending.map((cat) => {
+              const key = cat.toLowerCase().replace(/\s+/g, '_')
+              const pillClass = SPENDING_PILL_COLORS[key] ?? SPENDING_PILL_COLORS.other
+              return (
+                <span key={cat} className={cn('rounded-full border px-2.5 py-1 text-[11px] font-medium', pillClass)}>
+                  {cat.split(' ').map(cap).join(' ')}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main results component                                             */
 /* ------------------------------------------------------------------ */
 
@@ -335,6 +482,16 @@ interface Props {
 
 export function AdvisorResults({ result, onStartOver }: Props) {
   const [viewMode, setViewMode] = useState<'detailed' | 'grid'>('detailed')
+  const router = useRouter()
+  const { clearComparison, toggleCompareCard } = useAnalysisStore()
+
+  const handleCompareAll = () => {
+    clearComparison()
+    for (const card of result.cards) {
+      toggleCompareCard(card.id, { id: card.id, card_name: card.name, bank_name: card.bank } as never)
+    }
+    router.push('/cards/compare')
+  }
 
   const PERSONA_LABELS: Record<string, string> = {
     student_firsttime: 'Student / First-time user',
@@ -374,40 +531,58 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         </Button>
       </div>
 
-      {/* View mode toggle */}
-      <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 w-fit">
-        <button
-          onClick={() => setViewMode('detailed')}
-          className={cn(
-            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
-            viewMode === 'detailed'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-        >
-          <List className="h-3.5 w-3.5" />
-          Detailed
-        </button>
-        <button
-          onClick={() => setViewMode('grid')}
-          className={cn(
-            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
-            viewMode === 'grid'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-          Card View
-        </button>
+      {/* View mode toggle + Compare */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 w-fit">
+          <button
+            onClick={() => setViewMode('detailed')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+              viewMode === 'detailed'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <List className="h-3.5 w-3.5" />
+            Detailed
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+              viewMode === 'grid'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Card View
+          </button>
+        </div>
+
+        {result.cards.length >= 2 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCompareAll}
+            className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+          >
+            <GitCompare className="h-3.5 w-3.5" />
+            Compare All {result.cards.length} Cards
+          </Button>
+        )}
       </div>
 
       {/* Profile summary */}
       {result.profileSummary && (
-        <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
-          <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Profile summary</p>
-          <p className="text-sm text-foreground/80 leading-relaxed">{result.profileSummary}</p>
-        </div>
+        typeof result.profileSummary === 'string' ? (
+          <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Profile summary</p>
+            <p className="text-sm text-foreground/80 leading-relaxed">{result.profileSummary}</p>
+          </div>
+        ) : (
+          <ProfileSummaryCard data={result.profileSummary} />
+        )
       )}
 
       {/* Analysis */}

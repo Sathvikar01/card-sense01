@@ -76,7 +76,7 @@ async function getDashboardData() {
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
   const sixMonthsAgoDate = sixMonthsAgo.toISOString().split('T')[0]
 
-  const [profileResult, recommendationsResult, spendingResult] = await Promise.all([
+  const [profileResult, recommendationsResult, spendingResult, userCardsResult] = await Promise.all([
     getProfileWithFallback(supabase, { userId: user.id, email: user.email ?? null }),
     supabase
       .from('recommendations')
@@ -92,6 +92,11 @@ async function getDashboardData() {
       .eq('user_id', user.id)
       .gte('transaction_date', sixMonthsAgoDate)
       .order('transaction_date', { ascending: true }),
+    supabase
+      .from('user_cards')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_active', true),
   ])
 
   const profile = profileResult as DashboardProfile
@@ -123,7 +128,7 @@ async function getDashboardData() {
       return sum
     }, 0) || 0
 
-  const totalCards = profile?.existing_cards_count || 0
+  const totalCards = userCardsResult.count ?? profile?.existing_cards_count ?? 0
 
   return {
     profile,
@@ -245,11 +250,11 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* AI Picks */}
+        {/* Top Picks */}
         <div className="dash-card relative overflow-hidden p-6">
           <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-500/8 blur-[30px]" />
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">AI Picks</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Top Picks</p>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="white" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>

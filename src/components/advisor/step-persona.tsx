@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Slider } from '@/components/ui/slider'
+
+const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 /* ------------------------------------------------------------------ */
 /*  Persona heading config                                             */
@@ -62,21 +63,22 @@ function StudentSection() {
       />
       {store.willingSecuredCard && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">
-              How much can you deposit for a secured card?
-            </Label>
-            <span className="text-sm font-semibold tabular-nums text-primary">
-              INR {store.fdAmount.toLocaleString('en-IN')}
-            </span>
+          <Label className="text-sm font-medium text-foreground">
+            How much can you deposit for a secured card?
+          </Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
+            <Input
+              type="number"
+              min={5000}
+              max={200000}
+              step={5000}
+              value={store.fdAmount || ''}
+              onChange={(e) => store.updateField('fdAmount', Number(e.target.value) || 0)}
+              placeholder="e.g. 25000"
+              className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
+            />
           </div>
-          <Slider
-            value={[store.fdAmount]}
-            onValueChange={([v]) => store.updateField('fdAmount', v)}
-            min={5000}
-            max={200000}
-            step={5000}
-          />
         </div>
       )}
       <BooleanToggle
@@ -111,19 +113,20 @@ function SalariedSection() {
       />
       {store.hasFD && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">Total FD amount</Label>
-            <span className="text-sm font-semibold tabular-nums text-primary">
-              INR {store.fdAmount.toLocaleString('en-IN')}
-            </span>
+          <Label className="text-sm font-medium text-foreground">Total FD amount</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
+            <Input
+              type="number"
+              min={10000}
+              max={20000000}
+              step={10000}
+              value={store.fdAmount || ''}
+              onChange={(e) => store.updateField('fdAmount', Number(e.target.value) || 0)}
+              placeholder="e.g. 500000"
+              className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
+            />
           </div>
-          <Slider
-            value={[store.fdAmount]}
-            onValueChange={([v]) => store.updateField('fdAmount', v)}
-            min={10000}
-            max={2000000}
-            step={10000}
-          />
         </div>
       )}
       <RewardPreference />
@@ -337,19 +340,20 @@ function CreditBuilderSection() {
       />
       {store.willingSecuredCard && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">Deposit amount you can lock</Label>
-            <span className="text-sm font-semibold tabular-nums text-primary">
-              INR {store.fdAmount.toLocaleString('en-IN')}
-            </span>
+          <Label className="text-sm font-medium text-foreground">Deposit amount you can lock</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
+            <Input
+              type="number"
+              min={5000}
+              max={200000}
+              step={5000}
+              value={store.fdAmount || ''}
+              onChange={(e) => store.updateField('fdAmount', Number(e.target.value) || 0)}
+              placeholder="e.g. 25000"
+              className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
+            />
           </div>
-          <Slider
-            value={[store.fdAmount]}
-            onValueChange={([v]) => store.updateField('fdAmount', v)}
-            min={5000}
-            max={200000}
-            step={5000}
-          />
         </div>
       )}
       <BooleanToggle

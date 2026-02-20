@@ -15,7 +15,7 @@ const navigation = [
   { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
   { name: 'Spending Tracker', href: '/spending', icon: ChartNavSVG },
   { name: 'Education', href: '/education', icon: BookNavSVG },
-  { name: 'AI Chat', href: '/chat', icon: ChatNavSVG },
+  { name: 'Chat', href: '/chat', icon: ChatNavSVG },
   { name: 'Profile', href: '/profile', icon: PersonNavSVG },
 ]
 

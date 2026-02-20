@@ -51,7 +51,7 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
       case 'experienced':
         return 'Experienced Flow'
       case 'chat':
-        return 'AI Advisor'
+        return 'Chat Advisor'
       default:
         return type
     }

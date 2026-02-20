@@ -223,7 +223,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       <p className="mt-1 text-sm text-gray-500 leading-snug">
                         {tab === 'login'
                           ? 'Sign in to access your card recommendations'
-                          : 'Get started with AI-powered card matching'}
+                          : 'Get started with personalized card matching'}
                       </p>
                     </div>
 

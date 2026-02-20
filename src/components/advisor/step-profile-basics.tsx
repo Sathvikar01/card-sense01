@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
 
+const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
 const SCORE_RANGES: { value: CreditScoreRange; label: string; sublabel: string; color: string }[] = [
   { value: 'no_history', label: 'No history', sublabel: 'First-time applicant', color: 'bg-slate-400' },
   { value: 'below_600', label: 'Below 600', sublabel: 'Needs improvement', color: 'bg-red-500' },
@@ -115,27 +117,21 @@ export function ProfileBasicsStep() {
 
       {/* Monthly Income */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-foreground">
-            {store.employmentType === 'student' ? 'Monthly income or allowance' : 'Monthly take-home income'}
-          </Label>
-          <span className="text-sm font-semibold tabular-nums text-primary">
-            {store.monthlyIncome === 0 ? 'None' : `INR ${store.monthlyIncome.toLocaleString('en-IN')}`}
-          </span>
-        </div>
-        <Slider
-          value={[store.monthlyIncome]}
-          onValueChange={([v]) => store.updateField('monthlyIncome', v)}
-          min={0}
-          max={500000}
-          step={5000}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0</span>
-          <span>1L</span>
-          <span>3L</span>
-          <span>5L</span>
+        <Label className="text-sm font-medium text-foreground">
+          {store.employmentType === 'student' ? 'Monthly income or allowance' : 'Monthly take-home income'}
+        </Label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
+          <Input
+            type="number"
+            min={0}
+            max={5000000}
+            step={1000}
+            value={store.monthlyIncome || ''}
+            onChange={(e) => store.updateField('monthlyIncome', Number(e.target.value) || 0)}
+            placeholder="e.g. 50000"
+            className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
+          />
         </div>
       </div>
 

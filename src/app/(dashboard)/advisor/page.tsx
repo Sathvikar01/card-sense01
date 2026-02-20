@@ -321,27 +321,14 @@ export default function AdvisorPage() {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function buildProfileSummary(payload: Record<string, unknown>): string {
-  const parts: string[] = []
-  const income = payload.monthlyIncome as number
-  if (income > 0) {
-    parts.push(`Monthly income: INR ${income.toLocaleString('en-IN')}`)
+function buildProfileSummary(payload: Record<string, unknown>) {
+  return {
+    monthlyIncome: (payload.monthlyIncome as number) || undefined,
+    creditScore: payload.cibilScore ? `~${payload.cibilScore}` : undefined,
+    persona: payload.detectedPersona ? String(payload.detectedPersona).replace(/_/g, ' ') : undefined,
+    primaryGoal: payload.primaryGoal ? String(payload.primaryGoal).replace(/_/g, ' ') : undefined,
+    topSpending: (payload.topSpendingCategories as string[])?.map((c) => c.replace(/_/g, ' ')) ?? undefined,
+    age: (payload.age as number) || undefined,
+    employment: payload.employmentType ? String(payload.employmentType).replace(/_/g, ' ') : undefined,
   }
-  const score = payload.cibilScore as number
-  if (score > 0) {
-    parts.push(`Credit score: ~${score}`)
-  }
-  const persona = payload.detectedPersona as string
-  if (persona) {
-    parts.push(`Profile: ${persona.replace(/_/g, ' ')}`)
-  }
-  const goal = payload.primaryGoal as string
-  if (goal) {
-    parts.push(`Primary goal: ${goal.replace(/_/g, ' ')}`)
-  }
-  const cats = payload.topSpendingCategories as string[]
-  if (cats && cats.length > 0) {
-    parts.push(`Top spending: ${cats.map((c) => c.replace(/_/g, ' ')).join(', ')}`)
-  }
-  return parts.join('  |  ')
 }

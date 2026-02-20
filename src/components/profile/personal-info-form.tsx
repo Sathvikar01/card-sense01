@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, User } from 'lucide-react'
+import { Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -17,13 +17,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 
 const personalInfoSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -80,12 +73,12 @@ export function PersonalInfoForm({ initialData, onUpdate }: PersonalInfoFormProp
           const error = (await response.json()) as { message?: string; error?: string }
           message = error.message || error.error || message
         } catch {
-          // Ignore response parsing failures and fall back to generic message.
+          // Ignore
         }
         throw new Error(message)
       }
 
-      toast.success('Personal information updated successfully')
+      toast.success('Personal information updated')
       onUpdate?.()
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -98,99 +91,100 @@ export function PersonalInfoForm({ initialData, onUpdate }: PersonalInfoFormProp
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-600" />
-          Personal Information
-        </CardTitle>
-        <CardDescription>Update your personal details and contact information</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Full Name */}
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Full Name <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* Full Name */}
+          <FormField
+            control={form.control}
+            name="full_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">
+                  Full Name <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your full name" className="h-10" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {/* Email (Read-only) */}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled className="bg-gray-50" />
-                  </FormControl>
-                  <FormDescription>
-                    Your email cannot be changed. Contact support if you need to update it.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Email (Read-only) */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">Email</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled className="h-10 bg-muted/50 text-muted-foreground" />
+                </FormControl>
+                <FormDescription className="text-[0.7rem]">Cannot be changed</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {/* Phone */}
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile Number</FormLabel>
-                  <FormControl>
+          {/* Phone */}
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">Mobile Number</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground select-none">+91</span>
                     <Input
                       placeholder="9876543210"
                       type="tel"
                       maxLength={10}
+                      className="h-10 pl-10"
                       {...field}
                     />
-                  </FormControl>
-                  <FormDescription>10-digit Indian mobile number</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {/* City */}
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Mumbai, Delhi, Bangalore" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Your city helps us recommend cards with local benefits
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* City */}
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium text-muted-foreground">City</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Mumbai, Delhi, Bangalore" className="h-10" {...field} />
+                </FormControl>
+                <FormDescription className="text-[0.7rem]">Helps recommend cards with local benefits</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-            {/* Submit Button */}
-            <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+        {/* Submit */}
+        <div className="flex justify-end pt-2">
+          <Button
+            type="submit"
+            disabled={isSaving}
+            size="sm"
+            className="gap-2 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-sm hover:shadow-md"
+          >
+            {isSaving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   )
 }
