@@ -10,15 +10,18 @@ export default function RecommendationsPage() {
   const router = useRouter()
   const store = useAdvisorStore()
 
-  // Hydrate synchronously from Zustand (localStorage) to avoid any loading flicker
-  const [recommendation, setRecommendation] = useState<AdvisorResult | null>(store.savedResult)
-  const [loading, setLoading] = useState(!store.savedResult)
+  // Always start loading — useState runs before Zustand persist has rehydrated
+  // from localStorage, so store.savedResult would be null on first render.
+  const [recommendation, setRecommendation] = useState<AdvisorResult | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // If already populated from local store, skip the API round-trip
-    if (store.savedResult) return
+    const applyResult = (saved: AdvisorResult) => {
+      setRecommendation(saved)
+      setLoading(false)
+    }
 
-    const fetchRecommendation = async () => {
+    const fallbackToApi = async () => {
       try {
         const res = await fetch('/api/recommendations/latest')
         if (res.ok) {
@@ -46,21 +49,31 @@ export default function RecommendationsPage() {
               })),
             }
             store.setSavedResult(mapped)
-            setRecommendation(mapped)
-          } else {
-            // No saved recommendation – redirect to advisor
-            router.replace('/advisor')
+            applyResult(mapped)
+            return
           }
-        } else {
-          router.replace('/advisor')
         }
       } catch {
-        router.replace('/advisor')
-      } finally {
-        setLoading(false)
+        // fall through to redirect
+      }
+      router.replace('/advisor')
+    }
+
+    const checkAfterHydration = () => {
+      const savedResult = useAdvisorStore.getState().savedResult
+      if (savedResult) {
+        applyResult(savedResult)
+      } else {
+        fallbackToApi()
       }
     }
-    fetchRecommendation()
+
+    if (useAdvisorStore.persist.hasHydrated()) {
+      checkAfterHydration()
+    } else {
+      const unsub = useAdvisorStore.persist.onFinishHydration(checkAfterHydration)
+      return unsub
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

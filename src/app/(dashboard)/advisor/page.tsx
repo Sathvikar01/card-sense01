@@ -15,19 +15,30 @@ export default function AdvisorPage() {
   const searchParams = useSearchParams()
   const isNew = searchParams.get('new') === '1'
 
-  // Initialise from Zustand store synchronously so there's no loading flicker
-  const storeSavedResult = store.savedResult
-  const [step, setStep] = useState<FlowStep>(() => (!isNew && storeSavedResult ? 'results' : 'input'))
+  // Always start in a neutral "checking" state — useState initialisers run before
+  // Zustand's persist middleware has rehydrated from localStorage, so reading
+  // store.savedResult here would always return null on a hard reload.
+  const [step, setStep] = useState<FlowStep>('input')
   const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<AdvisorResult | null>(() => (!isNew ? storeSavedResult : null))
+  const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  // checkedSaved is true immediately if we already have a local result or are starting fresh
-  const [checkedSaved, setCheckedSaved] = useState(() => !isNew ? !!storeSavedResult : true)
+  const [checkedSaved, setCheckedSaved] = useState(false)
 
-  // On mount, fall back to Supabase check only when the local store is empty
+  // After mount, wait for Zustand to finish rehydrating from localStorage,
+  // then decide whether to show saved results or the questionnaire.
   useEffect(() => {
-    if (isNew || checkedSaved) return
-    const checkSaved = async () => {
+    if (isNew) {
+      setCheckedSaved(true)
+      return
+    }
+
+    const applyResult = (saved: AdvisorResult) => {
+      setResult(saved)
+      setStep('results')
+      setCheckedSaved(true)
+    }
+
+    const fallbackToApi = async () => {
       try {
         const res = await fetch('/api/recommendations/latest')
         if (res.ok) {
@@ -55,17 +66,31 @@ export default function AdvisorPage() {
               })),
             }
             store.setSavedResult(mappedResult)
-            setResult(mappedResult)
-            setStep('results')
+            applyResult(mappedResult)
+            return
           }
         }
       } catch {
-        // If check fails, just show the stepper normally
-      } finally {
-        setCheckedSaved(true)
+        // fall through
+      }
+      setCheckedSaved(true)
+    }
+
+    const checkAfterHydration = () => {
+      const savedResult = useAdvisorStore.getState().savedResult
+      if (savedResult) {
+        applyResult(savedResult)
+      } else {
+        fallbackToApi()
       }
     }
-    checkSaved()
+
+    if (useAdvisorStore.persist.hasHydrated()) {
+      checkAfterHydration()
+    } else {
+      const unsub = useAdvisorStore.persist.onFinishHydration(checkAfterHydration)
+      return unsub
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isNew])
 
