@@ -2,15 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import {
-  GEMINI_MODEL_FLASH,
-  GEMINI_MODEL_FLASH_FALLBACK,
-  getGeminiClient,
-} from '@/lib/gemini/client'
-import {
-  createFallbackGuideSnippet,
-  getCreditCardGuideContext,
-} from '@/lib/cards/pdf-guide'
-import {
   LOCAL_CARD_CATALOG,
   isMissingCreditCardsTableError,
 } from '@/lib/cards/local-catalog'
@@ -42,66 +33,6 @@ type FollowUpQuestion = {
   }>
 }
 
-const GUIDE_PROMPT_MAX_CHARS = 16000
-const AI_QUOTA_DEFAULT_RETRY_MS = 45000
-let quotaCooldownUntilMs = 0
-
-const clampGuideTextForPrompt = (text: string) => {
-  const normalized = text.trim()
-  if (normalized.length <= GUIDE_PROMPT_MAX_CHARS) return normalized
-  return `${normalized.slice(0, GUIDE_PROMPT_MAX_CHARS)}\n\n[Guide content truncated for token safety]`
-}
-
-const isQuotaExceededErrorMessage = (message: string) => {
-  return /resource_exhausted|quota exceeded|status"\s*:\s*"resource_exhausted"|code"\s*:\s*429|too many requests/i.test(
-    message
-  )
-}
-
-const parseRetryDelayMs = (message: string) => {
-  const directMatch = message.match(/retry in\s+([\d.]+)s/i)
-  if (directMatch) {
-    const seconds = Number(directMatch[1])
-    if (Number.isFinite(seconds) && seconds > 0) {
-      return Math.ceil(seconds * 1000)
-    }
-  }
-
-  const jsonDelayMatch = message.match(/"retryDelay"\s*:\s*"(\d+)s"/i)
-  if (jsonDelayMatch) {
-    const seconds = Number(jsonDelayMatch[1])
-    if (Number.isFinite(seconds) && seconds > 0) {
-      return seconds * 1000
-    }
-  }
-
-  return AI_QUOTA_DEFAULT_RETRY_MS
-}
-
-const toSafeAiFallbackReason = (error: unknown) => {
-  const message = error instanceof Error ? error.message : 'AI generation unavailable'
-  if (isQuotaExceededErrorMessage(message)) {
-    const retryMs = parseRetryDelayMs(message)
-    return `AI quota is temporarily exhausted. Using deterministic recommendations now; retry after about ${Math.max(1, Math.ceil(retryMs / 1000))}s.`
-  }
-  if (/api key|unauthorized|permission/i.test(message)) {
-    return 'AI configuration issue detected. Using deterministic recommendations.'
-  }
-  return 'AI response could not be used. Using deterministic recommendations.'
-}
-
-const toFlashModel = (modelName: string) => {
-  const normalized = modelName.trim()
-  if (!normalized) return 'gemini-2.0-flash'
-  if (/flash/i.test(normalized)) return normalized
-  return 'gemini-2.0-flash'
-}
-
-const getModelCandidates = () => {
-  const models = [toFlashModel(GEMINI_MODEL_FLASH), toFlashModel(GEMINI_MODEL_FLASH_FALLBACK)]
-  return Array.from(new Set(models.filter(Boolean)))
-}
-
 const recommendationInputSchema = z.object({
   cibilScore: z.coerce.number().min(300).max(900),
   monthlyIncome: z.coerce.number().nonnegative(),
@@ -127,22 +58,6 @@ const recommendationInputSchema = z.object({
   followUpAnswers: z.record(z.string(), z.string()).optional().default({}),
 })
 
-const followUpQuestionSchema = z.object({
-  id: z.string().min(2),
-  question: z.string().min(10),
-  why: z.string().min(8),
-  options: z
-    .array(
-      z.object({
-        value: z.string().min(1),
-        label: z.string().min(1),
-        description: z.string().min(4),
-      })
-    )
-    .min(2)
-    .max(5),
-})
-
 const REQUIRED_FOLLOW_UP_IDS = [
   'age_band',
   'income_profile',
@@ -150,45 +65,6 @@ const REQUIRED_FOLLOW_UP_IDS = [
   'primary_spend_focus',
   'value_priority',
 ] as const
-
-const aiQuestionsSchema = z.object({
-  questions: z.array(followUpQuestionSchema).length(5),
-}).superRefine((value, ctx) => {
-  const ids = value.questions.map((question) => question.id)
-  const uniqueIds = new Set(ids)
-
-  if (uniqueIds.size !== ids.length) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Follow-up questions contain duplicate IDs.',
-    })
-  }
-
-  for (const requiredId of REQUIRED_FOLLOW_UP_IDS) {
-    if (!ids.includes(requiredId)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Missing required follow-up question ID: ${requiredId}`,
-      })
-    }
-  }
-})
-
-const aiRecommendationSchema = z.object({
-  analysis: z.string().min(20),
-  cards: z
-    .array(
-      z.object({
-        cardName: z.string().min(2),
-        bank: z.string().min(2),
-        score: z.coerce.number().min(0).max(100),
-        reason: z.string().min(12),
-        keyPerks: z.array(z.string()).optional().default([]),
-      })
-    )
-    .min(3)
-    .max(5),
-})
 
 const DEFAULT_QUESTIONS: FollowUpQuestion[] = [
   {
@@ -322,6 +198,7 @@ const DEFAULT_QUESTIONS: FollowUpQuestion[] = [
     ],
   },
 ]
+
 const SPENDING_CATEGORY_LABELS: Record<string, string> = {
   dining: 'dining',
   online_shopping: 'online shopping',
@@ -486,27 +363,6 @@ const asStringArray = (value: unknown) => {
   return value.map((item) => asString(item)).filter(Boolean)
 }
 
-const parseAiJson = (raw: string) => {
-  if (!raw.trim()) {
-    throw new Error('AI returned empty response')
-  }
-
-  try {
-    return JSON.parse(raw)
-  } catch {
-    const fenced = raw.replace(/```json|```/g, '').trim()
-    try {
-      return JSON.parse(fenced)
-    } catch {
-      const jsonMatch = fenced.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        throw new Error('AI response did not contain valid JSON object')
-      }
-      return JSON.parse(jsonMatch[0])
-    }
-  }
-}
-
 const mapCatalogRow = (row: Record<string, unknown>): CardForRecommendation => {
   return {
     id: asString(row.id, crypto.randomUUID()),
@@ -631,8 +487,7 @@ const matchesSpendCategory = (
 
 const ruleBasedRecommendations = (
   input: z.infer<typeof recommendationInputSchema>,
-  cards: CardForRecommendation[],
-  reason: string
+  cards: CardForRecommendation[]
 ) => {
   const answers = input.followUpAnswers || {}
   const topCategories = getTopSpendingCategories(input.spendingBreakdown).map((category) =>
@@ -857,7 +712,7 @@ const ruleBasedRecommendations = (
   const usedRelaxedEligibility = strictEligibleCards.length === 0
 
   return {
-    analysis: `Generated recommendations with deterministic matching because AI response was unavailable (${reason}).${usedRelaxedEligibility ? ' Strict income filters had no direct match, so near-fit cards (including secured options) were included.' : ''}`,
+    analysis: `Recommendations generated using your profile, spending patterns, and preferences.${usedRelaxedEligibility ? ' Strict income filters had no direct match, so near-fit cards (including secured options) were included.' : ''}`,
     cards: ranked.map(({ card, score }) => ({
       id: card.id,
       name: card.cardName,
@@ -865,219 +720,48 @@ const ruleBasedRecommendations = (
       score,
       reason: `${card.cardName} fits your ${toSpendingLabel(spendFocus)} preference and current eligibility profile, while keeping fee-versus-benefit balance practical.`,
       keyPerks: card.perks.slice(0, 3),
+      annualFee: card.annualFee,
     })),
   }
-}
-
-const buildQuestionsPrompt = (
-  input: z.infer<typeof recommendationInputSchema>,
-  guideText: string
-) => {
-  return `
-You are designing follow-up questions for a credit card recommendation flow in India.
-Your task is to ask 5 concise multiple-choice questions that will improve recommendation precision.
-
-USER PROFILE SNAPSHOT:
-${JSON.stringify(
-    {
-      cibilScore: input.cibilScore,
-      annualIncome: input.annualIncome,
-      primaryBank: input.primaryBank,
-      monthlySpending: input.monthlySpending,
-      topSpendingCategories: getTopSpendingCategories(input.spendingBreakdown),
-      goals: input.creditGoals,
-      existingCards: input.existingCards,
-    },
-    null,
-    2
-  )}
-
-CARD GUIDE KNOWLEDGE (excerpt):
-${guideText || createFallbackGuideSnippet()}
-
-Return JSON only in this format:
-{
-  "questions": [
-    {
-      "id": "age_band",
-      "question": "Question text",
-      "why": "Why this matters",
-      "options": [
-        { "value": "value_1", "label": "Option label", "description": "impact/tradeoff" }
-      ]
-    }
-  ]
-}
-
-Rules:
-- Keep exactly 5 questions.
-- Use these exact IDs, in this exact order:
-  1) age_band
-  2) income_profile
-  3) secured_card_readiness
-  4) primary_spend_focus
-  5) value_priority
-- age_band must include 18_20.
-- income_profile must include no_personal_income and stipend_or_part_time options.
-- secured_card_readiness must capture FD-backed willingness (have_fd_now, can_start_fd, unsecured_only).
-- primary_spend_focus options must reflect the user's top spending categories.
-- value_priority options must cover low-fee credit building, cashback, travel, and UPI convenience.
-- Every question must have 3 or 4 options.
-- Keep wording simple and specific for Indian users.
-- Questions must reflect the user's top spend categories and goals.
-- Questions must be realistic for students, including users with zero personal income.
-`
-}
-
-const buildRecommendationPrompt = (
-  input: z.infer<typeof recommendationInputSchema>,
-  cards: CardForRecommendation[],
-  guideText: string
-) => {
-  const topCardsForContext = cards.slice(0, 80)
-
-  return `
-You are an expert Indian credit card advisor.
-Recommend the best 3 to 5 cards for this user based on profile, follow-up preferences, and the provided India 2026 card guide.
-Do not recommend cards already owned by the user.
-Prioritize realistic eligibility and practical net value.
-
-USER PROFILE:
-${JSON.stringify(
-    {
-      cibilScore: input.cibilScore,
-      annualIncome: input.annualIncome,
-      monthlyIncome: input.monthlyIncome,
-      employmentType: input.employmentType,
-      primaryBank: input.primaryBank,
-      city: input.city,
-      existingCards: input.existingCards,
-      monthlySpending: input.monthlySpending,
-      spendingBreakdown: input.spendingBreakdown,
-      creditGoals: input.creditGoals,
-      followUpAnswers: input.followUpAnswers,
-      parsedStatement: input.parsedStatement,
-    },
-    null,
-    2
-  )}
-
-AVAILABLE CATALOG CARDS:
-${JSON.stringify(topCardsForContext, null, 2)}
-
-INDIA CREDIT CARDS GUIDE (PDF CONTEXT):
-${guideText || createFallbackGuideSnippet()}
-
-Return JSON only:
-{
-  "analysis": "4-8 sentence practical analysis.",
-  "cards": [
-    {
-      "cardName": "Exact card name",
-      "bank": "Bank name",
-      "score": 0-100,
-      "reason": "Why this card is suitable in 2-4 lines.",
-      "keyPerks": ["perk 1", "perk 2", "perk 3"]
-    }
-  ]
-}
-
-Rules:
-- Recommend only 3 to 5 cards.
-- Avoid cards clearly ineligible based on income/CIBIL.
-- For age 18-20 or no personal income, prioritize realistic FD-backed or secured options.
-- Mention fee-value tradeoffs clearly.
-- Keep recommendations aligned to follow-up answers.
-`
-}
-
-const generateWithModelFallback = async <T>(params: {
-  prompt: string
-  schema: z.ZodType<T>
-}) => {
-  const { prompt, schema } = params
-  if (Date.now() < quotaCooldownUntilMs) {
-    const retrySeconds = Math.max(1, Math.ceil((quotaCooldownUntilMs - Date.now()) / 1000))
-    throw new Error(`AI quota cooldown active. Retry in ${retrySeconds}s`)
-  }
-
-  const gemini = getGeminiClient()
-  const modelCandidates = getModelCandidates()
-  const errors: string[] = []
-
-  for (const model of modelCandidates) {
-    try {
-      const response = await gemini.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-        },
-      })
-
-      const parsed = parseAiJson(response.text ?? '')
-      const validated = schema.parse(parsed)
-      return {
-        data: validated,
-        model,
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown model error'
-      if (isQuotaExceededErrorMessage(message)) {
-        const retryMs = parseRetryDelayMs(message)
-        quotaCooldownUntilMs = Math.max(quotaCooldownUntilMs, Date.now() + retryMs)
-        errors.push(`${model}: quota_exhausted_retry_${Math.max(1, Math.ceil(retryMs / 1000))}s`)
-      } else {
-        const compactMessage = message.length > 220 ? `${message.slice(0, 220)}...` : message
-        errors.push(`${model}: ${compactMessage}`)
-      }
-    }
-  }
-
-  throw new Error(`Model generation failed. ${errors.join(' | ')}`)
-}
-
-const resolveCardId = (cardName: string, cards: CardForRecommendation[]) => {
-  const normalizedName = cardName.toLowerCase().replace(/\s+/g, ' ').trim()
-  const exact = cards.find(
-    (card) => card.cardName.toLowerCase().replace(/\s+/g, ' ').trim() === normalizedName
-  )
-  if (exact) return exact.id
-
-  const fuzzy = cards.find(
-    (card) =>
-      card.cardName.toLowerCase().includes(normalizedName) ||
-      normalizedName.includes(card.cardName.toLowerCase())
-  )
-  if (fuzzy) return fuzzy.id
-
-  return normalizedName.replace(/[^a-z0-9]+/g, '-')
 }
 
 const saveRecommendation = async (params: {
   supabase: Awaited<ReturnType<typeof createClient>>
   userId: string
   input: z.infer<typeof recommendationInputSchema>
-  cards: Array<{ id: string; name: string; bank: string; score: number; reason: string; keyPerks: string[] }>
+  cards: Array<{ id: string; name: string; bank: string; score: number; reason: string; keyPerks: string[]; annualFee: number }>
   analysis: string
   model: string
 }) => {
   const { supabase, userId, input, cards, analysis, model } = params
+
+  // Map cards to the CardRecommendation format expected by the dashboard / Recommendation type
+  const normalizedCards = cards.map((card, index) => ({
+    cardId: card.id,
+    cardName: card.name,
+    bank: card.bank,
+    score: card.score,
+    reasoning: card.reason,
+    keyPerks: card.keyPerks,
+    annualValue: card.annualFee,
+    rank: index + 1,
+  }))
+
   const recommendationPayloads: Array<Record<string, unknown>> = [
     {
       user_id: userId,
       recommendation_type: 'experienced',
       input_snapshot: input,
-      recommended_cards: cards,
+      recommended_cards: normalizedCards,
       ai_analysis_text: analysis,
+      ai_analysis: analysis,
       model_used: model,
     },
     {
       user_id: userId,
       recommendation_type: 'experienced',
       input_snapshot: input,
-      recommended_cards: cards,
+      recommended_cards: normalizedCards,
       ai_analysis: analysis,
       model_used: model,
     },
@@ -1085,7 +769,7 @@ const saveRecommendation = async (params: {
       user_id: userId,
       flow_type: 'experienced_user',
       input_data: input,
-      recommended_cards: cards,
+      recommended_cards: normalizedCards,
       ai_analysis: analysis,
       ai_model_used: model,
     },
@@ -1182,10 +866,28 @@ export async function POST(request: NextRequest) {
     }
 
     const input = parsedBody.data
-    const [{ cards, source: catalogSource }, guide] = await Promise.all([
-      fetchCatalog(supabase),
-      getCreditCardGuideContext(),
-    ])
+
+    // Fetch user's spending transactions to enhance spendingBreakdown
+    const { data: txnData } = await supabase
+      .from('spending_transactions')
+      .select('category, amount')
+      .eq('user_id', user.id)
+      .order('transaction_date', { ascending: false })
+      .limit(200)
+
+    if (txnData && txnData.length > 0) {
+      const txnBreakdown: Record<string, number> = {}
+      for (const txn of txnData) {
+        const cat = (txn.category as string) || 'other'
+        txnBreakdown[cat] = (txnBreakdown[cat] || 0) + Number(txn.amount || 0)
+      }
+      // Merge transaction data into spendingBreakdown (transaction data supplements user input)
+      for (const [cat, amount] of Object.entries(txnBreakdown)) {
+        input.spendingBreakdown[cat] = (input.spendingBreakdown[cat] || 0) + amount
+      }
+    }
+
+    const { cards, source: catalogSource } = await fetchCatalog(supabase)
 
     if (cards.length === 0) {
       return NextResponse.json(
@@ -1194,113 +896,52 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const guideText = clampGuideTextForPrompt(guide.text || createFallbackGuideSnippet())
+    // If follow-up answers are not provided, return questions
     if (!hasFollowUpAnswers(input.followUpAnswers)) {
-      try {
-        const questionsPrompt = buildQuestionsPrompt(input, guideText)
-        const { data, model } = await generateWithModelFallback({
-          prompt: questionsPrompt,
-          schema: aiQuestionsSchema,
-        })
-
-        return NextResponse.json({
-          status: 'needs_more_info',
-          questions: data.questions,
-          metadata: {
-            model,
-            catalogSource,
-            guidePath: guide.sourcePath,
-          },
-        })
-      } catch (error) {
-        return NextResponse.json({
-          status: 'needs_more_info',
-          questions: buildContextualFallbackQuestions(input),
-          metadata: {
-            model: 'default_questions',
-            catalogSource,
-            guidePath: guide.sourcePath,
-            fallbackReason: toSafeAiFallbackReason(error),
-          },
-        })
-      }
-    }
-
-    let aiResult:
-      | {
-          analysis: string
-          cards: Array<{
-            id: string
-            name: string
-            bank: string
-            score: number
-            reason: string
-            keyPerks: string[]
-          }>
-          model: string
-        }
-      | null = null
-
-    try {
-      const recommendationPrompt = buildRecommendationPrompt(input, cards, guideText)
-      const { data, model } = await generateWithModelFallback({
-        prompt: recommendationPrompt,
-        schema: aiRecommendationSchema,
+      return NextResponse.json({
+        status: 'needs_more_info',
+        questions: buildContextualFallbackQuestions(input),
+        metadata: {
+          model: 'rule_based',
+          catalogSource,
+        },
       })
-
-      aiResult = {
-        analysis: data.analysis,
-        cards: data.cards.map((card) => ({
-          id: resolveCardId(card.cardName, cards),
-          name: card.cardName,
-          bank: card.bank,
-          score: Math.round(card.score),
-          reason: card.reason,
-          keyPerks: card.keyPerks,
-        })),
-        model,
-      }
-    } catch (error) {
-      const fallbackReason = toSafeAiFallbackReason(error)
-      const fallback = ruleBasedRecommendations(input, cards, fallbackReason)
-      aiResult = {
-        analysis: fallback.analysis,
-        cards: fallback.cards,
-        model: 'rule_based_fallback',
-      }
     }
+
+    // Generate rule-based recommendations
+    const result = ruleBasedRecommendations(input, cards)
 
     const recommendationId = await saveRecommendation({
       supabase,
       userId: user.id,
       input,
-      cards: aiResult.cards,
-      analysis: aiResult.analysis,
-      model: aiResult.model,
+      cards: result.cards,
+      analysis: result.analysis,
+      model: 'rule_based',
     })
 
     return NextResponse.json({
       status: 'success',
-      cards: aiResult.cards.map((card) => ({
+      cards: result.cards.map((card) => ({
         id: card.id,
         name: card.name,
         bank: card.bank,
         score: card.score,
         reason: card.reason,
+        annualFee: card.annualFee,
+        pros: card.keyPerks,
+        bestCategories: [],
       })),
-      analysis: aiResult.analysis,
+      analysis: result.analysis,
       recommendationId,
       metadata: {
-        model: aiResult.model,
+        model: 'rule_based',
         catalogSource,
-        guidePath: guide.sourcePath,
-        guideCardsDetected: guide.cardNames.length,
       },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error'
-    console.error('AI recommendation error:', error)
+    console.error('Recommendation error:', error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
-

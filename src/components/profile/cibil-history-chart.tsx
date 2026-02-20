@@ -113,7 +113,14 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
         throw new Error(message)
       }
 
-      toast.success('CIBIL score added successfully')
+      const data = await response.json() as { warning?: string; entry?: unknown; message?: string }
+
+      if (data.warning) {
+        // Score was saved to profile but history table is unavailable
+        toast.success('CIBIL score saved to your profile')
+      } else {
+        toast.success('CIBIL score added successfully')
+      }
       setIsDialogOpen(false)
       setNewScore('')
       setScoreDate(format(new Date(), 'yyyy-MM-dd'))

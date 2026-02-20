@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const PREFETCH_ROUTES = [
-  '/beginner',
+  '/advisor',
   '/cards',
   '/profile',
 ]

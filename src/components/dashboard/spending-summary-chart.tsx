@@ -30,7 +30,7 @@ function SpendingTooltip({ active, payload }: SpendingTooltipProps) {
         <p className="text-sm font-medium text-gray-900">{payload[0].payload.month}</p>
         <p className="text-sm text-gray-600">
           Amount:{' '}
-          <span className="font-semibold text-primary">
+          <span className="font-semibold text-[#b8860b]">
             {'\u20B9'}{payload[0].value.toLocaleString('en-IN')}
           </span>
         </p>
@@ -101,10 +101,10 @@ export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
                 tickLine={{ stroke: '#d1d5db' }}
                 tickFormatter={formatCurrency}
               />
-              <Tooltip content={<SpendingTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.12)' }} />
+              <Tooltip content={<SpendingTooltip />} cursor={{ fill: 'rgba(212, 160, 23, 0.1)' }} />
               <Bar
                 dataKey="amount"
-                fill="#3b82f6"
+                fill="#d4a017"
                 radius={[8, 8, 0, 0]}
                 maxBarSize={60}
               />

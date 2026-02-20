@@ -63,7 +63,7 @@
   --card-foreground: oklch(0.15 0.02 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.02 260);
-  --primary: oklch(0.55 0.18 270);
+  --primary: oklch(0.55 0.14 80);
   --primary-foreground: oklch(0.99 0.002 95);
   --secondary: oklch(0.95 0.015 270);
   --secondary-foreground: oklch(0.25 0.02 270);
@@ -74,20 +74,20 @@
   --destructive: oklch(0.55 0.22 29);
   --border: oklch(0.90 0.008 270);
   --input: oklch(0.93 0.008 270);
-  --ring: oklch(0.55 0.18 270);
-  --chart-1: oklch(0.55 0.18 270);
+  --ring: oklch(0.55 0.14 80);
+  --chart-1: oklch(0.55 0.14 80);
   --chart-2: oklch(0.60 0.15 155);
   --chart-3: oklch(0.65 0.12 35);
   --chart-4: oklch(0.55 0.16 330);
   --chart-5: oklch(0.70 0.10 200);
   --sidebar: oklch(0.98 0.003 270);
   --sidebar-foreground: oklch(0.15 0.02 260);
-  --sidebar-primary: oklch(0.55 0.18 270);
+  --sidebar-primary: oklch(0.55 0.14 80);
   --sidebar-primary-foreground: oklch(0.99 0.002 95);
   --sidebar-accent: oklch(0.95 0.015 270);
   --sidebar-accent-foreground: oklch(0.25 0.04 270);
   --sidebar-border: oklch(0.90 0.008 270);
-  --sidebar-ring: oklch(0.55 0.18 270);
+  --sidebar-ring: oklch(0.55 0.14 80);
 
   --surface-card: oklch(1 0 0 / 80%);
   --surface-card-strong: oklch(1 0 0 / 92%);
@@ -97,8 +97,8 @@
   --shadow-card: 0 8px 40px -8px oklch(0.30 0.04 270 / 18%), 0 0 0 1px oklch(0.85 0.02 270 / 50%);
   --shadow-elevated: 0 20px 60px -12px oklch(0.25 0.06 270 / 25%), 0 0 0 1px oklch(0.85 0.02 270 / 40%);
 
-  --tone-primary-soft: oklch(0.94 0.03 270);
-  --tone-primary-strong: oklch(0.55 0.18 270);
+  --tone-primary-soft: oklch(0.94 0.03 80);
+  --tone-primary-strong: oklch(0.55 0.14 80);
   --tone-success-soft: oklch(0.94 0.035 155);
   --tone-success-strong: oklch(0.48 0.16 155);
   --tone-danger-soft: oklch(0.94 0.035 28);
@@ -118,8 +118,8 @@
   --card-foreground: oklch(0.94 0.01 270);
   --popover: oklch(0.19 0.015 270);
   --popover-foreground: oklch(0.94 0.01 270);
-  --primary: oklch(0.72 0.16 270);
-  --primary-foreground: oklch(0.14 0.015 270);
+  --primary: oklch(0.72 0.14 80);
+  --primary-foreground: oklch(0.14 0.015 80);
   --secondary: oklch(0.24 0.015 270);
   --secondary-foreground: oklch(0.94 0.01 270);
   --muted: oklch(0.22 0.012 270);
@@ -129,7 +129,7 @@
   --destructive: oklch(0.62 0.22 28);
   --border: oklch(0.30 0.012 270);
   --input: oklch(0.24 0.015 270);
-  --ring: oklch(0.72 0.14 270);
+  --ring: oklch(0.72 0.14 80);
 
   --glass-bg: oklch(0.18 0.015 270 / 60%);
   --glass-border: oklch(0.30 0.01 270 / 40%);
@@ -232,7 +232,7 @@
   }
 
   .cardsense-navbar-link[data-active="true"] {
-    color: var(--primary);
+    color: #b8860b;
   }
 
   /* ---- Pill ---- */
@@ -430,7 +430,8 @@
 
   /* ---- Smart advisor gradient ---- */
   .advisor-hero {
-    background: linear-gradient(135deg, oklch(0.35 0.14 300), oklch(0.26 0.14 280));
+    background: linear-gradient(135deg, #fdf3d7, #fff8e7, #fdf3d7);
+    border: 1px solid rgba(212, 160, 23, 0.25);
     border-radius: 1.75rem;
     position: relative;
     overflow: hidden;
@@ -444,7 +445,7 @@
     width: 50%;
     height: 180%;
     border-radius: 50%;
-    background: radial-gradient(circle, oklch(0.50 0.10 320 / 0.2), transparent 55%);
+    background: radial-gradient(circle, rgba(212, 160, 23, 0.12), transparent 55%);
   }
 
   /* ---- Transaction row ---- */
@@ -465,7 +466,7 @@
 
   /* ---- Floating glow effect ---- */
   .glow-primary {
-    box-shadow: 0 0 60px -12px oklch(0.55 0.18 270 / 0.3);
+    box-shadow: 0 0 60px -12px oklch(0.55 0.14 80 / 0.3);
   }
 
   .glow-accent {
@@ -672,7 +673,6 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    -webkit-text-stroke: 0.3px #2a2a2a;
-    paint-order: stroke fill;
+    filter: drop-shadow(0 1px 2px rgba(184, 134, 11, 0.3)) drop-shadow(0 0px 4px rgba(212, 160, 23, 0.15));
   }
 }

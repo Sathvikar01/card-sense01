@@ -31,7 +31,7 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
           <p className="mt-1 text-center text-xs text-muted-foreground">
             Start with beginner flow to generate your first shortlist.
           </p>
-          <Link href="/beginner">
+          <Link href="/advisor">
             <Button className="mt-5 gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] shadow-lg shadow-[#b8860b]/20">
               Get Your First Recommendation
               <ArrowRight className="h-4 w-4" />

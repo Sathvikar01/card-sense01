@@ -169,18 +169,11 @@ export default async function DashboardPage() {
 
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href="/beginner"
+              href="/advisor"
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#b8860b]/25 transition-all hover:shadow-[#b8860b]/35 hover:-translate-y-0.5"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v6m0 0v6m0-6h6m-6 0H2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
               New Recommendation
-            </a>
-            <a
-              href="/advisor"
-              className="inline-flex items-center gap-2 rounded-xl border border-[#d4a017]/40 bg-white/60 px-5 py-2.5 text-sm font-medium text-[#7a5500] backdrop-blur-sm transition-all hover:bg-white/80 hover:border-[#d4a017]/60"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C6.5 2 5.2 2.8 4.6 4 3.1 4.3 2 5.6 2 7.2c0 1.3.7 2.4 1.7 3 0 .2-.1.5-.1.8 0 1.7 1.3 3 3 3h2.8c1.7 0 3-1.3 3-3 0-.3 0-.5-.1-.8 1-.6 1.7-1.7 1.7-3 0-1.6-1.1-2.9-2.6-3.2C10.8 2.8 9.5 2 8 2z" stroke="currentColor" strokeWidth="1.2" fill="none" /><path d="M8 5v6M6 7.5h4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" /></svg>
-              AI Advisor
             </a>
           </div>
         </div>
@@ -213,7 +206,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="mt-4">
               <p className="text-sm text-muted-foreground">Not recorded</p>
-              <a href="/profile" className="mt-1 inline-block text-xs font-medium text-violet-600 hover:text-violet-500">
+              <a href="/profile" className="mt-1 inline-block text-xs font-medium text-[#b8860b] hover:text-[#d4a017]">
                 Add your score
               </a>
             </div>

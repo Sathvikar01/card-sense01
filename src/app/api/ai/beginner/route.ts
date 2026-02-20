@@ -1,19 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
-import {
-  getGeminiClient,
-  GEMINI_MODEL_FLASH,
-  GEMINI_MODEL_FLASH_FALLBACK,
-} from '@/lib/gemini/client'
-import { buildBeginnerPrompt } from '@/lib/gemini/prompts'
 import { NextResponse } from 'next/server'
 import type { BeginnerInput } from '@/types/financial-profile'
 import type { CreditCard } from '@/types/credit-card'
 import type { CreditCard as LegacyCard } from '@/types'
 import { cards as localCards } from '@/data/cards'
 
-const AI_QUOTA_DEFAULT_RETRY_MS = 45000
 const MIN_BEGINNER_RECOMMENDATIONS = 3
-let beginnerQuotaCooldownUntilMs = 0
 
 const toAppCardType = (value: string): CreditCard['card_type'] => {
   const normalized = value.toLowerCase()
@@ -33,7 +25,7 @@ const toAppCardNetwork = (value: string): CreditCard['card_network'] => {
   const normalized = value.toLowerCase()
   if (normalized === 'visa') return 'visa'
   if (normalized === 'mastercard') return 'mastercard'
-  if (normalized === 'rupay' || normalized === 'rupay') return 'rupay'
+  if (normalized === 'rupay') return 'rupay'
   if (normalized === 'amex') return 'amex'
   if (normalized === 'diners') return 'diners'
   return 'visa'
@@ -98,10 +90,6 @@ const asString = (value: unknown, fallback = '') => {
   if (typeof value === 'string') return value
   if (typeof value === 'number') return String(value)
   return fallback
-}
-
-const toRecord = (value: unknown): Record<string, unknown> | null => {
-  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null
 }
 
 const asNumber = (value: unknown, fallback = 0) => {
@@ -387,9 +375,8 @@ const buildRecommendationDetails = (params: {
   input: BeginnerInput
   card: CreditCard
   score: number
-  aiReasoning?: string
 }): BeginnerRecommendationItem => {
-  const { input, card, score, aiReasoning } = params
+  const { input, card, score } = params
   const annualIncome = input.monthlyIncome * 12
   const spendCategories = (input.primarySpendCategories || []).map((value) => normalizeSpendCategory(value.toLowerCase()))
   const cardCategories = (card.best_for || []).map((value) => normalizeSpendCategory(value.toLowerCase()))
@@ -424,11 +411,7 @@ const buildRecommendationDetails = (params: {
       : 'This card can still be explored, but approval may depend on additional bank-level checks.',
   ]).slice(0, 3)
 
-  const aiReasonClean = (aiReasoning || '').trim()
-  const useAiReason = aiReasonClean.length >= 35 && !/fits beginner usage with manageable fees/i.test(aiReasonClean)
-  const reasoning = useAiReason
-    ? aiReasonClean
-    : `${card.card_name} suits you because it aligns with ${spendFocusText}, keeps fee-to-value practical, and matches your current beginner eligibility profile.`
+  const reasoning = `${card.card_name} suits you because it aligns with ${spendFocusText}, keeps fee-to-value practical, and matches your current beginner eligibility profile.`
 
   return {
     cardId: card.id,
@@ -442,182 +425,11 @@ const buildRecommendationDetails = (params: {
   }
 }
 
-const resolveCardFromRecommendation = (entry: unknown, cards: CreditCard[]) => {
-  const record = toRecord(entry)
-  if (!record) return null
-
-  const byId = asString(record.cardId ?? record.card_id, '')
-  if (byId) {
-    const exactById = cards.find((card) => card.id === byId)
-    if (exactById) return exactById
-  }
-
-  const byName = asString(record.cardName ?? record.card_name ?? record.name, '').toLowerCase().replace(/\s+/g, ' ').trim()
-  if (!byName) return null
-
-  const exactByName = cards.find((card) => card.card_name.toLowerCase().replace(/\s+/g, ' ').trim() === byName)
-  if (exactByName) return exactByName
-
-  const fuzzyByName = cards.find((card) => {
-    const cardName = card.card_name.toLowerCase()
-    return cardName.includes(byName) || byName.includes(cardName)
-  })
-  return fuzzyByName || null
-}
-
 const buildDeterministicRecommendations = (input: BeginnerInput, cards: CreditCard[]) => {
   const rankedCards = scoreCardsForBeginner(input, cards)
   return rankedCards
     .slice(0, MIN_BEGINNER_RECOMMENDATIONS)
     .map(({ card, score }) => buildRecommendationDetails({ input, card, score }))
-}
-
-const enrichRecommendations = (params: {
-  input: BeginnerInput
-  cards: CreditCard[]
-  rawRecommendations: unknown[]
-}) => {
-  const { input, cards, rawRecommendations } = params
-  const rankedCards = scoreCardsForBeginner(input, cards)
-  const fallbackByCardId = new Map(rankedCards.map((entry) => [entry.card.id, entry.score]))
-  const usedIds = new Set<string>()
-  const normalized: BeginnerRecommendationItem[] = []
-
-  for (const entry of rawRecommendations) {
-    const card = resolveCardFromRecommendation(entry, cards)
-    if (!card || usedIds.has(card.id)) continue
-
-    const record = toRecord(entry)
-    const aiReasoning = asString(
-      record?.reasoning ?? record?.reason ?? record?.why ?? '',
-      ''
-    )
-    const score = clampScore(asNumber(record?.score, fallbackByCardId.get(card.id) ?? 68))
-
-    normalized.push(buildRecommendationDetails({
-      input,
-      card,
-      score,
-      aiReasoning,
-    }))
-    usedIds.add(card.id)
-    if (normalized.length >= MIN_BEGINNER_RECOMMENDATIONS) break
-  }
-
-  if (normalized.length < MIN_BEGINNER_RECOMMENDATIONS) {
-    for (const { card, score } of rankedCards) {
-      if (usedIds.has(card.id)) continue
-      normalized.push(buildRecommendationDetails({ input, card, score }))
-      usedIds.add(card.id)
-      if (normalized.length >= MIN_BEGINNER_RECOMMENDATIONS) break
-    }
-  }
-
-  return normalized.slice(0, MIN_BEGINNER_RECOMMENDATIONS)
-}
-
-const buildRuleBasedBeginnerResponse = (input: BeginnerInput, cards: CreditCard[], reason: string) => {
-  return {
-    recommendations: buildDeterministicRecommendations(input, cards),
-    application_guide: DEFAULT_APPLICATION_GUIDE,
-    credit_education: DEFAULT_CREDIT_EDUCATION,
-    overall_analysis: `Used a rule-based recommendation path because AI response could not be used. ${reason}`,
-  }
-}
-
-const normalizeStringList = (value: unknown, fallback: string[]) => {
-  const items = asStringArray(value)
-  return items.length > 0 ? items : fallback
-}
-
-const normalizeApplicationGuide = (value: unknown) => {
-  const record = toRecord(value)
-  if (!record) return DEFAULT_APPLICATION_GUIDE
-  return {
-    steps: normalizeStringList(record.steps, DEFAULT_APPLICATION_GUIDE.steps),
-    documents_needed: normalizeStringList(record.documents_needed, DEFAULT_APPLICATION_GUIDE.documents_needed),
-    tips: normalizeStringList(record.tips, DEFAULT_APPLICATION_GUIDE.tips),
-  }
-}
-
-const normalizeCreditEducation = (value: unknown) => {
-  const record = toRecord(value)
-  if (!record) return DEFAULT_CREDIT_EDUCATION
-  return {
-    topics: normalizeStringList(record.topics, DEFAULT_CREDIT_EDUCATION.topics),
-    tips: normalizeStringList(record.tips, DEFAULT_CREDIT_EDUCATION.tips),
-  }
-}
-
-const parseAiJson = (raw: string) => {
-  if (!raw.trim()) {
-    throw new Error('AI returned empty response')
-  }
-
-  try {
-    return JSON.parse(raw)
-  } catch {
-    const fenced = raw.replace(/```json|```/g, '').trim()
-    try {
-      return JSON.parse(fenced)
-    } catch {
-      const jsonMatch = fenced.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        throw new Error('AI response did not contain valid JSON object')
-      }
-      return JSON.parse(jsonMatch[0])
-    }
-  }
-}
-
-const isQuotaExceededErrorMessage = (message: string) => {
-  return /resource_exhausted|quota exceeded|status"\s*:\s*"resource_exhausted"|code"\s*:\s*429|too many requests/i.test(
-    message
-  )
-}
-
-const parseRetryDelayMs = (message: string) => {
-  const directMatch = message.match(/retry in\s+([\d.]+)s/i)
-  if (directMatch) {
-    const seconds = Number(directMatch[1])
-    if (Number.isFinite(seconds) && seconds > 0) {
-      return Math.ceil(seconds * 1000)
-    }
-  }
-
-  const jsonDelayMatch = message.match(/"retryDelay"\s*:\s*"(\d+)s"/i)
-  if (jsonDelayMatch) {
-    const seconds = Number(jsonDelayMatch[1])
-    if (Number.isFinite(seconds) && seconds > 0) {
-      return seconds * 1000
-    }
-  }
-
-  return AI_QUOTA_DEFAULT_RETRY_MS
-}
-
-const toFlashModel = (modelName: string) => {
-  const normalized = modelName.trim()
-  if (!normalized) return 'gemini-2.0-flash'
-  if (/flash/i.test(normalized)) return normalized
-  return 'gemini-2.0-flash'
-}
-
-const getBeginnerModelCandidates = () => {
-  const models = [toFlashModel(GEMINI_MODEL_FLASH), toFlashModel(GEMINI_MODEL_FLASH_FALLBACK)]
-  return Array.from(new Set(models.filter(Boolean)))
-}
-
-const toSafeFallbackReason = (error: unknown) => {
-  const message = error instanceof Error ? error.message : 'AI generation unavailable'
-  if (isQuotaExceededErrorMessage(message)) {
-    const retryMs = parseRetryDelayMs(message)
-    return `AI quota is temporarily exhausted. Using rule-based recommendations now; retry after about ${Math.max(1, Math.ceil(retryMs / 1000))}s.`
-  }
-  if (/api key|unauthorized|permission/i.test(message)) {
-    return 'AI configuration issue detected. Using rule-based recommendations.'
-  }
-  return 'AI response could not be used. Using rule-based recommendations.'
 }
 
 export async function POST(request: Request) {
@@ -641,111 +453,38 @@ export async function POST(request: Request) {
       }, { status: 503 })
     }
 
-    // Build prompt and call Gemini
-    const prompt = buildBeginnerPrompt(body, cards)
-    const gemini = getGeminiClient()
-    let aiResponse: {
-      recommendations: unknown[]
-      application_guide?: unknown
-      credit_education?: unknown
-      overall_analysis?: string
-    } | null = null
-    let fallbackReason: string | null = null
-    let aiModelUsed = 'rule_based_fallback'
-
-    const tryGenerateWithModel = async (model: string) => {
-      const result = await gemini.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.3,
-        },
-      })
-      const parsed = parseAiJson(result.text ?? '')
-      if (!Array.isArray(parsed.recommendations) || parsed.recommendations.length === 0) {
-        throw new Error('AI response missing recommendations array')
-      }
-      return parsed
-    }
-
-    if (Date.now() < beginnerQuotaCooldownUntilMs) {
-      const retrySeconds = Math.max(1, Math.ceil((beginnerQuotaCooldownUntilMs - Date.now()) / 1000))
-      fallbackReason = `AI quota cooldown active. Retry in ${retrySeconds}s.`
-      aiResponse = buildRuleBasedBeginnerResponse(body, cards, fallbackReason)
-    } else {
-      let lastModelError: unknown = null
-      const modelCandidates = getBeginnerModelCandidates()
-
-      for (const model of modelCandidates) {
-        try {
-          aiResponse = await tryGenerateWithModel(model)
-          aiModelUsed = model
-          lastModelError = null
-          break
-        } catch (error) {
-          lastModelError = error
-          const message = error instanceof Error ? error.message : 'Unknown model error'
-          if (isQuotaExceededErrorMessage(message)) {
-            const retryMs = parseRetryDelayMs(message)
-            beginnerQuotaCooldownUntilMs = Math.max(beginnerQuotaCooldownUntilMs, Date.now() + retryMs)
-          }
-        }
-      }
-
-      if (!aiResponse) {
-        fallbackReason = toSafeFallbackReason(lastModelError)
-        aiResponse = buildRuleBasedBeginnerResponse(body, cards, fallbackReason)
-      }
-    }
-
-    if (!aiResponse) {
-      throw new Error('Could not produce beginner recommendations')
-    }
+    const recommendations = buildDeterministicRecommendations(body, cards)
 
     const finalResponse = {
-      recommendations: enrichRecommendations({
-        input: body,
-        cards,
-        rawRecommendations: aiResponse.recommendations,
-      }),
-      application_guide: normalizeApplicationGuide(aiResponse.application_guide),
-      credit_education: normalizeCreditEducation(aiResponse.credit_education),
-      overall_analysis: fallbackReason
-        ? `Used a rule-based recommendation path because AI response could not be used. ${fallbackReason}`
-        : asString(
-          aiResponse.overall_analysis,
-          'Recommendations generated from your profile, eligibility, and spending patterns.'
-        ),
+      recommendations,
+      application_guide: DEFAULT_APPLICATION_GUIDE,
+      credit_education: DEFAULT_CREDIT_EDUCATION,
+      overall_analysis: 'Recommendations generated based on your profile, eligibility, and spending patterns.',
     }
 
-    // Save recommendation to database (current schema)
+    // Save recommendation to database
     const primarySavePayloads: Array<Record<string, unknown>> = [
       {
         user_id: user.id,
         recommendation_type: 'beginner',
         input_snapshot: body,
         recommended_cards: finalResponse.recommendations,
-        ai_analysis_text: finalResponse.overall_analysis ?? null,
-        application_guide: finalResponse.application_guide ?? null,
-        model_used: aiModelUsed,
+        ai_analysis_text: finalResponse.overall_analysis,
+        application_guide: finalResponse.application_guide,
+        model_used: 'rule_based',
       },
       {
         user_id: user.id,
         recommendation_type: 'beginner',
         input_snapshot: body,
         recommended_cards: finalResponse.recommendations,
-        ai_analysis: finalResponse.overall_analysis ?? null,
-        application_guide: finalResponse.application_guide ?? null,
-        model_used: aiModelUsed,
+        ai_analysis: finalResponse.overall_analysis,
+        application_guide: finalResponse.application_guide,
+        model_used: 'rule_based',
       },
     ]
 
-    let primarySave: { data: { id: string } | null; error: unknown } = {
-      data: null,
-      error: { message: 'No insert attempted' },
-    }
-
+    let savedRecId: string | undefined
     for (const payload of primarySavePayloads) {
       const result = await supabase
         .from('recommendations')
@@ -753,15 +492,12 @@ export async function POST(request: Request) {
         .select('id')
         .single()
       if (!result.error && result.data?.id) {
-        primarySave = { data: result.data, error: null }
+        savedRecId = result.data.id
         break
       }
-      primarySave = { data: null, error: result.error }
     }
 
-    let savedRecId = primarySave.data?.id
-    if (primarySave.error) {
-      // Backward-compat fallback for older schemas.
+    if (!savedRecId) {
       const legacySave = await supabase
         .from('recommendations')
         .insert({
@@ -770,7 +506,7 @@ export async function POST(request: Request) {
           input_data: body,
           recommended_cards: finalResponse.recommendations,
           ai_analysis: finalResponse.overall_analysis,
-          ai_model_used: aiModelUsed,
+          ai_model_used: 'rule_based',
         } as unknown as Record<string, unknown>)
         .select('id')
         .single()
@@ -786,12 +522,11 @@ export async function POST(request: Request) {
       success: true,
       recommendation_id: savedRecId,
       fallback_catalog: usedFallback,
-      fallback_reason: fallbackReason,
       data: finalResponse,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected error'
-    console.error('Beginner AI API error:', error)
+    console.error('Beginner API error:', error)
     return NextResponse.json({
       error: `Failed to generate recommendations. ${message}`
     }, { status: 500 })

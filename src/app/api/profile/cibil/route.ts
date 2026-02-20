@@ -100,12 +100,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!result.entry) {
-      return NextResponse.json(
-        { message: 'Failed to add CIBIL score' },
-        { status: 500 }
-      )
-    }
+    // Always update profile with latest credit score, regardless of whether history insert succeeded
     await upsertProfileWithFallback(supabase, {
       userId: user.id,
       email: user.email ?? null,
@@ -114,6 +109,22 @@ export async function POST(request: NextRequest) {
         credit_score_date: score_date,
       },
     })
+
+    if (!result.entry) {
+      // History table unavailable or schema mismatch – profile was updated as fallback
+      console.error('POST /api/profile/cibil: history insert failed:', result.insertError)
+      return NextResponse.json({
+        message: 'CIBIL score saved to your profile, but score history could not be recorded.',
+        entry: {
+          id: crypto.randomUUID(),
+          credit_score,
+          score_date,
+          score_source: score_source || 'manual',
+          notes: notes || null,
+        },
+        warning: result.insertError ?? 'history_unavailable',
+      })
+    }
 
     return NextResponse.json({
       message: 'CIBIL score added successfully',

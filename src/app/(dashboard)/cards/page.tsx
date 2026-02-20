@@ -6,8 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CardFilters } from '@/components/cards/card-filters'
-import { Search, SlidersHorizontal } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import type { CreditCardListItem } from '@/types/credit-card'
 
 export default function CardsPage() {
@@ -19,6 +25,7 @@ export default function CardsPage() {
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [bank, setBank] = useState(searchParams.get('bank') || '')
   const [cardType, setCardType] = useState(searchParams.get('type') || '')
+  const [network, setNetwork] = useState(searchParams.get('network') || '')
   const [maxFee, setMaxFee] = useState(searchParams.get('maxFee') || '')
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'popularity')
   const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('search') || '')
@@ -41,10 +48,11 @@ export default function CardsPage() {
       search: debouncedSearch,
       bank: normalize(bank),
       cardType: normalize(cardType),
+      network: normalize(network),
       maxFee: normalize(maxFee),
       sortBy: sortBy || 'popularity',
     }
-  }, [bank, cardType, debouncedSearch, maxFee, sortBy])
+  }, [bank, cardType, network, debouncedSearch, maxFee, sortBy])
 
   useEffect(() => {
     const cacheKey = JSON.stringify(normalizedFilters)
@@ -67,6 +75,7 @@ export default function CardsPage() {
         if (normalizedFilters.search) params.set('search', normalizedFilters.search)
         if (normalizedFilters.bank) params.set('bank', normalizedFilters.bank)
         if (normalizedFilters.cardType) params.set('type', normalizedFilters.cardType)
+        if (normalizedFilters.network) params.set('network', normalizedFilters.network)
         if (normalizedFilters.maxFee) params.set('maxFee', normalizedFilters.maxFee)
         if (normalizedFilters.sortBy) params.set('sortBy', normalizedFilters.sortBy)
         params.set('fields', 'summary')
@@ -116,13 +125,14 @@ export default function CardsPage() {
     setSearch('')
     setBank('')
     setCardType('')
+    setNetwork('')
     setMaxFee('')
     setSortBy('popularity')
     router.push('/cards')
   }
 
   const handleFilterChange = (
-    filterType: 'bank' | 'cardType' | 'maxFee',
+    filterType: 'bank' | 'cardType' | 'network' | 'maxFee',
     value: string
   ) => {
     switch (filterType) {
@@ -132,13 +142,16 @@ export default function CardsPage() {
       case 'cardType':
         setCardType(value)
         break
+      case 'network':
+        setNetwork(value)
+        break
       case 'maxFee':
         setMaxFee(value)
         break
     }
   }
 
-  const activeFiltersCount = [bank, cardType, maxFee]
+  const activeFiltersCount = [bank, cardType, network, maxFee]
     .filter((value) => Boolean(value) && value !== 'all')
     .length
 
@@ -165,32 +178,50 @@ export default function CardsPage() {
           />
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="relative shrink-0">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="relative shrink-0 gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
               Filters
               {activeFiltersCount > 0 && (
-                <span className="ml-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {activeFiltersCount}
                 </span>
               )}
             </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 p-0 max-h-[80vh] overflow-y-auto">
-            <CardFilters
-              bank={bank}
-              cardType={cardType}
-              maxFee={maxFee}
-              sortBy={sortBy}
-              onBankChange={(value) => handleFilterChange('bank', value)}
-              onCardTypeChange={(value) => handleFilterChange('cardType', value)}
-              onMaxFeeChange={(value) => handleFilterChange('maxFee', value)}
-              onSortByChange={setSortBy}
-              onClearFilters={handleClearFilters}
-            />
-          </PopoverContent>
-        </Popover>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:w-[400px] p-0 flex flex-col">
+            <SheetHeader className="px-5 pt-5 pb-0">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-base font-semibold">Filter &amp; Sort</SheetTitle>
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                    Clear all ({activeFiltersCount})
+                  </button>
+                )}
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto">
+              <CardFilters
+                bank={bank}
+                cardType={cardType}
+                network={network}
+                maxFee={maxFee}
+                sortBy={sortBy}
+                onBankChange={(value) => handleFilterChange('bank', value)}
+                onCardTypeChange={(value) => handleFilterChange('cardType', value)}
+                onNetworkChange={(value) => handleFilterChange('network', value)}
+                onMaxFeeChange={(value) => handleFilterChange('maxFee', value)}
+                onSortByChange={setSortBy}
+                onClearFilters={handleClearFilters}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <div className="flex items-center justify-between">

@@ -86,6 +86,9 @@ export type CardType =
   | "fuel"
   | "lifestyle"
   | "premium"
+  | "super_premium"
+  | "business"
+  | "secured"
   | "entry-level";
 
 export interface CreditCard {

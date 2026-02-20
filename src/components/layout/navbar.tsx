@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { CardSenseIcon } from '@/components/shared/logo'
@@ -36,20 +35,15 @@ const mainNav = [
   { name: 'Education', href: '/education' },
 ]
 
-const advisorNav = [
-  { name: 'Beginner Advisor', href: '/beginner', description: 'Step-by-step card finder for newcomers', icon: WandNavSVG },
-  { name: 'Smart Advisor', href: '/advisor', description: 'Advanced AI analysis with detailed profile', icon: BrainNavSVG },
-]
-
 const mobileNav = [
   { name: 'Dashboard', href: '/dashboard', icon: DashboardSVG },
-  { name: 'Beginner Advisor', href: '/beginner', icon: WandNavSVG },
-  { name: 'Smart Advisor', href: '/advisor', icon: BrainNavSVG },
+  { name: 'Advisor', href: '/advisor', icon: BrainNavSVG },
   { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
   { name: 'Spending', href: '/spending', icon: ChartNavSVG },
   { name: 'Education', href: '/education', icon: BookNavSVG },
   { name: 'AI Chat', href: '/chat', icon: ChatNavSVG },
   { name: 'Profile', href: '/profile', icon: PersonNavSVG },
+  { name: 'Settings', href: '/settings', icon: GearNavSVG },
 ]
 
 /* ===== Main Navbar Component ===== */
@@ -73,7 +67,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
     .toUpperCase()
     .slice(0, 2)
 
-  const isAdvisorActive = pathname?.startsWith('/beginner') || pathname?.startsWith('/advisor')
+  const isAdvisorActive = pathname?.startsWith('/advisor')
 
   const handleLogout = async () => {
     try {
@@ -112,7 +106,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                   data-active={isActive ? 'true' : 'false'}
                   className={cn(
                     'cardsense-navbar-link relative px-3 py-2',
-                    isActive && 'text-primary'
+                    isActive && 'text-[#b8860b]'
                   )}
                 >
                   {item.name}
@@ -127,53 +121,24 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
               )
             })}
 
-            {/* Advisor Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                data-active={isAdvisorActive ? 'true' : 'false'}
-                className={cn(
-                  'cardsense-navbar-link relative flex items-center gap-1 px-3 py-2 outline-none',
-                  isAdvisorActive && 'text-primary'
-                )}
-              >
-                Advisor
-                <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                {isAdvisorActive && (
-                  <motion.div
-                    layoutId="navbar-active-indicator"
-                    className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a017]"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64 rounded-xl border-border/40 bg-white/90 p-1 backdrop-blur-2xl" align="start" sideOffset={12}>
-                {advisorNav.map((item) => {
-                  const IconComp = item.icon
-                  const isItemActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-                  return (
-                    <DropdownMenuItem
-                      key={item.href}
-                      onClick={() => router.push(item.href)}
-                      className={cn(
-                        'flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5',
-                        isItemActive && 'bg-[#fdf3d7]/60'
-                      )}
-                    >
-                      <span className={cn(
-                        'mt-0.5 shrink-0',
-                        isItemActive ? 'text-primary' : 'text-muted-foreground'
-                      )}>
-                        <IconComp active={isItemActive} />
-                      </span>
-                      <div>
-                        <p className={cn('text-sm font-medium', isItemActive && 'text-primary')}>{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
-                    </DropdownMenuItem>
-                  )
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Advisor link */}
+            <Link
+              href="/advisor"
+              data-active={isAdvisorActive ? 'true' : 'false'}
+              className={cn(
+                'cardsense-navbar-link relative px-3 py-2',
+                isAdvisorActive && 'text-[#b8860b]'
+              )}
+            >
+              Advisor
+              {isAdvisorActive && (
+                <motion.div
+                  layoutId="navbar-active-indicator"
+                  className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a017]"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+            </Link>
           </nav>
 
           {/* Right section */}
@@ -206,6 +171,10 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                 <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
                   <PersonNavSVG />
                   <span className="ml-2">Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+                  <SettingsNavSVG />
+                  <span className="ml-2">Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
@@ -248,11 +217,11 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                     className={cn(
                       'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-[#fdf3d7]/70 text-primary'
+                        ? 'bg-[#fdf3d7]/70 text-[#b8860b]'
                         : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                     )}
                   >
-                    <span className={cn('shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                    <span className={cn('shrink-0', isActive ? 'text-[#b8860b]' : 'text-muted-foreground')}>
                       <IconComp active={isActive} />
                     </span>
                     {item.name}
@@ -371,6 +340,24 @@ function MenuSVG() {
       <line x1="3" y1="6" x2="19" y2="6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       <line x1="3" y1="11" x2="15" y2="11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       <line x1="3" y1="16" x2="19" y2="16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function GearNavSVG({ active }: { active?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
+      <path d="M14.6 11.15l1 .58a.56.56 0 01.2.77l-1.12 1.95a.56.56 0 01-.77.2l-1-.58c-.37.3-.78.55-1.23.72v1.17a.56.56 0 01-.56.56h-2.24a.56.56 0 01-.56-.56v-1.17c-.45-.17-.86-.42-1.23-.72l-1 .58a.56.56 0 01-.77-.2L4.2 12.5a.56.56 0 01.2-.77l1-.58a5.06 5.06 0 010-1.42l-1-.58a.56.56 0 01-.2-.77l1.12-1.95a.56.56 0 01.77-.2l1 .58c.37-.3.78-.55 1.23-.72V4.92a.56.56 0 01.56-.56h2.24c.31 0 .56.25.56.56v1.17c.45.17.86.42 1.23.72l1-.58a.56.56 0 01.77.2l1.12 1.95a.56.56 0 01-.2.77l-1 .58a5.06 5.06 0 010 1.42z" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
+function SettingsNavSVG() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M13.05 10.13l.9.52a.5.5 0 01.18.68l-1 1.74a.5.5 0 01-.68.18l-.9-.52a4.47 4.47 0 01-1.1.64v1.04a.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5v-1.04a4.47 4.47 0 01-1.1-.64l-.9.52a.5.5 0 01-.68-.18l-1-1.74a.5.5 0 01.18-.68l.9-.52a4.5 4.5 0 010-1.26l-.9-.52a.5.5 0 01-.18-.68l1-1.74a.5.5 0 01.68-.18l.9.52a4.47 4.47 0 011.1-.64V4.59a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1.04c.4.16.77.37 1.1.64l.9-.52a.5.5 0 01.68.18l1 1.74a.5.5 0 01-.18.68l-.9.52a4.5 4.5 0 010 1.26z" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   )
 }

@@ -11,7 +11,6 @@ import { CardSenseIcon } from '@/components/shared/logo'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: DashboardSVG },
-  { name: 'Beginner Advisor', href: '/beginner', icon: WandNavSVG },
   { name: 'Smart Advisor', href: '/advisor', icon: BrainNavSVG },
   { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
   { name: 'Spending Tracker', href: '/spending', icon: ChartNavSVG },
@@ -64,19 +63,19 @@ export function Sidebar() {
                 data-active={isActive ? 'true' : 'false'}
                 className={cn(
                   'cardsense-nav-item group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium',
-                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  isActive ? 'text-[#b8860b]' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <span className={cn(
                   'mr-3 shrink-0 transition-colors duration-200',
-                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                  isActive ? 'text-[#b8860b]' : 'text-muted-foreground group-hover:text-foreground'
                 )}>
                   <IconComp active={isActive} />
                 </span>
                 <span className="flex-1">{item.name}</span>
                 {isActive && (
                   <>
-                    <ChevronRight className="h-3.5 w-3.5 text-primary/50" />
+                    <ChevronRight className="h-3.5 w-3.5 text-[#b8860b]/50" />
                     <motion.div
                       layoutId="sidebar-active-bg"
                       className="absolute inset-0 rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/50"

@@ -50,6 +50,7 @@ const getFallbackCardsResponse = (params: {
   search: string
   bank: string
   cardType: string
+  network: string
   maxFee: number | undefined
   minIncome: number | undefined
   sortBy: string
@@ -57,9 +58,10 @@ const getFallbackCardsResponse = (params: {
   limit: number
   offset: number
 }) => {
-  const { search, bank, cardType, maxFee, minIncome, sortBy, fields, limit, offset } = params
+  const { search, bank, cardType, network, maxFee, minIncome, sortBy, fields, limit, offset } = params
   const normalizedSearch = search.toLowerCase()
   const normalizedBank = bank.toLowerCase()
+  const normalizedNetwork = network.toLowerCase()
 
   let cards = LOCAL_CARD_CATALOG.filter((card) => card.is_active)
 
@@ -78,6 +80,10 @@ const getFallbackCardsResponse = (params: {
     cards = cards.filter((card) => card.card_type === cardType)
   }
 
+  if (normalizedNetwork) {
+    cards = cards.filter((card) => card.card_network === normalizedNetwork)
+  }
+
   if (typeof maxFee === 'number') {
     cards = cards.filter((card) => card.annual_fee <= maxFee)
   }
@@ -94,6 +100,9 @@ const getFallbackCardsResponse = (params: {
       break
     case 'fee_high':
       cards.sort((a, b) => b.annual_fee - a.annual_fee || b.popularity_score - a.popularity_score)
+      break
+    case 'reward_high':
+      cards.sort((a, b) => b.reward_rate_default - a.reward_rate_default || b.popularity_score - a.popularity_score)
       break
     case 'name':
       cards.sort((a, b) => a.card_name.localeCompare(b.card_name))
@@ -125,6 +134,7 @@ export async function GET(request: NextRequest) {
   const search = normalizeFilter(searchParams.get('search'))
   const bank = normalizeFilter(searchParams.get('bank'))
   const cardType = normalizeFilter(searchParams.get('type'))
+  const network = normalizeFilter(searchParams.get('network'))
   const maxFee = parsePositiveInteger(searchParams.get('maxFee'))
   const minIncome = parsePositiveInteger(searchParams.get('minIncome'))
   const sortBy = normalizeFilter(searchParams.get('sortBy')) || 'popularity'
@@ -157,6 +167,10 @@ export async function GET(request: NextRequest) {
     cardsQuery = cardsQuery.eq('card_type', cardType)
   }
 
+  if (network) {
+    cardsQuery = cardsQuery.eq('card_network', network)
+  }
+
   if (typeof maxFee === 'number') {
     cardsQuery = cardsQuery.lte('annual_fee', maxFee)
   }
@@ -171,6 +185,9 @@ export async function GET(request: NextRequest) {
       break
     case 'fee_high':
       cardsQuery = cardsQuery.order('annual_fee', { ascending: false }).order('popularity_score', { ascending: false })
+      break
+    case 'reward_high':
+      cardsQuery = cardsQuery.order('reward_rate_default', { ascending: false }).order('popularity_score', { ascending: false })
       break
     case 'name':
       cardsQuery = cardsQuery.order('card_name', { ascending: true })
@@ -190,6 +207,7 @@ export async function GET(request: NextRequest) {
         search,
         bank,
         cardType,
+        network,
         maxFee,
         minIncome,
         sortBy,
@@ -223,6 +241,10 @@ export async function GET(request: NextRequest) {
 
     if (cardType) {
       countQuery = countQuery.eq('card_type', cardType)
+    }
+
+    if (network) {
+      countQuery = countQuery.eq('card_network', network)
     }
 
     if (typeof maxFee === 'number') {

@@ -587,28 +587,24 @@ export async function insertCreditScoreWithFallback(
     notes: string | null
   }
 ) {
-  const modernDuplicate = await supabase
+  // Check for existing entry on the same date (single query is sufficient)
+  const duplicateCheck = await supabase
     .from('credit_score_history')
     .select('id')
     .eq('user_id', params.userId)
     .eq('score_date', params.scoreDate)
     .maybeSingle()
 
-  if (modernDuplicate.data) {
-    return { duplicate: true as const, entry: null }
+  if (duplicateCheck.data) {
+    return { duplicate: true as const, entry: null, insertError: null }
   }
 
-  const legacyDuplicate = await supabase
-    .from('credit_score_history')
-    .select('id')
-    .eq('user_id', params.userId)
-    .eq('score_date', params.scoreDate)
-    .maybeSingle()
-
-  if (legacyDuplicate.data) {
-    return { duplicate: true as const, entry: null }
+  // If the table doesn't exist, return gracefully
+  if (isMissingTableError(duplicateCheck.error?.message, 'credit_score_history')) {
+    return { duplicate: false as const, entry: null, insertError: 'credit_score_history table not found' }
   }
 
+  // Attempt 1: Modern schema with score_source column
   const modernInsert = await supabase
     .from('credit_score_history')
     .insert({
@@ -625,30 +621,70 @@ export async function insertCreditScoreWithFallback(
     return {
       duplicate: false as const,
       entry: normalizeModernHistory(modernInsert.data as unknown as UnknownRow),
+      insertError: null,
     }
   }
 
-  const legacyInsert = await supabase
-    .from('credit_score_history')
-    .insert({
-      user_id: params.userId,
-      score: params.creditScore,
-      score_date: params.scoreDate,
-      source: params.scoreSource,
-      notes: params.notes,
-    })
-    .select(LEGACY_HISTORY_SELECT)
-    .maybeSingle()
+  // Attempt 2: Legacy schema using 'score' and 'source' column names
+  if (!isMissingTableError(modernInsert.error?.message, 'credit_score_history')) {
+    const legacyInsert = await supabase
+      .from('credit_score_history')
+      .insert({
+        user_id: params.userId,
+        score: params.creditScore,
+        score_date: params.scoreDate,
+        source: params.scoreSource,
+        notes: params.notes,
+      })
+      .select(LEGACY_HISTORY_SELECT)
+      .maybeSingle()
 
-  if (!legacyInsert.error && legacyInsert.data) {
+    if (!legacyInsert.error && legacyInsert.data) {
+      return {
+        duplicate: false as const,
+        entry: normalizeLegacyHistory(legacyInsert.data as unknown as UnknownRow),
+        insertError: null,
+      }
+    }
+
+    // Attempt 3: Minimal schema – only core columns, no score_source/source
+    const minimalInsert = await supabase
+      .from('credit_score_history')
+      .insert({
+        user_id: params.userId,
+        credit_score: params.creditScore,
+        score_date: params.scoreDate,
+      })
+      .select('id, credit_score, score_date')
+      .maybeSingle()
+
+    if (!minimalInsert.error && minimalInsert.data) {
+      const row = minimalInsert.data as unknown as UnknownRow
+      return {
+        duplicate: false as const,
+        entry: {
+          id: asString(row.id) || crypto.randomUUID(),
+          credit_score: asNumber(row.credit_score) || params.creditScore,
+          score_date: asString(row.score_date) || params.scoreDate,
+          score_source: params.scoreSource,
+          notes: params.notes,
+        },
+        insertError: null,
+      }
+    }
+
+    const errorMsg = legacyInsert.error?.message || modernInsert.error?.message || 'Unknown insert error'
     return {
       duplicate: false as const,
-      entry: normalizeLegacyHistory(legacyInsert.data as unknown as UnknownRow),
+      entry: null,
+      insertError: errorMsg,
     }
   }
 
+  const errorMsg = modernInsert.error?.message || 'Table not accessible'
   return {
     duplicate: false as const,
     entry: null,
+    insertError: errorMsg,
   }
 }

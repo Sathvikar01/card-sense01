@@ -43,11 +43,6 @@ export function CardGrid({ cards, loading }: CardGridProps) {
 
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{cards.length}</span> {cards.length === 1 ? 'card' : 'cards'}
-        </p>
-      </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, idx) => (
           <motion.div

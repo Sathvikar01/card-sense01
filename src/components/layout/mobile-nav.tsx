@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: HomeMobileSVG },
-  { name: 'Advisor', href: '/beginner', icon: WandMobileSVG },
+  { name: 'Advisor', href: '/advisor', icon: WandMobileSVG },
   { name: 'Cards', href: '/cards', icon: CardMobileSVG },
   { name: 'Spend', href: '/spending', icon: ChartMobileSVG },
   { name: 'Profile', href: '/profile', icon: PersonMobileSVG },
@@ -29,13 +29,13 @@ export function MobileNav() {
               href={item.href}
               className={cn(
                 'relative flex h-full flex-1 flex-col items-center justify-center gap-1.5 rounded-xl text-[0.6rem] font-semibold transition-colors',
-                isActive ? 'text-violet-600' : 'text-muted-foreground'
+                isActive ? 'text-[#b8860b]' : 'text-muted-foreground'
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="mobile-nav-active"
-                  className="absolute inset-1.5 rounded-xl bg-violet-50/80"
+                  className="absolute inset-1.5 rounded-xl bg-[#fdf3d7]/60"
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
@@ -46,7 +46,7 @@ export function MobileNav() {
               {isActive && (
                 <motion.div
                   layoutId="mobile-nav-dot"
-                  className="absolute bottom-1 h-1 w-1 rounded-full bg-violet-500"
+                  className="absolute bottom-1 h-1 w-1 rounded-full bg-[#d4a017]"
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}

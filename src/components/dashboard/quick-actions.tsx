@@ -9,7 +9,7 @@ const quickActions = [
     title: 'Get Recommendation',
     description: 'Run profile-based card matching',
     icon: SparkQaSVG,
-    href: '/beginner',
+    href: '/advisor',
     iconGradient: 'from-[#b8860b] to-[#d4a017]',
     hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
