@@ -12,6 +12,7 @@ import { useAnalysisStore } from '@/store/use-analysis-store'
 import { motion } from 'framer-motion'
 import type { UserPersona } from '@/lib/store/advisor-store'
 import type { SavedAdvisorCard, SavedAdvisorResult, ProfileSummaryData } from '@/lib/store/advisor-store'
+import { trackInteraction } from '@/lib/interactions/client'
 
 /* ------------------------------------------------------------------ */
 /*  Re-export types under the names used by the advisor page          */
@@ -483,13 +484,28 @@ interface Props {
 export function AdvisorResults({ result, onStartOver }: Props) {
   const [viewMode, setViewMode] = useState<'detailed' | 'grid'>('detailed')
   const router = useRouter()
-  const { clearComparison, toggleCompareCard } = useAnalysisStore()
+  const { setComparisonFromCards } = useAnalysisStore()
 
   const handleCompareAll = () => {
-    clearComparison()
-    for (const card of result.cards) {
-      toggleCompareCard(card.id, { id: card.id, card_name: card.name, bank_name: card.bank } as never)
-    }
+    const compareCards = result.cards.map((card) => ({
+      id: card.id,
+      card_name: card.name,
+      bank_name: card.bank,
+      card_type: 'rewards' as const,
+      annual_fee: card.annualFee,
+      reward_rate_default: card.rewardRate,
+      lounge_access: 'none',
+      best_for: card.bestCategories,
+      popularity_score: card.score,
+    }))
+    setComparisonFromCards(compareCards)
+    void trackInteraction('compare_started', {
+      page: '/advisor',
+      entityType: 'advisor_result',
+      metadata: {
+        comparedCardIds: compareCards.map((card) => card.id),
+      },
+    })
     router.push('/cards/compare')
   }
 

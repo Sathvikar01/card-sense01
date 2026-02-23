@@ -5,6 +5,8 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { createClient } from '@/lib/supabase/server'
 import { DbHealthBanner } from '@/components/layout/db-health-banner'
 import { ChatbotWidget } from '@/components/chatbot/chatbot-widget'
+import { getProfileWithFallback } from '@/lib/profile/profile-compat'
+import { OnboardingTrigger } from '@/components/onboarding/onboarding-trigger'
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +24,9 @@ export default async function DashboardLayout({
     user?.email?.split('@')[0] ||
     'User'
   const userEmail = user?.email || ''
+  const profile = user
+    ? await getProfileWithFallback(supabase, { userId: user.id, email: user.email ?? null })
+    : null
 
   return (
     <TooltipProvider>
@@ -30,6 +35,7 @@ export default async function DashboardLayout({
 
         {/* Unified Navbar - replaces Sidebar + Topbar */}
         <Navbar userName={userName} userEmail={userEmail} />
+        <OnboardingTrigger profile={profile} />
 
         {/* Main content area - full width, no sidebar offset */}
         <main className="flex-1 pb-20 md:pb-8">

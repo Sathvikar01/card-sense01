@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
+import { trackInteraction } from '@/lib/interactions/client'
 
 const signupSchema = z.object({
   fullName: z
@@ -78,6 +79,10 @@ export default function SignupPage() {
       }
 
       toast.success('Account created! Please check your email to verify your account.')
+      await trackInteraction('auth_signup_success', {
+        page: '/signup',
+        entityType: 'auth',
+      })
       router.push('/dashboard')
       router.refresh()
     } catch (error) {

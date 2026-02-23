@@ -221,9 +221,7 @@ export default async function DashboardPage() {
           <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/8 blur-[30px]" />
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">CIBIL Score</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L2 3.5v4c0 3.5 2.6 6.3 6 7.5 3.4-1.2 6-4 6-7.5v-4L8 1z" stroke="white" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><path d="M8 1L2 3.5v4c0 3.5 2.6 6.3 6 7.5 3.4-1.2 6-4 6-7.5v-4L8 1z" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
           {cibilScore ? (
             <div className="mt-3">
@@ -253,9 +251,7 @@ export default async function DashboardPage() {
           <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/8 blur-[30px]" />
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Monthly Spend</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-green-500">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="2" stroke="white" strokeWidth="1.3" fill="none" /><path d="M1 6h14" stroke="white" strokeWidth="1.3" /><circle cx="12" cy="9.5" r="1" fill="white" /><path d="M4 3V2a1 1 0 011-1h6a1 1 0 011 1v1" stroke="white" strokeWidth="1" opacity="0.5" /></svg>
-            </div>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><rect x="1" y="3" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M1 6h14" stroke="currentColor" strokeWidth="1.3" /><circle cx="12" cy="9.5" r="1" fill="currentColor" /><path d="M4 3V2a1 1 0 011-1h6a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1" opacity="0.5" /></svg>
           </div>
           <div className="mt-3">
             <p className="text-3xl font-bold text-foreground">
@@ -273,9 +269,7 @@ export default async function DashboardPage() {
           <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-500/8 blur-[30px]" />
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Top Picks</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="white" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
           <div className="mt-3">
             <p className="text-3xl font-bold text-foreground">{recommendations.length}</p>

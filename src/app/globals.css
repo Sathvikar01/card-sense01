@@ -49,6 +49,8 @@
   --color-gold-mid: #d4a017;
   --color-gold-light: #e8c04a;
   --color-gold-pale: #fdf3d7;
+  --color-icon-primary: #ffffff;
+  --color-icon-secondary: #d4a017;
 }
 
 :root {
@@ -109,6 +111,8 @@
   --glass-bg: oklch(1 0 0 / 60%);
   --glass-border: oklch(1 0 0 / 40%);
   --glass-blur: 20px;
+  --icon-primary: var(--color-icon-primary);
+  --icon-secondary: var(--color-icon-secondary);
 }
 
 .dark {
@@ -133,6 +137,8 @@
 
   --glass-bg: oklch(0.18 0.015 270 / 60%);
   --glass-border: oklch(0.30 0.01 270 / 40%);
+  --icon-primary: var(--color-icon-primary);
+  --icon-secondary: var(--color-icon-secondary);
 }
 
 @layer base {
@@ -659,6 +665,14 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .icon-primary {
+    color: var(--icon-primary);
+  }
+
+  .icon-secondary {
+    color: var(--icon-secondary);
   }
 
   .text-gradient-primary {

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GitCompare, X, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { trackInteraction } from '@/lib/interactions/client'
 
 export function CompareBar() {
   const { comparedCards, comparedCardIds, toggleCompareCard, clearComparison } =
@@ -24,9 +25,7 @@ export function CompareBar() {
         >
           <div className="flex items-center gap-3 rounded-2xl border border-[#d4a017]/30 bg-white/95 px-4 py-3 shadow-2xl shadow-black/10 backdrop-blur-xl ring-1 ring-black/5">
             {/* Icon */}
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
-              <GitCompare className="h-4 w-4 text-white" />
-            </div>
+            <GitCompare className="h-4 w-4 shrink-0 text-[#b8860b]" />
 
             {/* Cards */}
             <div className="flex items-center gap-2">
@@ -36,7 +35,7 @@ export function CompareBar() {
                   className="flex items-center gap-1.5 rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/40 px-2 py-1"
                 >
                   {/* Bank initial badge */}
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-[0.55rem] font-bold text-white">
+                  <div className="text-[0.55rem] font-bold text-[#b8860b]">
                     {card.bank_name.charAt(0)}
                   </div>
                   <span className="max-w-[90px] truncate text-[0.65rem] font-medium text-foreground">
@@ -80,7 +79,17 @@ export function CompareBar() {
               <Button
                 size="sm"
                 disabled={count < 2}
-                onClick={() => router.push('/cards/compare')}
+                onClick={() => {
+                  void trackInteraction('compare_started', {
+                    page: '/cards',
+                    entityType: 'card_compare',
+                    metadata: {
+                      comparedCardIds: comparedCardIds,
+                      comparedCount: count,
+                    },
+                  })
+                  router.push('/cards/compare')
+                }}
                 className="cardsense-btn-primary h-7 gap-1.5 text-xs"
               >
                 Compare {count}

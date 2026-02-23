@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { SpendingAnalysis, AnalysisStatus } from "@/types";
 import type { CreditCardListItem } from "@/types/credit-card";
 
@@ -18,38 +19,71 @@ interface AnalysisState {
   reset: () => void;
   toggleCompareCard: (cardId: string, card?: CreditCardListItem) => void;
   clearComparison: () => void;
+  setComparisonFromCards: (cards: CreditCardListItem[]) => void;
   setSelectedMonth: (month: string | null) => void;
 }
 
-export const useAnalysisStore = create<AnalysisState>((set, get) => ({
-  status: "idle",
-  analysis: null,
-  errorMessage: null,
-  comparedCardIds: [],
-  comparedCards: [],
-  selectedMonth: null,
+export const useAnalysisStore = create<AnalysisState>()(
+  persist(
+    (set, get) => ({
+      status: "idle",
+      analysis: null,
+      errorMessage: null,
+      comparedCardIds: [],
+      comparedCards: [],
+      selectedMonth: null,
 
-  setStatus: (status) => set({ status, errorMessage: null }),
-  setAnalysis: (analysis) => set({ analysis, status: "complete" }),
-  setError: (message) => set({ errorMessage: message, status: "error" }),
-  reset: () =>
-    set({ status: "idle", analysis: null, errorMessage: null }),
+      setStatus: (status) => set({ status, errorMessage: null }),
+      setAnalysis: (analysis) => set({ analysis, status: "complete" }),
+      setError: (message) => set({ errorMessage: message, status: "error" }),
+      reset: () =>
+        set({ status: "idle", analysis: null, errorMessage: null }),
 
-  toggleCompareCard: (cardId, card) => {
-    const current = get().comparedCardIds;
-    const currentCards = get().comparedCards;
-    if (current.includes(cardId)) {
-      set({
-        comparedCardIds: current.filter((id) => id !== cardId),
-        comparedCards: currentCards.filter((c) => c.id !== cardId),
-      });
-    } else if (current.length < 3) {
-      set({
-        comparedCardIds: [...current, cardId],
-        comparedCards: card ? [...currentCards, card] : currentCards,
-      });
+      toggleCompareCard: (cardId, card) => {
+        const currentIds = Array.from(new Set(get().comparedCardIds));
+        const currentCards = get().comparedCards;
+
+        if (currentIds.includes(cardId)) {
+          set({
+            comparedCardIds: currentIds.filter((id) => id !== cardId),
+            comparedCards: currentCards.filter((c) => c.id !== cardId),
+          });
+          return;
+        }
+
+        if (currentIds.length >= 3) {
+          return;
+        }
+
+        const nextIds = [...currentIds, cardId];
+        const nextCards = card
+          ? [...currentCards.filter((c) => c.id !== card.id), card]
+          : currentCards;
+
+        set({
+          comparedCardIds: nextIds,
+          comparedCards: nextCards.slice(0, 3),
+        });
+      },
+
+      clearComparison: () => set({ comparedCardIds: [], comparedCards: [] }),
+
+      setComparisonFromCards: (cards) => {
+        const deduped = Array.from(new Map(cards.map((card) => [card.id, card])).values()).slice(0, 3);
+        set({
+          comparedCardIds: deduped.map((card) => card.id),
+          comparedCards: deduped,
+        });
+      },
+
+      setSelectedMonth: (month) => set({ selectedMonth: month }),
+    }),
+    {
+      name: "cardsense-analysis-store",
+      partialize: (state) => ({
+        comparedCardIds: state.comparedCardIds,
+        comparedCards: state.comparedCards,
+      }),
     }
-  },
-  clearComparison: () => set({ comparedCardIds: [], comparedCards: [] }),
-  setSelectedMonth: (month) => set({ selectedMonth: month }),
-}));
+  )
+);

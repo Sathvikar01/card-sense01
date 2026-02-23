@@ -80,6 +80,22 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
     }
   }
 
+  const profileTriggerButton = (
+    <Button
+      variant="ghost"
+      className="h-10 gap-2 rounded-full px-1.5 sm:h-11 sm:px-2"
+      aria-label="Open profile menu"
+    >
+      <Avatar className="h-8 w-8 border-2 border-[#d4a017]/40 ring-2 ring-[#d4a017]/15">
+        <AvatarImage src="" alt={displayName} />
+        <AvatarFallback className="bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-xs font-semibold text-white">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <span className="hidden text-sm font-medium text-foreground sm:inline">{displayName.split(' ')[0]}</span>
+    </Button>
+  )
+
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="border-b border-border/40 bg-white/70 backdrop-blur-xl">
@@ -146,19 +162,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
             {/* User avatar dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-10 gap-2 rounded-full px-1.5 sm:h-11 sm:px-2"
-                  aria-label="Open profile menu"
-                >
-                  <Avatar className="h-8 w-8 border-2 border-[#d4a017]/40 ring-2 ring-[#d4a017]/15">
-                    <AvatarImage src="" alt={displayName} />
-                    <AvatarFallback className="bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-xs font-semibold text-white">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden text-sm font-medium text-foreground sm:inline">{displayName.split(' ')[0]}</span>
-                </Button>
+                {profileTriggerButton}
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-60 rounded-xl border-border/40 bg-white/90 backdrop-blur-2xl" align="end">
                 <DropdownMenuLabel>
@@ -235,12 +239,10 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
           <div className="mt-auto border-t border-border/30 p-4">
               <div className="overflow-hidden rounded-2xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/60 to-[#fdf3d7]/40 px-4 py-3.5">
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="white" strokeWidth="1.2" fill="none" />
-                    <path d="M5 8h6M5 5.5h6M5 10.5h3" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.8" />
-                  </svg>
-                </div>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0 text-[#b8860b]">
+                  <path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                  <path d="M5 8h6M5 5.5h6M5 10.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.8" />
+                </svg>
                 <div>
                   <p className="text-xs font-semibold text-foreground">Smarter over time</p>
                   <p className="mt-0.5 text-[0.68rem] leading-relaxed text-muted-foreground">
@@ -265,14 +267,6 @@ function DashboardSVG({ active }: { active?: boolean }) {
       <rect x="10" y="1" width="7" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
       <rect x="10" y="7" width="7" height="10" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
       <rect x="1" y="10" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-    </svg>
-  )
-}
-
-function WandNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M11.5 2l5 5-12.5 12.5L-.5 14 11.5 2z" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} transform="scale(0.85) translate(1.5,1)" />
     </svg>
   )
 }

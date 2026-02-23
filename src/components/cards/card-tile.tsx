@@ -103,17 +103,13 @@ export function CardTile({ card }: CardTileProps) {
               </div>
 
               <div className="flex items-center gap-2 text-sm">
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-violet-50">
-                  <TrendingUp className="h-3 w-3 text-violet-600" />
-                </div>
+                <TrendingUp className="h-3 w-3 text-[#b8860b]" />
                 <span className="text-muted-foreground">{card.reward_rate_default}% base rewards</span>
               </div>
 
               {card.lounge_access && card.lounge_access !== 'none' && (
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-50">
-                    <Award className="h-3 w-3 text-amber-600" />
-                  </div>
+                  <Award className="h-3 w-3 text-[#b8860b]" />
                   <span className="text-muted-foreground">Lounge access</span>
                 </div>
               )}

@@ -37,8 +37,8 @@ async function setupDatabase() {
     // Split by semicolons and execute each statement
     const statements = sql
       .split(';')
-      .map(s => s.trim())
-.filter(s => s.length > 0 && !s.startsWith('--'))
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith('--'))
 
     for (const statement of statements) {
       const { error } = await supabase.rpc('exec_sql', { sql_query: statement })
@@ -46,7 +46,7 @@ async function setupDatabase() {
       if (error) {
         // Try direct execution if RPC fails
         console.log('ℹ️  Running migration directly...')
-        const { error: directError } = await supabase.from('_sql').select(statement as any)
+        const { error: directError } = await supabase.from('_sql').select(statement)
 
         if (directError) {
           console.error('❌ Migration error:', directError)

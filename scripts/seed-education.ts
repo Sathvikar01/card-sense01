@@ -88,6 +88,21 @@ interface EducationDataset {
   content: Record<string, Category>
 }
 
+interface ArticleInsertRecord {
+  slug: string
+  title: string
+  summary: string
+  category: string
+  difficulty: string
+  content: string
+  read_time_minutes: number
+  tags: string[]
+  is_published: boolean
+  view_count: number
+  created_at: string
+  updated_at: string
+}
+
 /**
  * Generate URL-friendly slug from title
  */
@@ -243,7 +258,7 @@ async function seedEducation() {
     console.log(`📂 Categories: ${dataset.metadata.categories.join(', ')}\n`)
 
     // Process each category
-    const allArticles: any[] = []
+    const allArticles: ArticleInsertRecord[] = []
     let totalArticles = 0
 
     for (const [categoryKey, categoryData] of Object.entries(dataset.content)) {
@@ -295,7 +310,7 @@ async function seedEducation() {
     // Insert all articles into database
     console.log(`💾 Inserting ${totalArticles} articles into database...\n`)
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('education_articles')
       .upsert(allArticles, { onConflict: 'slug' })
 

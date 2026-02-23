@@ -10,7 +10,29 @@ export interface CardRecommendation {
   benefitSummary?: string[]
   rewardBreakdown?: RewardBreakdown
   annualValue?: number // Net annual value (rewards - fees)
+  scoreBreakdown?: RecommendationScoreBreakdown
+  comparisonMetrics?: RecommendationComparisonMetrics
   rank: number
+}
+
+export interface RecommendationScoreBreakdown {
+  eligibilityFit: number
+  spendFit: number
+  goalFit: number
+  feeFit: number
+  diversificationFit: number
+  total: number
+}
+
+export interface RecommendationComparisonMetrics {
+  annualFee: number
+  joiningFee: number
+  rewardRate: number
+  minIncomeRequired: number | null
+  minCreditScoreRequired: number | null
+  loungeAccess: boolean
+  fuelSurchargeWaiver: boolean
+  forexMarkup: number | null
 }
 
 export interface RewardBreakdown {
@@ -121,6 +143,8 @@ export interface RecommendedCard {
   // Value analysis
   estimatedAnnualValue?: number // in INR (rewards - fees)
   rewardBreakdown?: RewardBreakdown
+  scoreBreakdown?: RecommendationScoreBreakdown
+  comparisonMetrics?: RecommendationComparisonMetrics
 
   // Eligibility
   eligibilityMatch: {

@@ -1,15 +1,17 @@
 'use client'
 
 import { useAdvisorStore } from '@/lib/store/advisor-store'
+import { ProfileBasicsStep, canAdvanceFromBasics } from './step-profile-basics'
 import { FinancialHabitsStep } from './step-financial-habits'
 import { SpendingProfileStep, canAdvanceFromSpending } from './step-spending-profile'
 import { GoalsStep } from './step-goals'
 import { cn } from '@/lib/utils'
 
 const STEPS = [
-  { index: 0, label: 'Habits', sublabel: 'Payment & fees' },
-  { index: 1, label: 'Spending', sublabel: 'Categories' },
-  { index: 2, label: 'Goals', sublabel: 'What you want' },
+  { index: 0, label: 'Profile', sublabel: 'Eligibility basics' },
+  { index: 1, label: 'Habits', sublabel: 'Payment & fees' },
+  { index: 2, label: 'Spending', sublabel: 'Categories' },
+  { index: 3, label: 'Goals', sublabel: 'What you want' },
 ] as const
 
 interface Props {
@@ -23,9 +25,21 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
 
   const canAdvance = (): boolean => {
     switch (current) {
-      case 0: return true
-      case 1: return canAdvanceFromSpending(store.topSpendingCategories)
-      case 2: return Boolean(store.primaryGoal)
+      case 0:
+        return canAdvanceFromBasics({
+          creditScore: store.creditScore,
+          employmentType: store.employmentType,
+          monthlyIncome: store.monthlyIncome,
+          city: store.city,
+          primaryBank: store.primaryBank,
+          prefilledFields: store.profilePrefilledFields,
+        })
+      case 1:
+        return true
+      case 2:
+        return canAdvanceFromSpending(store.topSpendingCategories)
+      case 3:
+        return Boolean(store.primaryGoal)
       default: return false
     }
   }
@@ -33,10 +47,10 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
   const handleNext = () => {
     if (!canAdvance()) return
     store.markStepComplete(current)
-    if (current === 2) {
+    if (current === 3) {
       onComplete()
     } else {
-      if (current === 1) {
+      if (current === 2) {
         // Run persona detection before goals step
         store.runPersonaDetection()
       }
@@ -123,9 +137,10 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
 
       {/* Step content */}
       <div className="px-6 py-6">
-        {current === 0 && <FinancialHabitsStep />}
-        {current === 1 && <SpendingProfileStep />}
-        {current === 2 && <GoalsStep />}
+        {current === 0 && <ProfileBasicsStep />}
+        {current === 1 && <FinancialHabitsStep />}
+        {current === 2 && <SpendingProfileStep />}
+        {current === 3 && <GoalsStep />}
       </div>
 
       {/* Navigation footer */}
@@ -166,7 +181,7 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
               </svg>
               Analyzing...
             </>
-          ) : current === 2 ? (
+          ) : current === 3 ? (
             <>
               Get Recommendations
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

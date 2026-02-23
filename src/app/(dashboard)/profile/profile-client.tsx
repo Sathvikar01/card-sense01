@@ -61,6 +61,7 @@ const EMPLOYMENT_LABELS: Record<string, string> = {
   freelancer: 'Freelancer',
   student: 'Student',
   retired: 'Retired',
+  homemaker: 'Homemaker',
   unemployed: 'Unemployed',
   other: 'Other',
 }
@@ -216,9 +217,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
                 </p>
               )}
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm">
-              <Shield className="h-4 w-4 text-white" />
-            </div>
+            <Shield className="h-4 w-4 text-[#b8860b]" />
           </div>
         </div>
 
@@ -231,9 +230,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
                 {formatIncome(profile.annual_income)}
               </p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 shadow-sm">
-              <Wallet className="h-4 w-4 text-white" />
-            </div>
+            <Wallet className="h-4 w-4 text-[#b8860b]" />
           </div>
         </div>
 
@@ -249,9 +246,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
                 <p className="mt-0.5 text-xs text-muted-foreground truncate max-w-[140px]">{profile.employer_name}</p>
               )}
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 shadow-sm">
-              <Briefcase className="h-4 w-4 text-white" />
-            </div>
+            <Briefcase className="h-4 w-4 text-[#b8860b]" />
           </div>
         </div>
 
@@ -267,9 +262,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
                 <p className="mt-0.5 text-xs text-emerald-600 font-medium">Has FD</p>
               )}
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 shadow-sm">
-              <CreditCard className="h-4 w-4 text-white" />
-            </div>
+            <CreditCard className="h-4 w-4 text-[#b8860b]" />
           </div>
         </div>
       </div>
@@ -282,7 +275,6 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
           title="Personal Information"
           description="Name, email, phone, and city"
           icon={User}
-          iconGradient="from-blue-400 to-indigo-500"
           isExpanded={expandedSection === 'personal'}
           onToggle={() => toggleSection('personal')}
         >
@@ -303,7 +295,6 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
           title="Financial Information"
           description="Income, employment, bank details, and FD"
           icon={Wallet}
-          iconGradient="from-emerald-400 to-green-500"
           isExpanded={expandedSection === 'financial'}
           onToggle={() => toggleSection('financial')}
         >
@@ -326,7 +317,6 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
           title="My Cards"
           description="Credit and debit cards you own"
           icon={CreditCard}
-          iconGradient="from-[#b8860b] to-[#d4a017]"
           isExpanded={expandedSection === 'cards'}
           onToggle={() => toggleSection('cards')}
         >
@@ -339,7 +329,6 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
           title="CIBIL Score History"
           description="Track your credit score over time"
           icon={TrendingUp}
-          iconGradient="from-amber-400 to-orange-500"
           isExpanded={expandedSection === 'cibil'}
           onToggle={() => toggleSection('cibil')}
         >
@@ -392,9 +381,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
             >
               <div className="w-full max-w-md rounded-2xl bg-background border border-border p-6 shadow-2xl">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-                    <Trash2 className="h-5 w-5 text-red-600" />
-                  </div>
+                  <Trash2 className="h-5 w-5 text-red-600" />
                   <div>
                     <h3 className="text-base font-semibold text-foreground">Delete account</h3>
                     <p className="text-sm text-muted-foreground">This cannot be undone</p>
@@ -449,7 +436,6 @@ interface ProfileSectionProps {
   title: string
   description: string
   icon: React.ComponentType<{ className?: string }>
-  iconGradient: string
   isExpanded: boolean
   onToggle: () => void
   children: React.ReactNode
@@ -459,7 +445,6 @@ function ProfileSection({
   title,
   description,
   icon: Icon,
-  iconGradient,
   isExpanded,
   onToggle,
   children,
@@ -471,9 +456,7 @@ function ProfileSection({
         onClick={onToggle}
         className="flex w-full items-center gap-4 p-4 sm:p-5 text-left transition-colors hover:bg-muted/30"
       >
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${iconGradient} shadow-sm`}>
-          <Icon className="h-4 w-4 text-white" />
-        </div>
+        <Icon className="h-4 w-4 shrink-0 text-[#b8860b]" />
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{description}</p>

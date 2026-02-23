@@ -1,14 +1,85 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 import { AdvisorStepper } from '@/components/advisor/advisor-stepper'
 import { AdvisorLoading } from '@/components/advisor/advisor-loading'
-import { AdvisorResults, type AdvisorResult } from '@/components/advisor/advisor-results'
+import { CardGrid } from '@/components/cards/card-grid'
+import { CompareBar } from '@/components/cards/compare-bar'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { useSearchParams } from 'next/navigation'
+import type { CreditCardListItem } from '@/types/credit-card'
+import { trackInteraction } from '@/lib/interactions/client'
 
 type FlowStep = 'input' | 'loading' | 'results'
+
+type AdvisorCardResult = {
+  id: string
+  name: string
+  bank: string
+  score: number
+  reason: string
+  annualFee: number
+  rewardRate: number
+  estimatedAnnualValue: number
+  pros: string[]
+  cons: string[]
+  bestCategories: string[]
+  eligibilityMatch: 'high' | 'moderate' | 'uncertain'
+  usageStrategy: string
+}
+
+type AdvisorResult = {
+  analysis: string
+  cards: AdvisorCardResult[]
+}
+
+function mapCards(cards: Record<string, unknown>[] = []): AdvisorCardResult[] {
+  return cards.map((card) => ({
+    id: String((card.id || card.cardId) || ''),
+    name: String((card.name || card.cardName) || ''),
+    bank: String(card.bank || ''),
+    score: Number(card.score || 0),
+    reason: String((card.reason || card.reasoning) || ''),
+    annualFee: Number((card.annualFee || card.annualValue) || 0),
+    rewardRate: Number(card.rewardRate || 0),
+    estimatedAnnualValue: Number((card.estimatedAnnualValue || card.annualValue) || 0),
+    pros: ((card.pros || card.keyPerks || []) as string[]),
+    cons: ((card.cons || []) as string[]),
+    bestCategories: ((card.bestCategories || card.bestFor || []) as string[]),
+    eligibilityMatch: ((card.eligibilityMatch || 'moderate') as 'high' | 'moderate' | 'uncertain'),
+    usageStrategy: String(card.usageStrategy || ''),
+  }))
+}
+
+function toBrowseCards(cards: AdvisorCardResult[]): CreditCardListItem[] {
+  return cards
+    .filter((card) => Boolean(card.id))
+    .map((card) => {
+      const inferredType: CreditCardListItem['card_type'] = card.bestCategories.some((v) => /travel|lounge/i.test(v))
+        ? 'travel'
+        : card.bestCategories.some((v) => /fuel/i.test(v))
+          ? 'fuel'
+          : card.bestCategories.some((v) => /cashback|shopping|dining|grocery/i.test(v))
+            ? 'cashback'
+            : 'rewards'
+
+      const lounge = card.bestCategories.some((v) => /lounge|travel/i.test(v)) ? 'domestic_only' : 'none'
+
+      return {
+        id: card.id,
+        bank_name: card.bank || 'Bank',
+        card_name: card.name || 'Recommended Card',
+        card_type: inferredType,
+        annual_fee: card.annualFee,
+        reward_rate_default: card.rewardRate,
+        lounge_access: lounge,
+        best_for: card.bestCategories,
+        popularity_score: Math.max(45, Math.min(99, Math.round(card.score))),
+      }
+    })
+}
 
 export default function AdvisorPage() {
   const store = useAdvisorStore()
@@ -21,101 +92,91 @@ export default function AdvisorPage() {
   const [error, setError] = useState<string | null>(null)
   const [checkedSaved, setCheckedSaved] = useState(false)
 
-  // Fetch profile and pre-fill advisor store on mount
+  useEffect(() => {
+    void trackInteraction('advisor_started', {
+      page: '/advisor',
+      entityType: 'advisor_flow',
+    })
+  }, [])
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await fetch('/api/profile')
-        if (res.ok) {
-          const data = await res.json()
+        const [profileRes, cibilRes, cardsRes] = await Promise.all([
+          fetch('/api/profile'),
+          fetch('/api/profile/cibil'),
+          fetch('/api/cards/user'),
+        ])
+
+        if (profileRes.ok) {
+          const data = await profileRes.json()
           const profile = data.profile || data
-          if (profile) {
-            store.prefillFromProfile({
-              creditScore: profile.credit_score,
-              employmentType: profile.employment_type,
-              annualIncome: profile.annual_income,
-              city: profile.city,
-              primaryBank: profile.primary_bank,
-              hasFD: profile.has_fixed_deposit,
-              fdAmount: profile.fd_amount,
-            })
-          }
+          const latestHistory = cibilRes.ok
+            ? (((await cibilRes.json()).history || []) as Array<{ credit_score: number; score_date: string }>)
+            : []
+
+          const latestScore = latestHistory.length > 0
+            ? [...latestHistory].sort((a, b) => b.score_date.localeCompare(a.score_date))[0]?.credit_score
+            : profile?.credit_score
+
+          const existingCards = cardsRes.ok
+            ? ((await cardsRes.json()).cards || []).map((card: { card_name: string }) => card.card_name)
+            : []
+
+          store.prefillFromProfile({
+            creditScore: latestScore,
+            employmentType: profile?.employment_type,
+            annualIncome: profile?.annual_income,
+            city: profile?.city,
+            primaryBank: profile?.primary_bank,
+            hasFD: profile?.has_fixed_deposit,
+            fdAmount: profile?.fd_amount,
+            existingCards,
+          })
         }
       } catch {
-        // Profile fetch failure is non-fatal; advisor still works
+        // Non-fatal, user can still fill advisor manually
       }
     }
+
     loadProfile()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // After mount, wait for Zustand to finish rehydrating, then decide whether to show saved results
   useEffect(() => {
     if (isNew) {
       setCheckedSaved(true)
       return
     }
 
-    const applyResult = (saved: AdvisorResult) => {
-      setResult(saved)
-      setStep('results')
-      setCheckedSaved(true)
-    }
-
-    const fallbackToApi = async () => {
+    const hydrateSaved = async () => {
       try {
         const res = await fetch('/api/recommendations/latest')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.recommendation?.cards?.length > 0) {
-            const saved = data.recommendation
-            const mappedResult: AdvisorResult = {
-              persona: null,
-              profileSummary: '',
-              analysis: saved.analysis || '',
-              cards: (saved.cards as Record<string, unknown>[]).map((card) => ({
-                id: ((card.id || card.cardId) || '') as string,
-                name: ((card.name || card.cardName) || '') as string,
-                bank: (card.bank || '') as string,
-                score: (card.score || 0) as number,
-                reason: ((card.reason || card.reasoning) || '') as string,
-                annualFee: ((card.annualFee || card.annualValue) || 0) as number,
-                rewardRate: (card.rewardRate || 0) as number,
-                estimatedAnnualValue: (card.estimatedAnnualValue || 0) as number,
-                pros: ((card.pros || card.keyPerks || []) as string[]),
-                cons: (card.cons || []) as string[],
-                bestCategories: (card.bestCategories || []) as string[],
-                eligibilityMatch: ((card.eligibilityMatch || 'moderate') as string) as 'high' | 'moderate' | 'uncertain',
-                usageStrategy: (card.usageStrategy || '') as string,
-              })),
-            }
-            store.setSavedResult(mappedResult)
-            applyResult(mappedResult)
-            return
-          }
+        if (!res.ok) {
+          setCheckedSaved(true)
+          return
         }
+
+        const data = await res.json()
+        if (!data.recommendation?.cards?.length) {
+          setCheckedSaved(true)
+          return
+        }
+
+        const mapped: AdvisorResult = {
+          analysis: data.recommendation.analysis || '',
+          cards: mapCards(data.recommendation.cards as Record<string, unknown>[]),
+        }
+        setResult(mapped)
+        setStep('results')
       } catch {
-        // fall through
-      }
-      setCheckedSaved(true)
-    }
-
-    const checkAfterHydration = () => {
-      const savedResult = useAdvisorStore.getState().savedResult
-      if (savedResult) {
-        applyResult(savedResult)
-      } else {
-        fallbackToApi()
+        // ignore
+      } finally {
+        setCheckedSaved(true)
       }
     }
 
-    if (useAdvisorStore.persist.hasHydrated()) {
-      checkAfterHydration()
-    } else {
-      const unsub = useAdvisorStore.persist.onFinishHydration(checkAfterHydration)
-      return unsub
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    hydrateSaved()
   }, [isNew])
 
   const handleComplete = async () => {
@@ -125,6 +186,16 @@ export default function AdvisorPage() {
       setStep('loading')
 
       const payload = store.getApiPayload()
+
+      await trackInteraction('advisor_submitted', {
+        page: '/advisor',
+        entityType: 'advisor_flow',
+        metadata: {
+          monthlyIncome: payload.monthlyIncome as number,
+          cibilScore: payload.cibilScore as number,
+          prefilledFields: store.profilePrefilledFields,
+        },
+      })
 
       const age = (payload.age as number) || 28
       const annualIncome = (payload.annualIncome as number) || 0
@@ -153,7 +224,6 @@ export default function AdvisorPage() {
         travel_perks: 'travel_perks',
         premium_lifestyle: 'travel_perks',
       }
-      const valuePriority = goalToValue[primaryGoal] || 'cashback_everyday'
 
       const enrichedPayload = {
         ...payload,
@@ -162,7 +232,7 @@ export default function AdvisorPage() {
           income_profile: incomeProfile,
           secured_card_readiness: securedReadiness,
           primary_spend_focus: spendFocus,
-          value_priority: valuePriority,
+          value_priority: goalToValue[primaryGoal] || 'cashback_everyday',
         },
       }
 
@@ -186,67 +256,28 @@ export default function AdvisorPage() {
 
         const beginnerData = await beginnerResponse.json()
         const data = beginnerData.data ?? beginnerData
-
-        const mappedResult: AdvisorResult = {
-          persona: store.detectedPersona,
-          profileSummary: '',
+        const mapped = {
           analysis: data.overall_analysis || '',
-          cards: (data.recommendations || data.cards || []).map((card: Record<string, unknown>) => ({
-            id: (card.cardId || card.id || '') as string,
-            name: (card.cardName || card.name || '') as string,
-            bank: (card.bank || '') as string,
-            score: (card.score || 0) as number,
-            reason: (card.reasoning || card.reason || '') as string,
-            annualFee: (card.annualFee || 0) as number,
-            rewardRate: (card.rewardRate || 0) as number,
-            estimatedAnnualValue: (card.annualValue || 0) as number,
-            pros: (card.keyPerks || card.pros || []) as string[],
-            cons: (card.cons || []) as string[],
-            bestCategories: (card.bestCategories || card.bestFor || []) as string[],
-            eligibilityMatch: ((card.eligibilityMatch || 'moderate') as string) as 'high' | 'moderate' | 'uncertain',
-            usageStrategy: (card.usageStrategy || '') as string,
-          })),
+          cards: mapCards((data.recommendations || data.cards || []) as Record<string, unknown>[]),
         }
-
-        store.setSavedResult(mappedResult)
-        setResult(mappedResult)
+        setResult(mapped)
         setStep('results')
         toast.success('Recommendations ready')
         return
       }
 
       const data = await response.json()
-      const cards = data.cards || []
-      const mappedResult: AdvisorResult = {
-        persona: store.detectedPersona,
-        profileSummary: buildProfileSummary(payload),
+      setResult({
         analysis: data.analysis || '',
-        cards: cards.map((card: Record<string, unknown>) => ({
-          id: (card.id || '') as string,
-          name: (card.name || '') as string,
-          bank: (card.bank || '') as string,
-          score: (card.score || 0) as number,
-          reason: (card.reason || '') as string,
-          annualFee: (card.annualFee || 0) as number,
-          rewardRate: (card.rewardRate || 0) as number,
-          estimatedAnnualValue: (card.annualValue || card.estimatedAnnualValue || 0) as number,
-          pros: (card.pros || card.keyPerks || []) as string[],
-          cons: (card.cons || []) as string[],
-          bestCategories: (card.bestCategories || card.bestFor || []) as string[],
-          eligibilityMatch: ((card.eligibilityMatch || 'moderate') as string) as 'high' | 'moderate' | 'uncertain',
-          usageStrategy: (card.usageStrategy || '') as string,
-        })),
-      }
-
-      store.setSavedResult(mappedResult)
-      setResult(mappedResult)
+        cards: mapCards((data.cards || []) as Record<string, unknown>[]),
+      })
       setStep('results')
       toast.success('Recommendations ready')
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get recommendations'
-      setError(errorMessage)
-      toast.error(errorMessage)
+      const message = err instanceof Error ? err.message : 'Failed to get recommendations'
+      setError(message)
       setStep('input')
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -256,7 +287,7 @@ export default function AdvisorPage() {
     try {
       await fetch('/api/recommendations/latest', { method: 'DELETE' })
     } catch {
-      // Ignore errors
+      // ignore
     }
     store.setSavedResult(null)
     store.reset()
@@ -265,7 +296,8 @@ export default function AdvisorPage() {
     setError(null)
   }
 
-  // Loading spinner while checking saved state
+  const browseCards = useMemo(() => toBrowseCards(result?.cards || []), [result])
+
   if (!checkedSaved && !isNew) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -278,71 +310,54 @@ export default function AdvisorPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Hero header — only shown during input */}
-      {step === 'input' && (
-        <div className="mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-[#fdf3d7]/60 px-3 py-1 mb-3">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 1L8.8 4.7L13 5.3L10 8.2L10.7 12.4L7 10.5L3.3 12.4L4 8.2L1 5.3L5.2 4.7L7 1Z" fill="#b8860b" stroke="#b8860b" strokeWidth="0.5" strokeLinejoin="round"/>
-            </svg>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#b8860b]">Smart Advisor</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-            Find your ideal credit card
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-md leading-relaxed">
-            Answer a few questions about your habits and goals. We use your profile data to skip the basics and give you a tighter match.
-          </p>
-        </div>
-      )}
-
-      {/* Error banner */}
-      {error && step === 'input' && (
-        <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="mt-0.5 shrink-0 text-red-500">
-            <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M9 5.5V10M9 12.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-700">Could not generate recommendations</p>
-            <p className="text-xs text-red-600/80 mt-0.5">{error}</p>
-            <button onClick={() => setError(null)} className="text-xs font-medium text-[#b8860b] mt-1.5 hover:underline">
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main content card */}
-      <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
-        {step === 'input' && (
-          <AdvisorStepper onComplete={handleComplete} isLoading={isLoading} />
-        )}
-        {step === 'loading' && <AdvisorLoading />}
-        {step === 'results' && result && (
-          <AdvisorResults result={result} onStartOver={handleStartOver} />
-        )}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Advisor</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          Answer key eligibility, spending, and goal questions to get tailored credit card matches.
+        </p>
       </div>
 
-      {/* Footer note */}
+      {error && step === 'input' && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       {step === 'input' && (
-        <p className="text-[11px] text-muted-foreground/70 text-center mt-5 leading-relaxed max-w-sm mx-auto">
-          Your data is used only to generate recommendations and is not shared with card issuers.
-        </p>
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+          <AdvisorStepper onComplete={handleComplete} isLoading={isLoading} />
+        </div>
+      )}
+
+      {step === 'loading' && (
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+          <AdvisorLoading />
+        </div>
+      )}
+
+      {step === 'results' && result && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground">Recommended Cards</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Showing {browseCards.length} matched cards in Browse Cards view.
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleStartOver}>Start Over</Button>
+          </div>
+
+          {result.analysis && (
+            <div className="rounded-xl border border-border/60 bg-white p-4 text-sm leading-relaxed text-foreground/90">
+              {result.analysis}
+            </div>
+          )}
+
+          <CardGrid cards={browseCards} loading={false} />
+          <CompareBar />
+        </div>
       )}
     </div>
   )
-}
-
-function buildProfileSummary(payload: Record<string, unknown>) {
-  return {
-    monthlyIncome: (payload.monthlyIncome as number) || undefined,
-    creditScore: payload.cibilScore ? `~${payload.cibilScore}` : undefined,
-    persona: payload.detectedPersona ? String(payload.detectedPersona).replace(/_/g, ' ') : undefined,
-    primaryGoal: payload.primaryGoal ? String(payload.primaryGoal).replace(/_/g, ' ') : undefined,
-    topSpending: (payload.topSpendingCategories as string[])?.map((c) => c.replace(/_/g, ' ')) ?? undefined,
-    age: (payload.age as number) || undefined,
-    employment: payload.employmentType ? String(payload.employmentType).replace(/_/g, ' ') : undefined,
-  }
 }

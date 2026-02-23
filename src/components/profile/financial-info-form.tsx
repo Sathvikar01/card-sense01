@@ -27,7 +27,17 @@ import {
 import { Switch } from '@/components/ui/switch'
 
 const financialInfoSchema = z.object({
-  employment_type: z.enum(['salaried', 'self_employed', 'student', 'retired', 'unemployed', 'other']).optional(),
+  employment_type: z.enum([
+    'salaried',
+    'self_employed',
+    'business_owner',
+    'freelancer',
+    'student',
+    'retired',
+    'homemaker',
+    'unemployed',
+    'other',
+  ]).optional(),
   employer_name: z.string().max(200).optional().or(z.literal('')),
   annual_income: z
     .number()
@@ -62,8 +72,11 @@ interface FinancialInfoFormProps {
 const EMPLOYMENT_TYPES = [
   { value: 'salaried', label: 'Salaried' },
   { value: 'self_employed', label: 'Self Employed' },
+  { value: 'business_owner', label: 'Business Owner' },
+  { value: 'freelancer', label: 'Freelancer' },
   { value: 'student', label: 'Student' },
   { value: 'retired', label: 'Retired' },
+  { value: 'homemaker', label: 'Homemaker' },
   { value: 'unemployed', label: 'Unemployed' },
   { value: 'other', label: 'Other' },
 ]

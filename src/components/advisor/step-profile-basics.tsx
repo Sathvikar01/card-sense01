@@ -36,6 +36,14 @@ function formatIncome(value: number) {
 
 export function ProfileBasicsStep() {
   const store = useAdvisorStore()
+  const prefilled = new Set(store.profilePrefilledFields)
+  const prefilledList = store.profilePrefilledFields
+
+  const showCreditScore = !prefilled.has('creditScore')
+  const showEmployment = !prefilled.has('employmentType')
+  const showIncome = !prefilled.has('monthlyIncome')
+  const showCity = !prefilled.has('city')
+  const showPrimaryBank = !prefilled.has('primaryBank')
 
   return (
     <div className="space-y-8">
@@ -48,92 +56,123 @@ export function ProfileBasicsStep() {
         </p>
       </div>
 
-      {/* Credit Score */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">
-          What is your current credit score range?
-        </Label>
-        <p className="text-xs text-muted-foreground -mt-1">
-          If you are unsure, select your best estimate. You can check free on CIBIL, Experian, or your bank app.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {SCORE_RANGES.map((range) => {
-            const selected = store.creditScore === range.value
-            return (
-              <button
-                key={range.value}
-                type="button"
-                onClick={() => store.updateField('creditScore', range.value)}
-                className={cn(
-                  'relative flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all duration-200',
-                  selected
-                    ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
-                    : 'border-border hover:border-border/80 hover:bg-muted/40'
-                )}
+      {prefilledList.length > 0 && (
+        <div className="rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/40 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#b8860b]">
+            Prefilled From Profile
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {prefilledList.map((field) => (
+              <span
+                key={field}
+                className="rounded-full border border-[#d4a017]/30 bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
               >
-                <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', range.color)} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground leading-tight">{range.label}</p>
-                  <p className="text-xs text-muted-foreground">{range.sublabel}</p>
-                </div>
-                {selected && (
-                  <div className="absolute top-2 right-2.5">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="8" className="fill-primary" />
-                      <path d="M5 8L7 10L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                )}
-              </button>
-            )
-          })}
+                {field === 'creditScore' && 'Credit score'}
+                {field === 'employmentType' && 'Employment'}
+                {field === 'monthlyIncome' && `Income (${formatIncome(store.monthlyIncome)})`}
+                {field === 'city' && 'City'}
+                {field === 'primaryBank' && 'Primary bank'}
+                {field === 'hasFD' && 'Fixed deposit status'}
+                {field === 'fdAmount' && 'FD amount'}
+                {field === 'existingCards' && 'Existing cards'}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Credit Score */}
+      {showCreditScore && (
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground">
+            What is your current credit score range?
+          </Label>
+          <p className="text-xs text-muted-foreground -mt-1">
+            If you are unsure, select your best estimate. You can check free on CIBIL, Experian, or your bank app.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {SCORE_RANGES.map((range) => {
+              const selected = store.creditScore === range.value
+              return (
+                <button
+                  key={range.value}
+                  type="button"
+                  onClick={() => store.updateField('creditScore', range.value)}
+                  className={cn(
+                    'relative flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all duration-200',
+                    selected
+                      ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
+                      : 'border-border hover:border-border/80 hover:bg-muted/40'
+                  )}
+                >
+                  <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', range.color)} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground leading-tight">{range.label}</p>
+                    <p className="text-xs text-muted-foreground">{range.sublabel}</p>
+                  </div>
+                  {selected && (
+                    <div className="absolute top-2 right-2.5">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="8" r="8" className="fill-primary" />
+                        <path d="M5 8L7 10L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Employment Type */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">Employment type</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {EMPLOYMENT_OPTIONS.map((option) => {
-            const selected = store.employmentType === option.value
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => store.updateField('employmentType', option.value)}
-                className={cn(
-                  'rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200',
-                  selected
-                    ? 'border-primary/60 bg-primary/[0.06] text-foreground shadow-[0_0_0_1px_var(--primary)]'
-                    : 'border-border text-muted-foreground hover:border-border/80 hover:bg-muted/40'
-                )}
-              >
-                {option.label}
-              </button>
-            )
-          })}
+      {showEmployment && (
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground">Employment type</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {EMPLOYMENT_OPTIONS.map((option) => {
+              const selected = store.employmentType === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => store.updateField('employmentType', option.value)}
+                  className={cn(
+                    'rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200',
+                    selected
+                      ? 'border-primary/60 bg-primary/[0.06] text-foreground shadow-[0_0_0_1px_var(--primary)]'
+                      : 'border-border text-muted-foreground hover:border-border/80 hover:bg-muted/40'
+                  )}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Monthly Income */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">
-          {store.employmentType === 'student' ? 'Monthly income or allowance' : 'Monthly take-home income'}
-        </Label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
-          <Input
-            type="number"
-            min={0}
-            max={5000000}
-            step={1000}
-            value={store.monthlyIncome || ''}
-            onChange={(e) => store.updateField('monthlyIncome', Number(e.target.value) || 0)}
-            placeholder="e.g. 50000"
-            className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
-          />
+      {showIncome && (
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground">
+            {store.employmentType === 'student' ? 'Monthly income or allowance' : 'Monthly take-home income'}
+          </Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
+            <Input
+              type="number"
+              min={0}
+              max={5000000}
+              step={1000}
+              value={store.monthlyIncome || ''}
+              onChange={(e) => store.updateField('monthlyIncome', Number(e.target.value) || 0)}
+              placeholder="e.g. 50000"
+              className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Age */}
       <div className="space-y-3">
@@ -153,29 +192,46 @@ export function ProfileBasicsStep() {
 
       {/* City & Primary Bank row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-foreground">City</Label>
-          <Input
-            value={store.city}
-            onChange={(e) => store.updateField('city', e.target.value)}
-            placeholder="e.g. Mumbai, Delhi, Bengaluru"
-            className="rounded-xl"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-foreground">Primary bank</Label>
-          <Input
-            value={store.primaryBank}
-            onChange={(e) => store.updateField('primaryBank', e.target.value)}
-            placeholder="e.g. HDFC, SBI, ICICI"
-            className="rounded-xl"
-          />
-        </div>
+        {showCity && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-foreground">City</Label>
+            <Input
+              value={store.city}
+              onChange={(e) => store.updateField('city', e.target.value)}
+              placeholder="e.g. Mumbai, Delhi, Bengaluru"
+              className="rounded-xl"
+            />
+          </div>
+        )}
+        {showPrimaryBank && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-foreground">Primary bank</Label>
+            <Input
+              value={store.primaryBank}
+              onChange={(e) => store.updateField('primaryBank', e.target.value)}
+              placeholder="e.g. HDFC, SBI, ICICI"
+              className="rounded-xl"
+            />
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-export function canAdvanceFromBasics(state: { creditScore: CreditScoreRange; employmentType: EmploymentType; city: string; primaryBank: string }) {
-  return Boolean(state.creditScore && state.employmentType && state.city && state.primaryBank)
+export function canAdvanceFromBasics(state: {
+  creditScore: CreditScoreRange
+  employmentType: EmploymentType
+  monthlyIncome: number
+  city: string
+  primaryBank: string
+  prefilledFields?: string[]
+}) {
+  const prefilled = new Set(state.prefilledFields || [])
+  const hasCreditScore = prefilled.has('creditScore') || Boolean(state.creditScore)
+  const hasEmployment = prefilled.has('employmentType') || Boolean(state.employmentType)
+  const hasCity = prefilled.has('city') || Boolean(state.city)
+  const hasPrimaryBank = prefilled.has('primaryBank') || Boolean(state.primaryBank)
+  const hasIncome = prefilled.has('monthlyIncome') || state.monthlyIncome > 0
+  return Boolean(hasCreditScore && hasEmployment && hasCity && hasPrimaryBank && hasIncome)
 }
