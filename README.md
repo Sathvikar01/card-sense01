@@ -1,4 +1,4 @@
-# CardSense India 🃏
+# CardSense India 
 
 A smart credit card management and advisory platform for Indian users — built with Next.js, Supabase, and Google Gemini AI.
 
