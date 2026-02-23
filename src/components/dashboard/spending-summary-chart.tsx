@@ -1,38 +1,68 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
 import { TrendingUp } from 'lucide-react'
 
+interface CategoryDataPoint {
+  category: string
+  amount: number
+  percentage: number
+}
+
 interface SpendingSummaryChartProps {
-  data: Array<{
-    month: string
-    amount: number
-  }>
+  data: CategoryDataPoint[]
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  dining: 'Dining',
+  groceries: 'Groceries',
+  shopping: 'Shopping',
+  travel: 'Travel',
+  fuel: 'Fuel',
+  utilities: 'Utilities',
+  rent: 'Rent/EMI',
+  emi: 'EMI',
+  entertainment: 'Entertain.',
+  healthcare: 'Health',
+  education: 'Education',
+  other: 'Other',
+  insurance: 'Insurance',
+  investments: 'Invest.',
 }
 
 interface TooltipPayloadItem {
   value: number
-  payload: {
-    month: string
-  }
+  payload: CategoryDataPoint
 }
 
-interface SpendingTooltipProps {
+interface CategoryTooltipProps {
   active?: boolean
   payload?: TooltipPayloadItem[]
 }
 
-function SpendingTooltip({ active, payload }: SpendingTooltipProps) {
+function CategoryTooltip({ active, payload }: CategoryTooltipProps) {
   if (active && payload && payload.length > 0) {
+    const { category, amount, percentage } = payload[0].payload
     return (
       <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
-        <p className="text-sm font-medium text-gray-900">{payload[0].payload.month}</p>
-        <p className="text-sm text-gray-600">
-          Amount:{' '}
-          <span className="font-semibold text-[#b8860b]">
-            {'\u20B9'}{payload[0].value.toLocaleString('en-IN')}
-          </span>
+        <p className="text-sm font-medium text-foreground capitalize">
+          {CATEGORY_LABELS[category] || category}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Share:{' '}
+          <span className="font-semibold text-[#b8860b]">{percentage}%</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Avg: ₹{amount.toLocaleString('en-IN')}
         </p>
       </div>
     )
@@ -41,29 +71,20 @@ function SpendingTooltip({ active, payload }: SpendingTooltipProps) {
 }
 
 export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
-  const formatCurrency = (value: number) => {
-    if (value >= 100000) {
-      return `\u20B9${(value / 100000).toFixed(1)}L`
-    } else if (value >= 1000) {
-      return `\u20B9${(value / 1000).toFixed(1)}K`
-    }
-    return `\u20B9${value}`
-  }
-
   if (!data || data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Spending Summary
+            Spending Breakdown
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-            <TrendingUp className="h-16 w-16 mb-4 text-gray-300" />
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <TrendingUp className="h-16 w-16 mb-4 text-muted-foreground/30" />
             <p className="text-sm font-medium">No spending data yet</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Track your spending to see insights here
             </p>
           </div>
@@ -72,66 +93,68 @@ export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
     )
   }
 
+  const topCategory = data[0]
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
-          Spending Summary
+          Spending Breakdown
         </CardTitle>
-        <p className="text-sm text-gray-500 mt-1">
-          Last {data.length} months spending trend
+        <p className="text-sm text-muted-foreground mt-1">
+          % of avg monthly expenditure by category
         </p>
       </CardHeader>
       <CardContent>
-        <div className="w-full h-[300px]">
+        <div className="w-full h-[260px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
+            <LineChart
               data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
               <XAxis
-                dataKey="month"
-                tick={{ fill: '#6b7280', fontSize: 12 }}
-                tickLine={{ stroke: '#d1d5db' }}
+                dataKey="category"
+                tick={{ fill: '#6b7280', fontSize: 11 }}
+                tickLine={false}
+                tickFormatter={(val: string) => CATEGORY_LABELS[val] || val}
+                interval={0}
               />
               <YAxis
-                tick={{ fill: '#6b7280', fontSize: 12 }}
-                tickLine={{ stroke: '#d1d5db' }}
-                tickFormatter={formatCurrency}
+                unit="%"
+                tick={{ fill: '#6b7280', fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                domain={[0, 'auto']}
               />
-              <Tooltip content={<SpendingTooltip />} cursor={{ fill: 'rgba(212, 160, 23, 0.1)' }} />
-              <Bar
-                dataKey="amount"
-                fill="#d4a017"
-                radius={[8, 8, 0, 0]}
-                maxBarSize={60}
+              <Tooltip content={<CategoryTooltip />} cursor={{ stroke: '#d4a017', strokeWidth: 1, strokeDasharray: '4 2' }} />
+              <Line
+                type="monotone"
+                dataKey="percentage"
+                stroke="#d4a017"
+                strokeWidth={2.5}
+                dot={{ r: 5, fill: '#d4a017', stroke: '#fff', strokeWidth: 2 }}
+                activeDot={{ r: 7, fill: '#b8860b', stroke: '#fff', strokeWidth: 2 }}
               />
-            </BarChart>
+            </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t">
+        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
           <div className="text-center">
-            <p className="text-xs text-gray-500">Average</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {formatCurrency(
-                data.reduce((sum, item) => sum + item.amount, 0) / data.length
-              )}
+            <p className="text-xs text-muted-foreground">Top Category</p>
+            <p className="text-sm font-semibold text-foreground capitalize">
+              {CATEGORY_LABELS[topCategory.category] || topCategory.category}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500">Highest</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {formatCurrency(Math.max(...data.map((item) => item.amount)))}
-            </p>
+            <p className="text-xs text-muted-foreground">Top Share</p>
+            <p className="text-sm font-semibold text-foreground">{topCategory.percentage}%</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500">Total</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {formatCurrency(data.reduce((sum, item) => sum + item.amount, 0))}
-            </p>
+            <p className="text-xs text-muted-foreground">Categories</p>
+            <p className="text-sm font-semibold text-foreground">{data.length}</p>
           </div>
         </div>
       </CardContent>

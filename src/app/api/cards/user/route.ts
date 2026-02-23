@@ -5,12 +5,7 @@ import { z } from 'zod'
 const addCardSchema = z.object({
   card_name: z.string().min(1, 'Card name is required').max(200),
   bank_name: z.string().min(1, 'Bank name is required').max(100),
-  card_type: z.enum(['credit', 'debit', 'prepaid']).optional().default('credit'),
-  last_four_digits: z
-    .string()
-    .regex(/^\d{4}$/, 'Must be exactly 4 digits')
-    .optional()
-    .or(z.literal('')),
+  card_type: z.literal('credit').optional().default('credit'),
   notes: z.string().max(500).optional().or(z.literal('')),
 })
 
@@ -69,7 +64,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { card_name, bank_name, card_type, last_four_digits, notes } = validation.data
+    const { card_name, bank_name, notes } = validation.data
 
     const { data, error } = await supabase
       .from('user_cards')
@@ -77,8 +72,7 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         card_name,
         bank_name,
-        card_type: card_type || 'credit',
-        last_four_digits: last_four_digits || null,
+        card_type: 'credit',
         notes: notes || null,
       })
       .select('id, card_name, bank_name, card_type, last_four_digits, is_active, added_at, notes')

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, CreditCard, Loader2, Check } from 'lucide-react'
+import { Plus, Trash2, CreditCard, Loader2, Check, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,12 +16,19 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { LOCAL_CARD_CATALOG } from '@/lib/cards/local-catalog'
 
 interface UserCard {
   id: string
@@ -34,34 +41,13 @@ interface UserCard {
   notes: string | null
 }
 
-const POPULAR_BANKS = [
-  'HDFC Bank',
-  'ICICI Bank',
-  'State Bank of India (SBI)',
-  'Axis Bank',
-  'Kotak Mahindra Bank',
-  'IndusInd Bank',
-  'Yes Bank',
-  'IDFC First Bank',
-  'RBL Bank',
-  'Standard Chartered',
-  'HSBC',
-  'Citibank',
-  'American Express',
-  'Other',
-]
-
-const CARD_TYPE_LABELS: Record<string, string> = {
-  credit: 'Credit',
-  debit: 'Debit',
-  prepaid: 'Prepaid',
-}
-
-const CARD_TYPE_COLORS: Record<string, string> = {
-  credit: 'bg-amber-100 text-amber-800',
-  debit: 'bg-emerald-100 text-emerald-800',
-  prepaid: 'bg-blue-100 text-blue-800',
-}
+const CATALOG_CARDS = LOCAL_CARD_CATALOG
+  .map((c) => ({
+    value: c.id,
+    label: c.card_name,
+    bank: c.bank_name,
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label))
 
 export function UserCardsManager() {
   const [cards, setCards] = useState<UserCard[]>([])
@@ -73,9 +59,9 @@ export function UserCardsManager() {
   // Form state
   const [cardName, setCardName] = useState('')
   const [bankName, setBankName] = useState('')
-  const [cardType, setCardType] = useState('credit')
-  const [lastFour, setLastFour] = useState('')
   const [notes, setNotes] = useState('')
+  const [comboboxOpen, setComboboxOpen] = useState(false)
+  const [isManualEntry, setIsManualEntry] = useState(false)
 
   const fetchCards = useCallback(async () => {
     try {
@@ -96,9 +82,8 @@ export function UserCardsManager() {
   const resetForm = () => {
     setCardName('')
     setBankName('')
-    setCardType('credit')
-    setLastFour('')
     setNotes('')
+    setIsManualEntry(false)
   }
 
   const handleAdd = async () => {
@@ -115,8 +100,7 @@ export function UserCardsManager() {
         body: JSON.stringify({
           card_name: cardName.trim(),
           bank_name: bankName.trim(),
-          card_type: cardType,
-          last_four_digits: lastFour || '',
+          card_type: 'credit',
           notes: notes.trim() || '',
         }),
       })
@@ -155,7 +139,7 @@ export function UserCardsManager() {
   }
 
   const addCardDialog = (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
       <DialogTrigger asChild>
         <Button
           size="sm"
@@ -168,66 +152,117 @@ export function UserCardsManager() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a Card</DialogTitle>
-          <DialogDescription>Add a credit or debit card you currently own</DialogDescription>
+          <DialogDescription>Add a credit card you currently own</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          {/* Card Name - Searchable Combobox */}
+          {!isManualEntry ? (
             <div className="grid gap-2">
-              <Label htmlFor="card-name" className="text-xs text-muted-foreground">
+              <Label className="text-xs text-muted-foreground">
                 Card Name <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="card-name"
-                placeholder="e.g., HDFC Regalia"
-                className="h-10"
-                value={cardName}
-                onChange={(e) => setCardName(e.target.value)}
-              />
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboboxOpen}
+                    className="h-10 justify-between font-normal"
+                  >
+                    <span className={cardName ? 'text-foreground' : 'text-muted-foreground'}>
+                      {cardName || 'Search for a card...'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search cards..." />
+                    <CommandList>
+                      <CommandEmpty>No card found.</CommandEmpty>
+                      <CommandGroup>
+                        {CATALOG_CARDS.map((card) => (
+                          <CommandItem
+                            key={card.value}
+                            value={card.label}
+                            onSelect={() => {
+                              setCardName(card.label)
+                              setBankName(card.bank)
+                              setComboboxOpen(false)
+                            }}
+                          >
+                            <div>
+                              <p className="text-sm font-medium">{card.label}</p>
+                              <p className="text-xs text-muted-foreground">{card.bank}</p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                      <CommandGroup>
+                        <CommandItem
+                          value="__manual_entry__"
+                          onSelect={() => {
+                            setIsManualEntry(true)
+                            setCardName('')
+                            setBankName('')
+                            setComboboxOpen(false)
+                          }}
+                        >
+                          <p className="text-sm text-muted-foreground">Can&apos;t find your card? Enter manually</p>
+                        </CommandItem>
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
+          ) : (
+            <>
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="card-name-manual" className="text-xs text-muted-foreground">
+                    Card Name <span className="text-red-500">*</span>
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => { setIsManualEntry(false); setCardName(''); setBankName('') }}
+                    className="text-[0.65rem] text-[#b8860b] hover:underline"
+                  >
+                    Search from list
+                  </button>
+                </div>
+                <Input
+                  id="card-name-manual"
+                  placeholder="e.g., HDFC Regalia"
+                  className="h-10"
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="bank-name-manual" className="text-xs text-muted-foreground">
+                  Bank <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="bank-name-manual"
+                  placeholder="e.g., HDFC Bank"
+                  className="h-10"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Bank (read-only when selected from catalog) */}
+          {!isManualEntry && bankName && (
             <div className="grid gap-2">
-              <Label htmlFor="bank-name" className="text-xs text-muted-foreground">
-                Bank <span className="text-red-500">*</span>
-              </Label>
-              <Select value={bankName} onValueChange={setBankName}>
-                <SelectTrigger id="bank-name" className="h-10">
-                  <SelectValue placeholder="Select bank" />
-                </SelectTrigger>
-                <SelectContent>
-                  {POPULAR_BANKS.map((bank) => (
-                    <SelectItem key={bank} value={bank}>
-                      {bank}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-xs text-muted-foreground">Bank</Label>
+              <Input value={bankName} readOnly className="h-10 bg-muted/30 text-muted-foreground" />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="card-type" className="text-xs text-muted-foreground">Card Type</Label>
-              <Select value={cardType} onValueChange={setCardType}>
-                <SelectTrigger id="card-type" className="h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="credit">Credit Card</SelectItem>
-                  <SelectItem value="debit">Debit Card</SelectItem>
-                  <SelectItem value="prepaid">Prepaid Card</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="last-four" className="text-xs text-muted-foreground">Last 4 Digits</Label>
-              <Input
-                id="last-four"
-                placeholder="e.g., 1234"
-                className="h-10"
-                maxLength={4}
-                value={lastFour}
-                onChange={(e) => setLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              />
-            </div>
-          </div>
+          )}
+
+          {/* Notes */}
           <div className="grid gap-2">
             <Label htmlFor="card-notes" className="text-xs text-muted-foreground">Notes</Label>
             <Input
@@ -249,7 +284,7 @@ export function UserCardsManager() {
           </Button>
           <Button
             onClick={handleAdd}
-            disabled={submitting}
+            disabled={submitting || !cardName.trim() || !bankName.trim()}
             className="gap-1.5 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white"
           >
             {submitting ? (
@@ -280,7 +315,7 @@ export function UserCardsManager() {
         </div>
         <p className="text-sm font-medium text-foreground mb-1">No cards added yet</p>
         <p className="text-xs text-muted-foreground mb-5 max-w-xs">
-          Add your existing credit and debit cards to get better recommendations and track your portfolio
+          Add your existing credit cards to get better recommendations and track your portfolio
         </p>
         {addCardDialog}
       </div>
@@ -309,16 +344,8 @@ export function UserCardsManager() {
                 <CreditCard className="h-5 w-5 text-[#b8860b]" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate text-foreground">{card.card_name}</p>
-                  <span className={`text-[0.6rem] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${CARD_TYPE_COLORS[card.card_type] || CARD_TYPE_COLORS.credit}`}>
-                    {CARD_TYPE_LABELS[card.card_type] || 'Credit'}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {card.bank_name}
-                  {card.last_four_digits && ` \u2022\u2022\u2022\u2022 ${card.last_four_digits}`}
-                </p>
+                <p className="text-sm font-medium truncate text-foreground">{card.card_name}</p>
+                <p className="text-xs text-muted-foreground">{card.bank_name}</p>
               </div>
             </div>
             <Button

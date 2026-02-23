@@ -415,13 +415,6 @@ export default function SpendingPage() {
                           {txn.category.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(txn.transaction_date).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-bold text-sm">

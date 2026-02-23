@@ -15,17 +15,41 @@ export default function AdvisorPage() {
   const searchParams = useSearchParams()
   const isNew = searchParams.get('new') === '1'
 
-  // Always start in a neutral "checking" state — useState initialisers run before
-  // Zustand's persist middleware has rehydrated from localStorage, so reading
-  // store.savedResult here would always return null on a hard reload.
   const [step, setStep] = useState<FlowStep>('input')
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [checkedSaved, setCheckedSaved] = useState(false)
 
-  // After mount, wait for Zustand to finish rehydrating from localStorage,
-  // then decide whether to show saved results or the questionnaire.
+  // Fetch profile and pre-fill advisor store on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await fetch('/api/profile')
+        if (res.ok) {
+          const data = await res.json()
+          const profile = data.profile || data
+          if (profile) {
+            store.prefillFromProfile({
+              creditScore: profile.credit_score,
+              employmentType: profile.employment_type,
+              annualIncome: profile.annual_income,
+              city: profile.city,
+              primaryBank: profile.primary_bank,
+              hasFD: profile.has_fixed_deposit,
+              fdAmount: profile.fd_amount,
+            })
+          }
+        }
+      } catch {
+        // Profile fetch failure is non-fatal; advisor still works
+      }
+    }
+    loadProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // After mount, wait for Zustand to finish rehydrating, then decide whether to show saved results
   useEffect(() => {
     if (isNew) {
       setCheckedSaved(true)
@@ -102,7 +126,6 @@ export default function AdvisorPage() {
 
       const payload = store.getApiPayload()
 
-      // Pre-populate followUpAnswers from advisor store data so we skip the needs_more_info round-trip
       const age = (payload.age as number) || 28
       const annualIncome = (payload.annualIncome as number) || 0
       const hasFD = payload.hasFixedDeposits as boolean
@@ -143,7 +166,6 @@ export default function AdvisorPage() {
         },
       }
 
-      // Try the experienced endpoint (it has the full recommendation logic)
       const response = await fetch('/api/ai/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,7 +173,6 @@ export default function AdvisorPage() {
       })
 
       if (!response.ok) {
-        // Fallback to beginner endpoint if recommend fails
         const beginnerResponse = await fetch('/api/ai/beginner', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -190,13 +211,11 @@ export default function AdvisorPage() {
         store.setSavedResult(mappedResult)
         setResult(mappedResult)
         setStep('results')
-        toast.success('Recommendations generated')
+        toast.success('Recommendations ready')
         return
       }
 
       const data = await response.json()
-
-      // Handle the needs_more_info case by just using whatever cards are returned
       const cards = data.cards || []
       const mappedResult: AdvisorResult = {
         persona: store.detectedPersona,
@@ -222,7 +241,7 @@ export default function AdvisorPage() {
       store.setSavedResult(mappedResult)
       setResult(mappedResult)
       setStep('results')
-      toast.success('Recommendations generated')
+      toast.success('Recommendations ready')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get recommendations'
       setError(errorMessage)
@@ -234,11 +253,10 @@ export default function AdvisorPage() {
   }
 
   const handleStartOver = async () => {
-    // Clear saved recommendation from Supabase and local store
     try {
       await fetch('/api/recommendations/latest', { method: 'DELETE' })
     } catch {
-      // Ignore errors clearing the saved recommendation
+      // Ignore errors
     }
     store.setSavedResult(null)
     store.reset()
@@ -247,61 +265,61 @@ export default function AdvisorPage() {
     setError(null)
   }
 
-  // Show spinner while checking for saved recommendations
+  // Loading spinner while checking saved state
   if (!checkedSaved && !isNew) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <svg className="animate-spin h-7 w-7 text-[#b8860b]" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" className="opacity-20" />
+          <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Hero header */}
+    <div className="max-w-2xl mx-auto">
+      {/* Hero header — only shown during input */}
       {step === 'input' && (
-        <div className="advisor-hero px-6 py-8 sm:px-8 sm:py-10 mb-8">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#b8860b]/70">Smart Advisor</p>
-          <h1 className="cardsense-hero-title text-2xl sm:text-3xl font-bold text-foreground mt-1">
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-[#fdf3d7]/60 px-3 py-1 mb-3">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1L8.8 4.7L13 5.3L10 8.2L10.7 12.4L7 10.5L3.3 12.4L4 8.2L1 5.3L5.2 4.7L7 1Z" fill="#b8860b" stroke="#b8860b" strokeWidth="0.5" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#b8860b]">Smart Advisor</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Find your ideal credit card
           </h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-lg leading-relaxed">
-            Answer a series of questions about your finances, habits, and goals.
-            We will match you with cards that genuinely fit your profile -- not generic top-10 lists.
+          <p className="text-sm text-muted-foreground mt-2 max-w-md leading-relaxed">
+            Answer a few questions about your habits and goals. We use your profile data to skip the basics and give you a tighter match.
           </p>
         </div>
       )}
 
       {/* Error banner */}
       {error && step === 'input' && (
-        <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/[0.06] p-4">
-          <div className="flex items-start gap-3">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="mt-0.5 shrink-0 text-destructive">
-              <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M9 5.5V10M9 12.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Could not generate recommendations</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{error}</p>
-              <button
-                onClick={() => setError(null)}
-                className="text-xs font-medium text-[#b8860b] mt-2 hover:underline"
-              >
-                Dismiss
-              </button>
-            </div>
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="mt-0.5 shrink-0 text-red-500">
+            <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M9 5.5V10M9 12.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-700">Could not generate recommendations</p>
+            <p className="text-xs text-red-600/80 mt-0.5">{error}</p>
+            <button onClick={() => setError(null)} className="text-xs font-medium text-[#b8860b] mt-1.5 hover:underline">
+              Dismiss
+            </button>
           </div>
         </div>
       )}
 
-      {/* Main content area */}
-      <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 sm:p-8">
+      {/* Main content card */}
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
         {step === 'input' && (
           <AdvisorStepper onComplete={handleComplete} isLoading={isLoading} />
         )}
-
         {step === 'loading' && <AdvisorLoading />}
-
         {step === 'results' && result && (
           <AdvisorResults result={result} onStartOver={handleStartOver} />
         )}
@@ -309,17 +327,13 @@ export default function AdvisorPage() {
 
       {/* Footer note */}
       {step === 'input' && (
-        <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed max-w-md mx-auto">
-          Your data stays in your browser and is sent only to generate recommendations. We do not share personal information with card issuers without your consent.
+        <p className="text-[11px] text-muted-foreground/70 text-center mt-5 leading-relaxed max-w-sm mx-auto">
+          Your data is used only to generate recommendations and is not shared with card issuers.
         </p>
       )}
     </div>
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
 
 function buildProfileSummary(payload: Record<string, unknown>) {
   return {

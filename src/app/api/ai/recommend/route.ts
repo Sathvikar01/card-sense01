@@ -466,24 +466,6 @@ const getFollowUpAnswer = (
   return fallback
 }
 
-const matchesSpendCategory = (
-  category: string,
-  bestFor: string[],
-  cardText: string
-) => {
-  const normalized = normalizeSpendCategory(category)
-  const aliases =
-    normalized === 'shopping'
-      ? ['shopping', 'online_shopping']
-      : [normalized]
-
-  if (aliases.some((alias) => bestFor.includes(alias))) {
-    return true
-  }
-
-  const pattern = CATEGORY_MATCH_PATTERNS[normalized]
-  return pattern ? pattern.test(cardText) : false
-}
 
 const ruleBasedRecommendations = (
   input: z.infer<typeof recommendationInputSchema>,
@@ -595,7 +577,7 @@ const ruleBasedRecommendations = (
         : cards
 
   const scoreCard = (card: CardForRecommendation) => {
-    let score = 52
+    let score = 0
     const bestFor = card.bestFor.map((value) => normalizeSpendCategory(value.toLowerCase()))
     const perkText = card.perks.join(' ').toLowerCase()
     const cardText = `${card.cardName} ${card.bank} ${bestFor.join(' ')} ${perkText}`.toLowerCase()
@@ -604,99 +586,170 @@ const ruleBasedRecommendations = (
     const hasTravelSignals = /travel|lounge|mile|air/.test(cardText)
     const hasUpiSignals = /upi|rupay|qr/.test(cardText)
 
+    // --- Primary bank match (0-8) ---
     if (primaryBank && normalizeBank(card.bank).includes(primaryBank)) {
-      score += 7
-    }
-
-    for (const category of topCategories) {
-      if (matchesSpendCategory(category, bestFor, cardText)) {
-        score += 7
-      }
-    }
-
-    if (spendFocus && matchesSpendCategory(spendFocus, bestFor, cardText)) {
-      score += 10
-    }
-
-    if (valuePriority === 'build_credit_low_fee') {
-      score += card.annualFee === 0 ? 10 : card.annualFee <= 500 ? 6 : -8
-      if (hasSecuredSignals) score += 8
-    } else if (valuePriority === 'cashback_everyday' && hasCashbackSignals) {
-      score += 9
-    } else if (valuePriority === 'travel_perks' && hasTravelSignals) {
-      score += 10
-    } else if (valuePriority === 'upi_qr_rewards' && hasUpiSignals) {
-      score += 10
-    }
-
-    if (rewardPreference === 'cashback' && hasCashbackSignals) {
-      score += 7
-    }
-    if (rewardPreference === 'travel' && hasTravelSignals) {
       score += 8
     }
-    if (rewardPreference === 'points' && /reward|point/.test(cardText)) {
-      score += 5
-    }
 
-    if (travelFrequency === 'frequent' && hasTravelSignals) {
-      score += 7
-    }
-    if (needsUpi && hasUpiSignals) {
-      score += 7
-    }
+    // --- Category matching with precision weighting (0-30) ---
+    // Exact bestFor match is worth more than fuzzy text match
+    for (const category of topCategories) {
+      const normalized = normalizeSpendCategory(category)
+      const aliases = normalized === 'shopping' ? ['shopping', 'online_shopping'] : [normalized]
+      const isExactMatch = aliases.some((alias) => bestFor.includes(alias))
+      const pattern = CATEGORY_MATCH_PATTERNS[normalized]
+      const isFuzzyMatch = pattern ? pattern.test(cardText) : false
 
-    if (ageBand === '18_20') {
-      if (hasSecuredSignals) {
-        score += 12
-      } else {
-        score -= 9
+      if (isExactMatch) {
+        score += 10 // strong signal: card explicitly lists this category
+      } else if (isFuzzyMatch) {
+        score += 3  // weak signal: text mentions related keywords
       }
     }
 
+    // --- Primary spend focus (0-14) ---
+    if (spendFocus) {
+      const normalized = normalizeSpendCategory(spendFocus)
+      const aliases = normalized === 'shopping' ? ['shopping', 'online_shopping'] : [normalized]
+      const isExactMatch = aliases.some((alias) => bestFor.includes(alias))
+      const pattern = CATEGORY_MATCH_PATTERNS[normalized]
+      const isFuzzyMatch = pattern ? pattern.test(cardText) : false
+
+      if (isExactMatch) {
+        score += 14
+      } else if (isFuzzyMatch) {
+        score += 4
+      }
+    }
+
+    // --- Value priority alignment (0-14) ---
+    if (valuePriority === 'build_credit_low_fee') {
+      score += card.annualFee === 0 ? 12 : card.annualFee <= 500 ? 6 : -10
+      if (hasSecuredSignals) score += 10
+    } else if (valuePriority === 'cashback_everyday') {
+      if (hasCashbackSignals) {
+        score += bestFor.some((b) => /cashback/.test(b)) ? 14 : 7
+      }
+    } else if (valuePriority === 'travel_perks') {
+      if (hasTravelSignals) {
+        score += bestFor.some((b) => /travel/.test(b)) ? 14 : 7
+      }
+    } else if (valuePriority === 'upi_qr_rewards') {
+      if (hasUpiSignals) {
+        score += bestFor.some((b) => /upi|rupay/.test(b)) ? 14 : 7
+      }
+    }
+
+    // --- Reward preference (0-10) ---
+    if (rewardPreference === 'cashback') {
+      if (bestFor.some((b) => /cashback/.test(b))) score += 10
+      else if (hasCashbackSignals) score += 4
+    }
+    if (rewardPreference === 'travel') {
+      if (bestFor.some((b) => /travel/.test(b))) score += 10
+      else if (hasTravelSignals) score += 4
+    }
+    if (rewardPreference === 'points') {
+      if (bestFor.some((b) => /reward|point/.test(b))) score += 10
+      else if (/reward|point/.test(cardText)) score += 4
+    }
+
+    // --- Travel frequency (0-8) ---
+    if (travelFrequency === 'frequent') {
+      if (bestFor.some((b) => /travel/.test(b))) score += 8
+      else if (hasTravelSignals) score += 3
+    }
+
+    // --- UPI needs (0-8) ---
+    if (needsUpi) {
+      if (bestFor.some((b) => /upi|rupay/.test(b))) score += 8
+      else if (hasUpiSignals) score += 3
+    }
+
+    // --- Age-based adjustments ---
+    if (ageBand === '18_20') {
+      if (hasSecuredSignals) {
+        score += 14
+      } else {
+        score -= 10
+      }
+    }
+
+    // --- Income profile adjustments ---
     if (incomeProfile === 'no_personal_income') {
-      if (card.minIncome && card.minIncome > 0) score -= 14
-      if (hasSecuredSignals) score += 12
-      if (card.annualFee === 0) score += 4
+      if (card.minIncome && card.minIncome > 0) score -= 16
+      if (hasSecuredSignals) score += 14
+      if (card.annualFee === 0) score += 5
     } else if (incomeProfile === 'stipend_or_part_time') {
-      if (card.minIncome && card.minIncome > input.annualIncome) score -= 7
-      if (hasSecuredSignals) score += 6
-      if (card.annualFee <= 1000) score += 4
+      if (card.minIncome && card.minIncome > input.annualIncome) score -= 8
+      if (hasSecuredSignals) score += 7
+      if (card.annualFee <= 1000) score += 5
     } else if (incomeProfile === 'stable_income_above_6l') {
       score += card.annualFee <= 5000 ? 3 : 2
     }
 
+    // --- Secured card readiness ---
     if (securedCardReadiness === 'have_fd_now' || securedCardReadiness === 'can_start_fd') {
       if (hasSecuredSignals) {
-        score += 10
+        score += 12
       } else {
-        score -= 2
+        score -= 3
       }
     }
-
     if (securedCardReadiness === 'unsecured_only' && hasSecuredSignals) {
-      score -= 8
+      score -= 10
     }
 
+    // --- Annual fee tolerance (0-12) ---
     if (annualFeeTolerance === 'free_only') {
-      score += card.annualFee === 0 ? 10 : -12
+      score += card.annualFee === 0 ? 12 : card.annualFee <= 500 ? -6 : -14
     } else if (annualFeeTolerance === 'up_to_1000') {
-      score += card.annualFee <= 1000 ? 8 : -5
+      score += card.annualFee === 0 ? 10 : card.annualFee <= 1000 ? 8 : card.annualFee <= 2000 ? -2 : -8
     } else if (annualFeeTolerance === 'up_to_5000') {
-      score += card.annualFee <= 5000 ? 5 : -3
+      score += card.annualFee <= 1000 ? 6 : card.annualFee <= 5000 ? 5 : -4
     } else if (annualFeeTolerance === 'premium_ok') {
-      score += card.annualFee > 5000 ? 4 : 2
+      score += card.annualFee > 5000 ? 6 : card.annualFee > 2000 ? 3 : 1
     }
+
+    // --- Perk relevance bonus (0-8) ---
+    // Cards with more perks matching user intent get a bonus
+    let perkHits = 0
+    const userKeywords: string[] = []
+    if (valuePriority === 'cashback_everyday' || rewardPreference === 'cashback') userKeywords.push('cashback', 'statement credit')
+    if (valuePriority === 'travel_perks' || rewardPreference === 'travel' || travelFrequency === 'frequent') userKeywords.push('lounge', 'travel', 'mile', 'flight', 'hotel')
+    if (valuePriority === 'upi_qr_rewards' || needsUpi) userKeywords.push('upi', 'rupay', 'qr')
+    if (valuePriority === 'build_credit_low_fee') userKeywords.push('secured', 'credit build', 'no fee', 'zero fee')
+    for (const perk of card.perks) {
+      const perkLower = perk.toLowerCase()
+      if (userKeywords.some((kw) => perkLower.includes(kw))) {
+        perkHits++
+      }
+    }
+    score += Math.min(perkHits * 2, 8)
+
+    // --- BestFor breadth bonus (0-4) ---
+    // Cards that are "best for" more relevant categories get a small boost
+    const relevantBestForCount = bestFor.filter((b) => {
+      return topCategories.some((tc) => {
+        const norm = normalizeSpendCategory(tc)
+        return b === norm || (norm === 'shopping' && b === 'online_shopping')
+      })
+    }).length
+    score += Math.min(relevantBestForCount * 2, 4)
+
+    // Normalize score to 35-96 range with better distribution
+    // Max theoretical raw score is roughly 120+; map proportionally
+    const normalizedScore = 35 + Math.round((Math.max(0, score) / 110) * 61)
 
     return {
       card,
-      score: Math.max(35, Math.min(96, Math.round(score))),
+      score: Math.max(35, Math.min(96, normalizedScore)),
     }
   }
 
   let ranked = scoringPool
     .map(scoreCard)
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score || a.card.annualFee - b.card.annualFee)
     .slice(0, 3)
 
   if (ranked.length < 3) {
@@ -704,17 +757,31 @@ const ruleBasedRecommendations = (
     const extra = cards
       .filter((card) => !usedIds.has(card.id))
       .map(scoreCard)
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => b.score - a.score || a.card.annualFee - b.card.annualFee)
       .slice(0, 3 - ranked.length)
     ranked = [...ranked, ...extra]
   }
 
+  // Guarantee minimum gap between ranks so cards never show identical percentages
+  for (let i = 1; i < ranked.length; i++) {
+    if (ranked[i].score >= ranked[i - 1].score) {
+      ranked[i] = { ...ranked[i], score: ranked[i - 1].score - 1 }
+    }
+  }
+
   // Apply rank-based bonus so the best card clearly stands out
-  const RANK_BONUS = [7, 3, 0] as const
+  const RANK_BONUS = [10, 4, 0] as const
   ranked = ranked.map((entry, index) => ({
     ...entry,
     score: Math.max(35, Math.min(96, entry.score + (RANK_BONUS[index] ?? 0))),
   }))
+
+  // Re-enforce minimum gap after rank bonus (bonus could re-equalize rank 2 and 1)
+  for (let i = 1; i < ranked.length; i++) {
+    if (ranked[i].score >= ranked[i - 1].score) {
+      ranked[i] = { ...ranked[i], score: ranked[i - 1].score - 1 }
+    }
+  }
 
   const usedRelaxedEligibility = strictEligibleCards.length === 0
 

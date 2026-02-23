@@ -1,18 +1,62 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { ArrowRight, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { motion } from 'framer-motion'
 import type { Recommendation } from '@/types/recommendation'
+import { useAdvisorStore } from '@/lib/store/advisor-store'
 
 interface RecentRecommendationsProps {
   recommendations: Recommendation[]
 }
 
-export function RecentRecommendations({ recommendations }: RecentRecommendationsProps) {
+export function RecentRecommendations({ recommendations: dbRecommendations }: RecentRecommendationsProps) {
+  const [recommendations, setRecommendations] = useState<Recommendation[]>(dbRecommendations)
+  const [isLocalFallback, setIsLocalFallback] = useState(false)
+
+  useEffect(() => {
+    if (dbRecommendations.length > 0) return
+
+    // DB returned nothing — try the persisted advisor store
+    const tryStore = () => {
+      const saved = useAdvisorStore.getState().savedResult
+      if (saved && saved.cards.length > 0) {
+        const pseudo: Recommendation = {
+          id: 'local',
+          user_id: '',
+          recommendation_type: 'experienced',
+          input_snapshot: {},
+          recommended_cards: saved.cards.map((card, idx) => ({
+            cardId: card.id,
+            cardName: card.name,
+            bank: card.bank,
+            score: card.score,
+            reasoning: card.reason,
+            keyPerks: card.pros,
+            annualValue: card.annualFee,
+            rank: idx + 1,
+          })),
+          ai_analysis: saved.analysis,
+          spending_analysis: null,
+          created_at: new Date().toISOString(),
+        }
+        setRecommendations([pseudo])
+        setIsLocalFallback(true)
+      }
+    }
+
+    if (useAdvisorStore.persist.hasHydrated()) {
+      tryStore()
+    } else {
+      const unsub = useAdvisorStore.persist.onFinishHydration(tryStore)
+      return unsub
+    }
+  }, [dbRecommendations.length])
+
   if (!recommendations || recommendations.length === 0) {
     return (
       <div className="stat-card-premium p-6">
@@ -87,10 +131,15 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
         </Link>
       </div>
 
+      {isLocalFallback && (
+        <p className="mt-2 text-[0.65rem] text-muted-foreground">Showing your most recent saved recommendation</p>
+      )}
+
       <div className="mt-5 space-y-3">
         {recentThree.map((recommendation, idx) => {
           const topCard = recommendation.recommended_cards[0]
           const createdDate = new Date(recommendation.created_at)
+          const href = recommendation.id === 'local' ? '/recommendations' : `/recommendations/${recommendation.id}`
 
           return (
             <motion.div
@@ -99,10 +148,7 @@ export function RecentRecommendations({ recommendations }: RecentRecommendations
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1, duration: 0.3 }}
             >
-              <Link
-                href={`/recommendations/${recommendation.id}`}
-                className="group block"
-              >
+              <Link href={href} className="group block">
                 <div className="recommendation-card p-4 transition-all duration-300">
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-2">

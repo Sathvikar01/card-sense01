@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -8,8 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
 import { motion } from 'framer-motion'
 import {
   AlertDialog,
@@ -25,7 +23,6 @@ import {
 import {
   User,
   Lock,
-  Bell,
   Shield,
   Trash2,
   LogOut,
@@ -35,6 +32,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  FileText,
 } from 'lucide-react'
 
 interface SettingsClientProps {
@@ -46,20 +44,6 @@ interface SettingsClientProps {
 }
 
 const PREF_KEY = 'cardsense-preferences'
-
-function loadPrefs() {
-  if (typeof window === 'undefined') return {}
-  try {
-    return JSON.parse(localStorage.getItem(PREF_KEY) || '{}')
-  } catch {
-    return {}
-  }
-}
-
-function savePrefs(prefs: Record<string, unknown>) {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(PREF_KEY, JSON.stringify(prefs))
-}
 
 /* ─────────────────── Section wrapper ─────────────────── */
 function Section({
@@ -97,31 +81,6 @@ function Section({
   )
 }
 
-/* ─────────────────── Row toggle ─────────────────── */
-function ToggleRow({
-  label,
-  description,
-  checked,
-  onCheckedChange,
-}: {
-  label: string
-  description?: string
-  checked: boolean
-  onCheckedChange: (v: boolean) => void
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="space-y-0.5">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
-      </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
-    </div>
-  )
-}
-
 /* ─────────────────── Main component ─────────────────── */
 export function SettingsClient({
   userId,
@@ -144,36 +103,10 @@ export function SettingsClient({
   const [name, setName] = useState(displayName)
   const [savingName, setSavingName] = useState(false)
 
-  /* Notification prefs (local) */
-  const [notifyRecommendations, setNotifyRecommendations] = useState(true)
-  const [notifySpendingAlerts, setNotifySpendingAlerts] = useState(true)
-  const [notifyEducation, setNotifyEducation] = useState(false)
-  const [notifyProductUpdates, setNotifyProductUpdates] = useState(true)
-
-  /* Privacy prefs */
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(true)
-
   /* Deleting */
   const [deleting, setDeleting] = useState(false)
 
   const isOAuthUser = provider !== 'email'
-
-  /* Load preferences from localStorage */
-  useEffect(() => {
-    const prefs = loadPrefs()
-    if ('notifyRecommendations' in prefs) setNotifyRecommendations(prefs.notifyRecommendations)
-    if ('notifySpendingAlerts' in prefs) setNotifySpendingAlerts(prefs.notifySpendingAlerts)
-    if ('notifyEducation' in prefs) setNotifyEducation(prefs.notifyEducation)
-    if ('notifyProductUpdates' in prefs) setNotifyProductUpdates(prefs.notifyProductUpdates)
-    if ('analyticsEnabled' in prefs) setAnalyticsEnabled(prefs.analyticsEnabled)
-  }, [])
-
-  /* Persist notification/privacy prefs */
-  const updatePref = (key: string, value: boolean) => {
-    const prefs = loadPrefs()
-    prefs[key] = value
-    savePrefs(prefs)
-  }
 
   /* ── Update display name ── */
   const handleSaveName = async () => {
@@ -214,25 +147,54 @@ export function SettingsClient({
     }
   }
 
-  /* ── Export data ── */
-  const handleExportData = () => {
-    const data = {
-      exportedAt: new Date().toISOString(),
-      userId,
-      email,
-      displayName: name,
-      advisorPreferences: localStorage.getItem('cardsense-advisor-storage'),
-      beginnerFlow: localStorage.getItem('beginner-flow-storage'),
-      appPreferences: localStorage.getItem(PREF_KEY),
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  /* ── Export data as CSV ── */
+  const handleExportCSV = () => {
+    const rows = [
+      ['Field', 'Value'],
+      ['User ID', userId],
+      ['Email', email],
+      ['Display Name', name],
+      ['Exported At', new Date().toISOString()],
+      ['Advisor Preferences', localStorage.getItem('cardsense-advisor-storage') || ''],
+      ['Beginner Flow', localStorage.getItem('beginner-flow-storage') || ''],
+      ['App Preferences', localStorage.getItem(PREF_KEY) || ''],
+    ]
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `cardsense-data-export-${new Date().toISOString().split('T')[0]}.json`
+    a.download = `cardsense-data-export-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Data exported successfully')
+    toast.success('Data exported as CSV')
+  }
+
+  /* ── Export data as PDF ── */
+  const handleExportPDF = () => {
+    const rows = [
+      ['User ID', userId],
+      ['Email', email],
+      ['Display Name', name],
+      ['Exported At', new Date().toLocaleString('en-IN')],
+    ]
+    const html = `<!DOCTYPE html><html><head><title>CardSense Data Export</title>
+<style>body{font-family:system-ui,sans-serif;padding:2rem;color:#222}h1{font-size:1.4rem;margin-bottom:.5rem}
+p.sub{font-size:.85rem;color:#666;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;margin-top:.5rem}
+td,th{border:1px solid #ddd;padding:10px 12px;text-align:left;font-size:.85rem}th{background:#f8f4e8;font-weight:600}
+tr:nth-child(even){background:#fafafa}</style></head>
+<body><h1>CardSense India &mdash; Data Export</h1>
+<p class="sub">Generated on ${new Date().toLocaleString('en-IN')}</p>
+<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+</tbody></table></body></html>`
+    const w = window.open('', '_blank')
+    if (w) {
+      w.document.write(html)
+      w.document.close()
+      w.print()
+    }
+    toast.success('Print dialog opened for PDF export')
   }
 
   /* ── Sign out ── */
@@ -411,89 +373,37 @@ export function SettingsClient({
         )}
       </Section>
 
-      {/* Notifications */}
-      <Section
-        title="Notifications"
-        description="Choose what you want to be notified about"
-        icon={Bell}
-      >
-        <div className="space-y-5">
-          <ToggleRow
-            label="Card recommendations"
-            description="Get notified when new personalised card recommendations are available"
-            checked={notifyRecommendations}
-            onCheckedChange={(v) => {
-              setNotifyRecommendations(v)
-              updatePref('notifyRecommendations', v)
-            }}
-          />
-          <Separator />
-          <ToggleRow
-            label="Spending alerts"
-            description="Alerts when your spending crosses budget thresholds"
-            checked={notifySpendingAlerts}
-            onCheckedChange={(v) => {
-              setNotifySpendingAlerts(v)
-              updatePref('notifySpendingAlerts', v)
-            }}
-          />
-          <Separator />
-          <ToggleRow
-            label="Education articles"
-            description="Weekly curated finance tips and card strategy articles"
-            checked={notifyEducation}
-            onCheckedChange={(v) => {
-              setNotifyEducation(v)
-              updatePref('notifyEducation', v)
-            }}
-          />
-          <Separator />
-          <ToggleRow
-            label="Product updates"
-            description="New features, improvements and important announcements"
-            checked={notifyProductUpdates}
-            onCheckedChange={(v) => {
-              setNotifyProductUpdates(v)
-              updatePref('notifyProductUpdates', v)
-            }}
-          />
-        </div>
-      </Section>
-
       {/* Privacy */}
       <Section
         title="Privacy & Data"
-        description="Control how your data is used"
+        description="Export your data"
         icon={Shield}
       >
-        <div className="space-y-5">
-          <ToggleRow
-            label="Usage analytics"
-            description="Help us improve CardSense by sharing anonymous usage data"
-            checked={analyticsEnabled}
-            onCheckedChange={(v) => {
-              setAnalyticsEnabled(v)
-              updatePref('analyticsEnabled', v)
-            }}
-          />
-
-          <Separator />
-
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground">Export your data</p>
-              <p className="text-xs text-muted-foreground">
-                Download a copy of your CardSense data including preferences and analysis history
-              </p>
-            </div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-foreground">Export your data</p>
+            <p className="text-xs text-muted-foreground">
+              Download a copy of your CardSense data including preferences and analysis history
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExportData}
-              className="shrink-0 gap-1.5"
+              onClick={handleExportCSV}
+              className="gap-1.5"
             >
               <Download className="h-3.5 w-3.5" />
-              Export
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              className="gap-1.5"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              PDF
             </Button>
           </div>
         </div>
@@ -523,7 +433,7 @@ export function SettingsClient({
             </Button>
           </div>
 
-          <Separator />
+          <div className="border-t border-border/40" />
 
           {/* Delete account */}
           <div className="flex items-start justify-between gap-4">

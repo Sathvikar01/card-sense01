@@ -2,109 +2,123 @@
 
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 import { cn } from '@/lib/utils'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 
 const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
+/* ------------------------------------------------------------------ */
+/*  Constants                                                          */
+/* ------------------------------------------------------------------ */
+
 const SPENDING_CATEGORIES = [
-  { key: 'groceries', label: 'Groceries', sublabel: 'Supermarkets, kirana, BigBasket' },
+  { key: 'groceries', label: 'Groceries', sublabel: 'Supermarkets, BigBasket' },
   { key: 'fuel', label: 'Fuel', sublabel: 'Petrol, diesel, CNG' },
-  { key: 'dining', label: 'Dining', sublabel: 'Restaurants, Zomato, Swiggy' },
-  { key: 'travel', label: 'Travel', sublabel: 'Flights, hotels, trains, Ola/Uber' },
-  { key: 'online_shopping', label: 'Online Shopping', sublabel: 'Amazon, Flipkart, Myntra' },
-  { key: 'utilities', label: 'Utilities and Bills', sublabel: 'Electricity, broadband, recharges' },
-  { key: 'rent', label: 'Rent or EMI', sublabel: 'Housing rent, loan EMIs' },
-  { key: 'entertainment', label: 'Entertainment', sublabel: 'OTT, movies, gaming, events' },
-  { key: 'healthcare', label: 'Healthcare', sublabel: 'Pharmacy, doctor visits, insurance' },
-  { key: 'education', label: 'Education', sublabel: 'Courses, books, subscriptions' },
+  { key: 'dining', label: 'Dining', sublabel: 'Restaurants, Swiggy, Zomato' },
+  { key: 'travel', label: 'Travel', sublabel: 'Flights, hotels, Uber' },
+  { key: 'online_shopping', label: 'Online Shopping', sublabel: 'Amazon, Flipkart' },
+  { key: 'utilities', label: 'Utilities', sublabel: 'Bills, broadband, recharges' },
+  { key: 'rent', label: 'Rent / EMI', sublabel: 'Housing, loan EMIs' },
+  { key: 'entertainment', label: 'Entertainment', sublabel: 'OTT, movies, gaming' },
+  { key: 'healthcare', label: 'Healthcare', sublabel: 'Pharmacy, doctor' },
+  { key: 'education', label: 'Education', sublabel: 'Courses, books' },
 ] as const
+
+/* ------------------------------------------------------------------ */
+/*  Main export                                                        */
+/* ------------------------------------------------------------------ */
 
 export function SpendingProfileStep() {
   const store = useAdvisorStore()
+  const selectedCount = store.topSpendingCategories.length
+  const maxReached = selectedCount >= 5
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground tracking-tight">
-          Where does your money go?
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Select your top 3 to 5 spending categories and estimate monthly amounts. This directly determines which reward structures give you the highest return.
-        </p>
-      </div>
-
+    <div className="space-y-5">
       {/* Category selection */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-foreground">
-            Select your top spending categories
-          </Label>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {store.topSpendingCategories.length} of 5 selected
+          <p className="text-sm font-semibold text-foreground">Select your top spending categories</p>
+          <span className={cn(
+            'text-xs font-medium tabular-nums rounded-full px-2.5 py-0.5 border',
+            selectedCount > 0
+              ? 'text-[#b8860b] bg-[#fdf3d7] border-[#d4a017]/30'
+              : 'text-muted-foreground bg-muted/40 border-border'
+          )}>
+            {selectedCount} / 5
           </span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <p className="text-xs text-muted-foreground -mt-1">
+          Pick 1 to 5 categories. Fewer selections = more focused card match.
+        </p>
+
+        {/* 5-column compact grid on desktop, 2-col on mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {SPENDING_CATEGORIES.map((cat) => {
             const selected = store.topSpendingCategories.includes(cat.key)
+            const disabled = !selected && maxReached
             return (
               <button
                 key={cat.key}
                 type="button"
                 onClick={() => store.toggleSpendingCategory(cat.key)}
+                disabled={disabled}
                 className={cn(
-                  'relative flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all duration-200',
+                  'relative rounded-xl border p-3 text-left transition-all duration-200',
                   selected
-                    ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
-                    : 'border-border hover:border-border/80 hover:bg-muted/40',
-                  !selected && store.topSpendingCategories.length >= 5 && 'opacity-50 cursor-not-allowed'
+                    ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
+                    : disabled
+                      ? 'border-border/40 bg-muted/20 opacity-50 cursor-not-allowed'
+                      : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'
                 )}
-                disabled={!selected && store.topSpendingCategories.length >= 5}
               >
+                {/* Checkbox indicator */}
                 <div className={cn(
-                  'mt-0.5 h-4 w-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors',
-                  selected ? 'border-primary bg-primary' : 'border-muted-foreground/40'
+                  'mb-2 h-4 w-4 rounded border-2 flex items-center justify-center transition-colors',
+                  selected ? 'border-[#b8860b] bg-gradient-to-br from-[#b8860b] to-[#d4a017]' : 'border-border/60'
                 )}>
                   {selected && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3 5.5L6.5 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground leading-tight">{cat.label}</p>
-                  <p className="text-xs text-muted-foreground">{cat.sublabel}</p>
-                </div>
+                <p className="text-xs font-semibold text-foreground leading-tight">{cat.label}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{cat.sublabel}</p>
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Spending amounts per selected category */}
+      {/* Amount inputs for selected categories */}
       {store.topSpendingCategories.length > 0 && (
-        <div className="space-y-5">
-          <Label className="text-sm font-medium text-foreground">
-            Estimate monthly spend on each
-          </Label>
-          <div className="space-y-3">
+        <div className="space-y-2.5">
+          <p className="text-sm font-semibold text-foreground">Estimate monthly spend on each</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {store.topSpendingCategories.map((catKey) => {
               const cat = SPENDING_CATEGORIES.find((c) => c.key === catKey)
               if (!cat) return null
               const amount = store.spendingAmounts[catKey] ?? 5000
               return (
-                <div key={catKey} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 p-4 bg-muted/20">
-                  <p className="text-sm font-medium text-foreground">{cat.label}</p>
-                  <div className="relative w-36 shrink-0">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">INR</span>
-                    <Input
+                <div
+                  key={catKey}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-4 py-3"
+                >
+                  <p className="text-sm font-medium text-foreground truncate">{cat.label}</p>
+                  <div className="relative shrink-0 w-32">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none">
+                      INR
+                    </span>
+                    <input
                       type="number"
                       min={0}
                       step={500}
                       value={amount || ''}
                       onChange={(e) => store.updateSpendingAmount(catKey, Number(e.target.value) || 0)}
                       placeholder="0"
-                      className={cn('pl-10 h-9 rounded-lg text-sm tabular-nums', HIDE_SPINNERS)}
+                      className={cn(
+                        'w-full rounded-lg border border-border bg-white pl-10 pr-3 py-1.5 text-sm tabular-nums text-foreground focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017]/30',
+                        HIDE_SPINNERS
+                      )}
                     />
                   </div>
                 </div>
@@ -112,26 +126,30 @@ export function SpendingProfileStep() {
             })}
           </div>
 
-          {/* Total spend summary */}
-          <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/[0.04] p-4">
-            <p className="text-sm font-medium text-foreground">Total estimated monthly card spend</p>
-            <p className="text-lg font-bold tabular-nums text-primary">
+          {/* Total */}
+          <div className="flex items-center justify-between rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/50 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#b8860b]">
+                <rect x="1" y="3" width="12" height="9" rx="2" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M1 6h12M4.5 6v6M9.5 6v6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+              <p className="text-sm font-medium text-foreground">Total monthly card spend</p>
+            </div>
+            <p className="text-base font-bold tabular-nums text-[#b8860b]">
               INR {store.getTotalMonthlySpend().toLocaleString('en-IN')}
             </p>
           </div>
         </div>
       )}
 
-      {/* Foreign usage */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">
-          Do you use your card for international transactions?
-        </Label>
+      {/* International usage */}
+      <div className="space-y-2.5">
+        <p className="text-sm font-semibold text-foreground">Do you use your card for international transactions?</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {[
-            { value: true, label: 'Yes, regularly or occasionally', desc: 'Foreign transaction fees and forex markup matter to me.' },
-            { value: false, label: 'No, domestic use only', desc: 'I do not shop on international sites or travel abroad frequently.' },
-          ].map((opt) => {
+          {([
+            { value: true, label: 'Yes', desc: 'Foreign transaction fees and forex markup matter.' },
+            { value: false, label: 'No, domestic only', desc: 'I do not shop on international sites or travel abroad.' },
+          ] as const).map((opt) => {
             const selected = store.usesCardAbroad === opt.value
             return (
               <button
@@ -139,48 +157,24 @@ export function SpendingProfileStep() {
                 type="button"
                 onClick={() => store.updateField('usesCardAbroad', opt.value)}
                 className={cn(
-                  'relative rounded-xl border p-4 text-left transition-all duration-200',
+                  'relative rounded-xl border p-3.5 text-left transition-all duration-200',
                   selected
-                    ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
-                    : 'border-border hover:border-border/80 hover:bg-muted/40'
+                    ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
+                    : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'
                 )}
               >
-                <p className="text-sm font-medium text-foreground">{opt.label}</p>
-                <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
+                <p className="text-sm font-medium text-foreground pr-5">{opt.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
                 {selected && (
-                  <div className="absolute top-2.5 right-2.5">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="8" className="fill-primary" />
-                      <path d="M5 8L7 10L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <div className="absolute top-2.5 right-2.5 h-5 w-5 rounded-full bg-gradient-to-br from-[#b8860b] to-[#d4a017] flex items-center justify-center shadow-sm">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 )}
               </button>
             )
           })}
-        </div>
-      </div>
-
-      {/* Desired credit limit */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">
-          Minimum credit limit you need
-        </Label>
-        <p className="text-xs text-muted-foreground -mt-1">
-          A good target is 2x-3x your monthly card spend to keep utilization under 30-40%.
-        </p>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">INR</span>
-          <Input
-            type="number"
-            min={10000}
-            max={10000000}
-            step={10000}
-            value={store.desiredCreditLimit || ''}
-            onChange={(e) => store.updateField('desiredCreditLimit', Number(e.target.value) || 10000)}
-            placeholder="e.g. 100000"
-            className={cn('pl-12 rounded-xl h-11 text-sm tabular-nums', HIDE_SPINNERS)}
-          />
         </div>
       </div>
     </div>

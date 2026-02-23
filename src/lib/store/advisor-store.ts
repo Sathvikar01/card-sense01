@@ -158,6 +158,20 @@ const initialState: AdvisorFormState = {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Helper: bucket a numeric CIBIL score into a CreditScoreRange      */
+/* ------------------------------------------------------------------ */
+
+export function bucketCibilScore(score: number | null | undefined): CreditScoreRange {
+  if (!score || score === 0) return 'no_history'
+  if (score < 600) return 'below_600'
+  if (score < 650) return '600_649'
+  if (score < 700) return '650_699'
+  if (score < 750) return '700_749'
+  if (score < 800) return '750_799'
+  return '800_plus'
+}
+
+/* ------------------------------------------------------------------ */
 /*  Persona detection                                                  */
 /* ------------------------------------------------------------------ */
 
@@ -258,8 +272,19 @@ export interface SavedAdvisorResult {
 /*  Store                                                              */
 /* ------------------------------------------------------------------ */
 
+export interface ProfilePrefillData {
+  creditScore?: number | null
+  employmentType?: string | null
+  annualIncome?: number | null
+  city?: string | null
+  primaryBank?: string | null
+  hasFD?: boolean | null
+  fdAmount?: number | null
+}
+
 interface AdvisorStore extends AdvisorFormState {
   savedResult: SavedAdvisorResult | null
+  profilePrefilledFields: string[]
   setSavedResult: (result: SavedAdvisorResult | null) => void
   setStep: (step: number) => void
   markStepComplete: (step: number) => void
@@ -271,6 +296,7 @@ interface AdvisorStore extends AdvisorFormState {
   reset: () => void
   getTotalMonthlySpend: () => number
   getApiPayload: () => Record<string, unknown>
+  prefillFromProfile: (data: ProfilePrefillData) => void
 }
 
 export const useAdvisorStore = create<AdvisorStore>()(
@@ -278,6 +304,7 @@ export const useAdvisorStore = create<AdvisorStore>()(
     (set, get) => ({
       ...initialState,
       savedResult: null as SavedAdvisorResult | null,
+      profilePrefilledFields: [] as string[],
 
       setSavedResult: (result: SavedAdvisorResult | null) => set({ savedResult: result }),
 
@@ -322,7 +349,43 @@ export const useAdvisorStore = create<AdvisorStore>()(
         set({ detectedPersona: persona })
       },
 
-      reset: () => set({ ...initialState, savedResult: null }),
+      reset: () => set({ ...initialState, savedResult: null, profilePrefilledFields: [] }),
+
+      prefillFromProfile: (data: ProfilePrefillData) => {
+        const filled: string[] = []
+        const updates: Partial<AdvisorFormState> = {}
+
+        if (data.creditScore !== undefined && data.creditScore !== null) {
+          updates.creditScore = bucketCibilScore(data.creditScore)
+          filled.push('creditScore')
+        }
+        if (data.employmentType) {
+          updates.employmentType = data.employmentType as EmploymentType
+          filled.push('employmentType')
+        }
+        if (data.annualIncome !== undefined && data.annualIncome !== null && data.annualIncome > 0) {
+          updates.monthlyIncome = Math.round(data.annualIncome / 12)
+          filled.push('monthlyIncome')
+        }
+        if (data.city) {
+          updates.city = data.city
+          filled.push('city')
+        }
+        if (data.primaryBank) {
+          updates.primaryBank = data.primaryBank
+          filled.push('primaryBank')
+        }
+        if (data.hasFD !== undefined && data.hasFD !== null) {
+          updates.hasFD = data.hasFD
+          filled.push('hasFD')
+        }
+        if (data.fdAmount !== undefined && data.fdAmount !== null && data.fdAmount > 0) {
+          updates.fdAmount = data.fdAmount
+          filled.push('fdAmount')
+        }
+
+        set({ ...updates, profilePrefilledFields: filled })
+      },
 
       getTotalMonthlySpend: () => {
         const amounts = get().spendingAmounts

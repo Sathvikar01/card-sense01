@@ -1,10 +1,10 @@
-import { NavbarLoader } from '@/components/layout/navbar-loader'
+import { Navbar } from '@/components/layout/navbar'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { DashboardRoutePrefetch } from '@/components/layout/dashboard-route-prefetch'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { createClient } from '@/lib/supabase/server'
 import { DbHealthBanner } from '@/components/layout/db-health-banner'
-import { ChatbotLoader } from '@/components/chatbot/chatbot-loader'
+import { ChatbotWidget } from '@/components/chatbot/chatbot-widget'
 
 export default async function DashboardLayout({
   children,
@@ -29,7 +29,7 @@ export default async function DashboardLayout({
         <DashboardRoutePrefetch />
 
         {/* Unified Navbar - replaces Sidebar + Topbar */}
-        <NavbarLoader userName={userName} userEmail={userEmail} />
+        <Navbar userName={userName} userEmail={userEmail} />
 
         {/* Main content area - full width, no sidebar offset */}
         <main className="flex-1 pb-20 md:pb-8">
@@ -45,7 +45,7 @@ export default async function DashboardLayout({
         <MobileNav />
 
         {/* Floating Chatbot Widget */}
-        <ChatbotLoader />
+        <ChatbotWidget />
       </div>
     </TooltipProvider>
   )

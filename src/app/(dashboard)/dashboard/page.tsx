@@ -15,6 +15,13 @@ interface DashboardProfile {
 interface SpendingRow {
   amount: number
   transaction_date: string
+  category: string | null
+}
+
+interface UserCardSummary {
+  id: string
+  card_name: string
+  bank_name: string
 }
 
 const CibilScoreGauge = dynamic(
@@ -56,6 +63,20 @@ const RecentRecommendations = dynamic(
   }
 )
 
+const CardsOwnedStack = dynamic(
+  () =>
+    import('@/components/dashboard/cards-owned-stack').then((m) => ({
+      default: m.CardsOwnedStack,
+    })),
+  {
+    loading: () => (
+      <div className="dash-card p-6">
+        <div className="h-40 shimmer rounded-xl" />
+      </div>
+    ),
+  }
+)
+
 async function getDashboardData() {
   const supabase = await createClient()
   const {
@@ -69,6 +90,7 @@ async function getDashboardData() {
       monthlySpending: [],
       currentMonthTotal: 0,
       totalCards: 0,
+      userCards: [],
     }
   }
 
@@ -81,43 +103,31 @@ async function getDashboardData() {
     supabase
       .from('recommendations')
       .select(
-        'id, user_id, recommendation_type, input_snapshot, recommended_cards, ai_analysis, spending_analysis, created_at'
+        'id, user_id, recommendation_type, input_snapshot, recommended_cards, ai_analysis, created_at'
       )
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(3),
     supabase
       .from('spending_transactions')
-      .select('amount, transaction_date')
+      .select('amount, transaction_date, category')
       .eq('user_id', user.id)
       .gte('transaction_date', sixMonthsAgoDate)
       .order('transaction_date', { ascending: true }),
     supabase
       .from('user_cards')
-      .select('id', { count: 'exact', head: true })
+      .select('id, card_name, bank_name')
       .eq('user_id', user.id)
-      .eq('is_active', true),
+      .eq('is_active', true)
+      .order('added_at', { ascending: false })
+      .limit(10),
   ])
 
   const profile = profileResult as DashboardProfile
   const recommendations = recommendationsResult.data as Recommendation[] | null
   const spendingData = spendingResult.data as SpendingRow[] | null
 
-  const monthlySpending: Record<string, number> = {}
-  spendingData?.forEach((transaction) => {
-    const date = new Date(transaction.transaction_date)
-    const monthKey = date.toLocaleDateString('en-IN', {
-      month: 'short',
-      year: '2-digit',
-    })
-    monthlySpending[monthKey] = (monthlySpending[monthKey] || 0) + Number(transaction.amount)
-  })
-
-  const monthlySpendingArray = Object.entries(monthlySpending).map(([month, amount]) => ({
-    month,
-    amount,
-  }))
-
+  // Monthly spending for current month total
   const currentMonth = new Date()
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
   const currentMonthTotal =
@@ -128,7 +138,26 @@ async function getDashboardData() {
       return sum
     }, 0) || 0
 
-  const totalCards = userCardsResult.count ?? profile?.existing_cards_count ?? 0
+  // Category percentage breakdown for chart
+  const categoryAmounts: Record<string, number> = {}
+  spendingData?.forEach((transaction) => {
+    const cat = transaction.category || 'other'
+    categoryAmounts[cat] = (categoryAmounts[cat] || 0) + Number(transaction.amount)
+  })
+  const categoryTotal = Object.values(categoryAmounts).reduce((sum, amt) => sum + amt, 0)
+  const categoryData = Object.entries(categoryAmounts)
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: categoryTotal > 0 ? Math.round((amount / categoryTotal) * 100) : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 8)
+
+  const monthlySpendingArray = categoryData
+
+  const totalCards = (userCardsResult.data as UserCardSummary[] | null)?.length ?? profile?.existing_cards_count ?? 0
+  const userCards = (userCardsResult.data as UserCardSummary[] | null) ?? []
 
   return {
     profile,
@@ -136,11 +165,12 @@ async function getDashboardData() {
     monthlySpending: monthlySpendingArray,
     currentMonthTotal,
     totalCards,
+    userCards,
   }
 }
 
 export default async function DashboardPage() {
-  const { profile, recommendations, monthlySpending, currentMonthTotal, totalCards } =
+  const { profile, recommendations, monthlySpending, currentMonthTotal, userCards } =
     await getDashboardData()
 
   const cibilScore = profile?.credit_score || null
@@ -236,19 +266,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Cards Owned */}
-        <div className="dash-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/8 blur-[30px]" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Cards Owned</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-400 to-cyan-500">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="5" width="12" height="8" rx="2" stroke="white" strokeWidth="1.3" fill="none" /><rect x="3" y="3" width="10" height="2" rx="1" fill="white" opacity="0.3" /><rect x="4" y="1" width="8" height="2" rx="1" fill="white" opacity="0.15" /><line x1="2" y1="8" x2="14" y2="8" stroke="white" strokeWidth="1" opacity="0.4" /></svg>
-            </div>
-          </div>
-          <div className="mt-3">
-            <p className="text-3xl font-bold text-foreground">{totalCards}</p>
-            <p className="mt-1 text-[0.65rem] text-muted-foreground">Active credit cards</p>
-          </div>
-        </div>
+        <CardsOwnedStack cards={userCards} />
 
         {/* Top Picks */}
         <div className="dash-card relative overflow-hidden p-6">
