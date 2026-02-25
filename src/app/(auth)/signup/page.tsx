@@ -58,7 +58,8 @@ export default function SignupPage() {
     },
   })
 
-  const onSubmit = async (data: SignupFormValues) => {
+  async function onSubmit(data: SignupFormValues) {
+    const supabase = createClient()
     setIsLoading(true)
 
     try {
