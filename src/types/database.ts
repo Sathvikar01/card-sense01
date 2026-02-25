@@ -17,12 +17,23 @@ export interface Database {
           full_name: string | null
           phone: string | null
           city: string | null
-          income_range: string | null
+          annual_income: number | null
           employment_type: string | null
+          employer_name: string | null
           primary_bank: string | null
+          has_fixed_deposit: boolean | null
+          fd_amount: number | null
+          credit_score: number | null
+          credit_score_date: string | null
+          existing_card_ids: string[] | null
+          preferred_spending_categories: string[] | null
+          financial_goals: string[] | null
+          is_beginner: boolean | null
+          onboarding_completed: boolean | null
+          income_range: string | null
           cibil_score: number | null
-          existing_cards: Json
-          fixed_deposits: Json
+          existing_cards: Json | null
+          fixed_deposits: Json | null
           created_at: string
           updated_at: string
         }
@@ -32,12 +43,23 @@ export interface Database {
           full_name?: string | null
           phone?: string | null
           city?: string | null
-          income_range?: string | null
+          annual_income?: number | null
           employment_type?: string | null
+          employer_name?: string | null
           primary_bank?: string | null
+          has_fixed_deposit?: boolean | null
+          fd_amount?: number | null
+          credit_score?: number | null
+          credit_score_date?: string | null
+          existing_card_ids?: string[] | null
+          preferred_spending_categories?: string[] | null
+          financial_goals?: string[] | null
+          is_beginner?: boolean | null
+          onboarding_completed?: boolean | null
+          income_range?: string | null
           cibil_score?: number | null
-          existing_cards?: Json
-          fixed_deposits?: Json
+          existing_cards?: Json | null
+          fixed_deposits?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -47,12 +69,23 @@ export interface Database {
           full_name?: string | null
           phone?: string | null
           city?: string | null
-          income_range?: string | null
+          annual_income?: number | null
           employment_type?: string | null
+          employer_name?: string | null
           primary_bank?: string | null
+          has_fixed_deposit?: boolean | null
+          fd_amount?: number | null
+          credit_score?: number | null
+          credit_score_date?: string | null
+          existing_card_ids?: string[] | null
+          preferred_spending_categories?: string[] | null
+          financial_goals?: string[] | null
+          is_beginner?: boolean | null
+          onboarding_completed?: boolean | null
+          income_range?: string | null
           cibil_score?: number | null
-          existing_cards?: Json
-          fixed_deposits?: Json
+          existing_cards?: Json | null
+          fixed_deposits?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -60,91 +93,154 @@ export interface Database {
       credit_cards: {
         Row: {
           id: string
-          bank: string
+          bank_name: string
           card_name: string
+          card_network: string
           card_type: string
-          network: string | null
+          card_variant: string | null
+          image_url: string | null
           joining_fee: number
           annual_fee: number
-          annual_fee_waiver_conditions: string | null
+          annual_fee_waiver_spend: number | null
+          renewal_fee: number | null
+          min_income_salaried: number | null
+          min_income_self_employed: number | null
           min_income_required: number | null
-          min_cibil_score: number
-          age_requirement: string
-          eligibility_criteria: string | null
-          reward_structure: Json
-          welcome_benefits: Json
-          key_features: string[] | null
+          min_cibil_score: number | null
+          min_credit_score: number | null
+          min_age: number | null
+          max_age: number | null
+          requires_itr: boolean | null
+          requires_existing_relationship: boolean | null
+          reward_rate_default: number | null
+          reward_rate_categories: Json | null
+          reward_structure: Json | null
+          welcome_benefits: Json | null
+          milestone_benefits: Json | null
+          lounge_access: string | null
+          lounge_access_details: string | null
+          lounge_visits_per_quarter: number | null
+          fuel_surcharge_waiver: boolean | null
+          fuel_surcharge_waiver_cap: number | null
+          movie_benefits: string | null
+          dining_benefits: string | null
+          travel_insurance_cover: number | null
+          purchase_protection_cover: number | null
+          golf_access: boolean | null
+          concierge_service: boolean | null
+          forex_markup: number | null
+          foreign_markup_fee: number | null
+          emi_conversion_available: boolean | null
+          description: string | null
           pros: string[] | null
           cons: string[] | null
           best_for: string[] | null
-          milestone_benefits: Json
-          lounge_access: string | null
-          fuel_surcharge_waiver: boolean
-          foreign_markup_fee: number | null
-          image_url: string | null
           apply_url: string | null
-          terms_url: string | null
+          application_url: string | null
           is_active: boolean
+          popularity_score: number | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          bank: string
+          bank_name?: string
           card_name: string
+          card_network?: string
           card_type: string
-          network?: string | null
+          card_variant?: string | null
+          image_url?: string | null
           joining_fee?: number
           annual_fee?: number
-          annual_fee_waiver_conditions?: string | null
+          annual_fee_waiver_spend?: number | null
+          renewal_fee?: number | null
+          min_income_salaried?: number | null
+          min_income_self_employed?: number | null
           min_income_required?: number | null
-          min_cibil_score?: number
-          age_requirement?: string
-          eligibility_criteria?: string | null
-          reward_structure: Json
-          welcome_benefits?: Json
-          key_features?: string[] | null
+          min_cibil_score?: number | null
+          min_credit_score?: number | null
+          min_age?: number | null
+          max_age?: number | null
+          requires_itr?: boolean | null
+          requires_existing_relationship?: boolean | null
+          reward_rate_default?: number | null
+          reward_rate_categories?: Json | null
+          reward_structure?: Json | null
+          welcome_benefits?: Json | null
+          milestone_benefits?: Json | null
+          lounge_access?: string | null
+          lounge_access_details?: string | null
+          lounge_visits_per_quarter?: number | null
+          fuel_surcharge_waiver?: boolean | null
+          fuel_surcharge_waiver_cap?: number | null
+          movie_benefits?: string | null
+          dining_benefits?: string | null
+          travel_insurance_cover?: number | null
+          purchase_protection_cover?: number | null
+          golf_access?: boolean | null
+          concierge_service?: boolean | null
+          forex_markup?: number | null
+          foreign_markup_fee?: number | null
+          emi_conversion_available?: boolean | null
+          description?: string | null
           pros?: string[] | null
           cons?: string[] | null
           best_for?: string[] | null
-          milestone_benefits?: Json
-          lounge_access?: string | null
-          fuel_surcharge_waiver?: boolean
-          foreign_markup_fee?: number | null
-          image_url?: string | null
           apply_url?: string | null
-          terms_url?: string | null
+          application_url?: string | null
           is_active?: boolean
+          popularity_score?: number | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          bank?: string
+          bank_name?: string
           card_name?: string
+          card_network?: string
           card_type?: string
-          network?: string | null
+          card_variant?: string | null
+          image_url?: string | null
           joining_fee?: number
           annual_fee?: number
-          annual_fee_waiver_conditions?: string | null
+          annual_fee_waiver_spend?: number | null
+          renewal_fee?: number | null
+          min_income_salaried?: number | null
+          min_income_self_employed?: number | null
           min_income_required?: number | null
-          min_cibil_score?: number
-          age_requirement?: string
-          eligibility_criteria?: string | null
-          reward_structure?: Json
-          welcome_benefits?: Json
-          key_features?: string[] | null
+          min_cibil_score?: number | null
+          min_credit_score?: number | null
+          min_age?: number | null
+          max_age?: number | null
+          requires_itr?: boolean | null
+          requires_existing_relationship?: boolean | null
+          reward_rate_default?: number | null
+          reward_rate_categories?: Json | null
+          reward_structure?: Json | null
+          welcome_benefits?: Json | null
+          milestone_benefits?: Json | null
+          lounge_access?: string | null
+          lounge_access_details?: string | null
+          lounge_visits_per_quarter?: number | null
+          fuel_surcharge_waiver?: boolean | null
+          fuel_surcharge_waiver_cap?: number | null
+          movie_benefits?: string | null
+          dining_benefits?: string | null
+          travel_insurance_cover?: number | null
+          purchase_protection_cover?: number | null
+          golf_access?: boolean | null
+          concierge_service?: boolean | null
+          forex_markup?: number | null
+          foreign_markup_fee?: number | null
+          emi_conversion_available?: boolean | null
+          description?: string | null
           pros?: string[] | null
           cons?: string[] | null
           best_for?: string[] | null
-          milestone_benefits?: Json
-          lounge_access?: string | null
-          fuel_surcharge_waiver?: boolean
-          foreign_markup_fee?: number | null
-          image_url?: string | null
           apply_url?: string | null
-          terms_url?: string | null
+          application_url?: string | null
           is_active?: boolean
+          popularity_score?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -153,32 +249,135 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          recommendation_type: string
-          input_snapshot: Json
+          recommendation_type: string | null
+          flow_type: string | null
+          input_snapshot: Json | null
+          input_data: Json | null
           recommended_cards: Json
+          ai_analysis_text: string | null
           ai_analysis: string | null
+          application_guide: string | null
+          portfolio_strategy: string | null
           spending_analysis: Json | null
+          spending_optimization_tips: Json | null
+          model_used: string | null
+          ai_model_used: string | null
+          processing_time_ms: number | null
           created_at: string
+          updated_at: string | null
         }
         Insert: {
           id?: string
           user_id: string
-          recommendation_type: string
-          input_snapshot: Json
-          recommended_cards: Json
+          recommendation_type?: string | null
+          flow_type?: string | null
+          input_snapshot?: Json | null
+          input_data?: Json | null
+          recommended_cards?: Json
+          ai_analysis_text?: string | null
           ai_analysis?: string | null
+          application_guide?: string | null
+          portfolio_strategy?: string | null
           spending_analysis?: Json | null
+          spending_optimization_tips?: Json | null
+          model_used?: string | null
+          ai_model_used?: string | null
+          processing_time_ms?: number | null
           created_at?: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
           user_id?: string
-          recommendation_type?: string
-          input_snapshot?: Json
+          recommendation_type?: string | null
+          flow_type?: string | null
+          input_snapshot?: Json | null
+          input_data?: Json | null
           recommended_cards?: Json
+          ai_analysis_text?: string | null
           ai_analysis?: string | null
+          application_guide?: string | null
+          portfolio_strategy?: string | null
           spending_analysis?: Json | null
+          spending_optimization_tips?: Json | null
+          model_used?: string | null
+          ai_model_used?: string | null
+          processing_time_ms?: number | null
           created_at?: string
+          updated_at?: string | null
+        }
+      }
+      user_cards: {
+        Row: {
+          id: string
+          user_id: string
+          card_name: string
+          bank_name: string
+          card_type: string
+          last_four_digits: string | null
+          notes: string | null
+          is_active: boolean
+          added_at: string
+          removed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          card_name: string
+          bank_name: string
+          card_type?: string
+          last_four_digits?: string | null
+          notes?: string | null
+          is_active?: boolean
+          added_at?: string
+          removed_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          card_name?: string
+          bank_name?: string
+          card_type?: string
+          last_four_digits?: string | null
+          notes?: string | null
+          is_active?: boolean
+          added_at?: string
+          removed_at?: string | null
+        }
+      }
+      user_interactions: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          page: string | null
+          entity_type: string | null
+          entity_id: string | null
+          metadata: Json
+          session_id: string | null
+          occurred_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          page?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+          metadata?: Json
+          session_id?: string | null
+          occurred_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          page?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+          metadata?: Json
+          session_id?: string | null
+          occurred_at?: string
         }
       }
       spending_transactions: {
@@ -188,11 +387,15 @@ export interface Database {
           amount: number
           category: string
           merchant: string | null
+          merchant_name: string | null
           card_used: string | null
+          credit_card_id: string | null
           transaction_date: string
           source: string
           notes: string | null
+          description: string | null
           created_at: string
+          updated_at: string | null
         }
         Insert: {
           id?: string
@@ -200,11 +403,15 @@ export interface Database {
           amount: number
           category: string
           merchant?: string | null
+          merchant_name?: string | null
           card_used?: string | null
+          credit_card_id?: string | null
           transaction_date?: string
           source?: string
           notes?: string | null
+          description?: string | null
           created_at?: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
@@ -212,11 +419,15 @@ export interface Database {
           amount?: number
           category?: string
           merchant?: string | null
+          merchant_name?: string | null
           card_used?: string | null
+          credit_card_id?: string | null
           transaction_date?: string
           source?: string
           notes?: string | null
+          description?: string | null
           created_at?: string
+          updated_at?: string | null
         }
       }
       uploaded_documents: {
@@ -227,11 +438,13 @@ export interface Database {
           file_name: string
           file_path: string
           file_size: number | null
+          file_size_bytes: number | null
           mime_type: string | null
           parsed_data: Json | null
           parsing_status: string
           parsing_error: string | null
           created_at: string
+          updated_at: string | null
         }
         Insert: {
           id?: string
@@ -240,11 +453,13 @@ export interface Database {
           file_name: string
           file_path: string
           file_size?: number | null
+          file_size_bytes?: number | null
           mime_type?: string | null
           parsed_data?: Json | null
           parsing_status?: string
           parsing_error?: string | null
           created_at?: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
@@ -253,40 +468,51 @@ export interface Database {
           file_name?: string
           file_path?: string
           file_size?: number | null
+          file_size_bytes?: number | null
           mime_type?: string | null
           parsed_data?: Json | null
           parsing_status?: string
           parsing_error?: string | null
           created_at?: string
+          updated_at?: string | null
         }
       }
       credit_score_history: {
         Row: {
           id: string
           user_id: string
-          score: number
+          credit_score: number | null
+          score: number | null
           score_date: string
-          source: string
+          score_source: string | null
+          source: string | null
           notes: string | null
           created_at: string
+          updated_at: string | null
         }
         Insert: {
           id?: string
           user_id: string
-          score: number
+          credit_score?: number | null
+          score?: number | null
           score_date?: string
-          source?: string
+          score_source?: string | null
+          source?: string | null
           notes?: string | null
           created_at?: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
           user_id?: string
-          score?: number
+          credit_score?: number | null
+          score?: number | null
           score_date?: string
-          source?: string
+          score_source?: string | null
+          source?: string | null
           notes?: string | null
           created_at?: string
+          updated_at?: string | null
         }
       }
       education_articles: {
@@ -295,14 +521,18 @@ export interface Database {
           slug: string
           title: string
           excerpt: string | null
+          summary: string | null
           content: string
           category: string
           difficulty: string
           read_time_minutes: number | null
-          featured: boolean
+          reading_time_minutes: number | null
+          featured: boolean | null
           tags: string[] | null
-          author: string
-          published_at: string
+          author: string | null
+          is_published: boolean | null
+          view_count: number | null
+          published_at: string | null
           created_at: string
           updated_at: string
         }
@@ -311,14 +541,18 @@ export interface Database {
           slug: string
           title: string
           excerpt?: string | null
+          summary?: string | null
           content: string
           category: string
           difficulty?: string
           read_time_minutes?: number | null
-          featured?: boolean
+          reading_time_minutes?: number | null
+          featured?: boolean | null
           tags?: string[] | null
-          author?: string
-          published_at?: string
+          author?: string | null
+          is_published?: boolean | null
+          view_count?: number | null
+          published_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -327,14 +561,18 @@ export interface Database {
           slug?: string
           title?: string
           excerpt?: string | null
+          summary?: string | null
           content?: string
           category?: string
           difficulty?: string
           read_time_minutes?: number | null
-          featured?: boolean
+          reading_time_minutes?: number | null
+          featured?: boolean | null
           tags?: string[] | null
-          author?: string
-          published_at?: string
+          author?: string | null
+          is_published?: boolean | null
+          view_count?: number | null
+          published_at?: string | null
           created_at?: string
           updated_at?: string
         }

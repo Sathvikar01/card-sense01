@@ -69,7 +69,34 @@ CREATE TABLE IF NOT EXISTS recommendations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Spending Transactions Table
+-- 4. User Cards Table
+CREATE TABLE IF NOT EXISTS user_cards (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  card_name TEXT NOT NULL,
+  bank_name TEXT NOT NULL,
+  card_type TEXT NOT NULL DEFAULT 'credit',
+  last_four_digits TEXT,
+  notes TEXT,
+  is_active BOOLEAN DEFAULT true,
+  added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  removed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- 5. User Interactions Table
+CREATE TABLE IF NOT EXISTS user_interactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,
+  page TEXT,
+  entity_type TEXT,
+  entity_id TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  session_id TEXT,
+  occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. Spending Transactions Table
 CREATE TABLE IF NOT EXISTS spending_transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -83,7 +110,7 @@ CREATE TABLE IF NOT EXISTS spending_transactions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. Uploaded Documents Table
+-- 7. Uploaded Documents Table
 CREATE TABLE IF NOT EXISTS uploaded_documents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -98,7 +125,7 @@ CREATE TABLE IF NOT EXISTS uploaded_documents (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. Credit Score History Table
+-- 8. Credit Score History Table
 CREATE TABLE IF NOT EXISTS credit_score_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -109,7 +136,7 @@ CREATE TABLE IF NOT EXISTS credit_score_history (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 7. Education Articles Table
+-- 9. Education Articles Table
 CREATE TABLE IF NOT EXISTS education_articles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   slug TEXT UNIQUE NOT NULL,
@@ -135,6 +162,13 @@ CREATE INDEX IF NOT EXISTS idx_credit_cards_bank ON credit_cards(bank);
 CREATE INDEX IF NOT EXISTS idx_credit_cards_type ON credit_cards(card_type);
 CREATE INDEX IF NOT EXISTS idx_credit_cards_active ON credit_cards(is_active);
 CREATE INDEX IF NOT EXISTS idx_recommendations_user ON recommendations(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_cards_user_added ON user_cards(user_id, added_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_cards_active ON user_cards(user_id, is_active);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_cards_unique_active
+  ON user_cards(user_id, lower(card_name), lower(bank_name))
+  WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_user_interactions_user_occurred ON user_interactions(user_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_interactions_event_occurred ON user_interactions(event_type, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_spending_user_date ON spending_transactions(user_id, transaction_date DESC);
 CREATE INDEX IF NOT EXISTS idx_spending_category ON spending_transactions(category);
 CREATE INDEX IF NOT EXISTS idx_documents_user ON uploaded_documents(user_id);
@@ -149,6 +183,8 @@ CREATE INDEX IF NOT EXISTS idx_articles_slug ON education_articles(slug);
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recommendations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_interactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spending_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE uploaded_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_score_history ENABLE ROW LEVEL SECURITY;
@@ -179,6 +215,33 @@ CREATE POLICY "Users can view own recommendations"
 
 CREATE POLICY "Users can insert own recommendations"
   ON recommendations FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- User Cards: Users can only access their own cards
+CREATE POLICY "Users can view own cards"
+  ON user_cards FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own cards"
+  ON user_cards FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own cards"
+  ON user_cards FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own cards"
+  ON user_cards FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- User Interactions: Users can write/read their own event logs
+CREATE POLICY "Users can view own interactions"
+  ON user_interactions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own interactions"
+  ON user_interactions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Spending Transactions: Users can only access their own transactions

@@ -41,6 +41,7 @@ export interface NormalizedProfile {
   credit_score: number | null
   credit_score_date: string | null
   existing_cards_count: number
+  onboarding_completed: boolean | null
   created_at: string
   updated_at: string
 }
@@ -65,6 +66,7 @@ export interface NormalizedProfileUpdate {
   fd_amount?: number | null
   credit_score?: number | null
   credit_score_date?: string | null
+  onboarding_completed?: boolean
 }
 
 const MODERN_PROFILE_SELECT = [
@@ -81,6 +83,7 @@ const MODERN_PROFILE_SELECT = [
   'fd_amount',
   'credit_score',
   'credit_score_date',
+  'onboarding_completed',
   'existing_card_ids',
   'created_at',
   'updated_at',
@@ -208,6 +211,7 @@ const normalizeModernProfile = (row: UnknownRow): NormalizedProfile => ({
   credit_score: asNumber(row.credit_score),
   credit_score_date: asString(row.credit_score_date),
   existing_cards_count: countItems(row.existing_card_ids),
+  onboarding_completed: asBoolean(row.onboarding_completed),
   created_at: asString(row.created_at) || toIsoString(),
   updated_at: asString(row.updated_at) || toIsoString(),
 })
@@ -229,6 +233,7 @@ const normalizeLegacyProfile = (row: UnknownRow): NormalizedProfile => {
     credit_score: asNumber(row.cibil_score),
     credit_score_date: null,
     existing_cards_count: countItems(row.existing_cards),
+    onboarding_completed: null,
     created_at: asString(row.created_at) || toIsoString(),
     updated_at: asString(row.updated_at) || toIsoString(),
   }
@@ -343,6 +348,7 @@ export async function getProfileWithFallback(
       credit_score: null,
       credit_score_date: null,
       existing_cards_count: 0,
+      onboarding_completed: null,
       created_at: now,
       updated_at: now,
     }
@@ -374,6 +380,7 @@ export async function getProfileWithFallback(
       credit_score: null,
       credit_score_date: null,
       existing_cards_count: 0,
+      onboarding_completed: null,
       created_at: now,
       updated_at: now,
     }
@@ -417,6 +424,7 @@ export async function getProfileWithFallback(
     credit_score: null,
     credit_score_date: null,
     existing_cards_count: 0,
+    onboarding_completed: null,
     created_at: now,
     updated_at: now,
   }

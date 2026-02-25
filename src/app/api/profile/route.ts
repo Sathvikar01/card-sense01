@@ -6,6 +6,7 @@ import {
   ProfileCompatError,
   upsertProfileWithFallback,
 } from '@/lib/profile/profile-compat'
+import { insertUserInteraction } from '@/lib/interactions/server'
 
 // GET /api/profile - Fetch user profile
 export async function GET() {
@@ -30,7 +31,25 @@ export async function GET() {
       email: user.email ?? null,
     })
 
-    const response = NextResponse.json({ profile })
+    const completionFields = {
+      full_name: Boolean(profile.full_name?.trim()),
+      city: Boolean(profile.city?.trim()),
+      employment_type: Boolean(profile.employment_type?.trim()),
+      annual_income: Boolean(profile.annual_income && profile.annual_income > 0),
+      primary_bank: Boolean(profile.primary_bank?.trim()),
+      credit_score: Boolean(profile.credit_score && profile.credit_score >= 300),
+    }
+    const completionScore = Object.values(completionFields).filter(Boolean).length
+    const profileCompletion = Math.round((completionScore / Object.keys(completionFields).length) * 100)
+
+    const response = NextResponse.json({
+      profile,
+      profileMeta: {
+        completionFields,
+        profileCompletion,
+        onboardingRequired: profile.onboarding_completed !== true || profileCompletion < 100,
+      },
+    })
     response.headers.set('Cache-Control', 'private, no-store')
     return response
   } catch (error) {
@@ -47,12 +66,23 @@ const updateProfileSchema = z.object({
   full_name: z.string().min(2).max(100).optional(),
   phone: z.string().regex(/^[6-9]\d{9}$/).optional().nullable(),
   city: z.string().min(2).max(100).optional().nullable(),
-  employment_type: z.enum(['salaried', 'self_employed', 'student', 'retired', 'unemployed', 'other']).optional().nullable(),
+  employment_type: z.enum([
+    'salaried',
+    'self_employed',
+    'business_owner',
+    'freelancer',
+    'student',
+    'retired',
+    'homemaker',
+    'unemployed',
+    'other',
+  ]).optional().nullable(),
   employer_name: z.string().max(200).optional().nullable(),
   annual_income: z.number().min(0).max(100000000).optional().nullable(),
   primary_bank: z.string().max(100).optional().nullable(),
   has_fixed_deposit: z.boolean().optional(),
   fd_amount: z.number().min(0).max(100000000).optional().nullable(),
+  onboarding_completed: z.boolean().optional(),
 })
 
 export async function PUT(request: NextRequest) {
@@ -91,6 +121,18 @@ export async function PUT(request: NextRequest) {
       userId: user.id,
       email: user.email ?? null,
       patch: updateData,
+    })
+
+    await insertUserInteraction({
+      supabase,
+      userId: user.id,
+      eventType: 'profile_updated',
+      page: '/profile',
+      entityType: 'profile',
+      entityId: user.id,
+      metadata: {
+        updatedFields: Object.keys(updateData),
+      },
     })
 
     return NextResponse.json({

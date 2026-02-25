@@ -81,6 +81,11 @@ export function CreditCardVisual({
 
   const sheenX = useTransform(mouseX, [-0.5, 0.5], [0, 100])
   const sheenY = useTransform(mouseY, [-0.5, 0.5], [0, 100])
+  const sheenBackground = useTransform(
+    [sheenX, sheenY],
+    ([x, y]) =>
+      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.15) 0%, transparent 60%)`
+  )
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -185,11 +190,7 @@ export function CreditCardVisual({
         <motion.div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: useTransform(
-              [sheenX, sheenY],
-              ([x, y]) =>
-                `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.15) 0%, transparent 60%)`
-            ),
+            background: sheenBackground,
           }}
         />
       )}

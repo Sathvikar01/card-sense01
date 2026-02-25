@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
-import { ArrowRight, ShieldCheck, TrendingUp, Zap, Check, Cpu, CreditCard, Calculator, Users } from 'lucide-react'
+import { ArrowRight, ShieldCheck, TrendingUp, Cpu, CreditCard } from 'lucide-react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { ParticleField } from '@/components/shared/particle-field'
@@ -89,15 +89,10 @@ export default function HomePage() {
   const row2 = allCardIds.slice(10, 20)
   const heroRef = useRef<HTMLElement>(null)
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
-  const [mounted, setMounted] = useState(false)
   const [authModal, setAuthModal] = useState<{ open: boolean; redirectTo: string }>({ open: false, redirectTo: '/dashboard' })
 
   const openAuth = (redirectTo: string) => setAuthModal({ open: true, redirectTo })
   const closeAuth = () => setAuthModal((prev) => ({ ...prev, open: false }))
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -183,9 +178,7 @@ export default function HomePage() {
           <div
             className="pointer-events-none absolute inset-0 transition-all duration-300"
             style={{
-              background: mounted
-                ? `radial-gradient(ellipse 600px 400px at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(212, 160, 23, 0.08) 0%, transparent 70%)`
-                : 'transparent',
+              background: `radial-gradient(ellipse 600px 400px at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(212, 160, 23, 0.08) 0%, transparent 70%)`,
             }}
           />
 

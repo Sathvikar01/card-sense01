@@ -310,9 +310,7 @@ export function UserCardsManager() {
   if (cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#b8860b]/10 to-[#d4a017]/10 mb-4">
-          <CreditCard className="h-7 w-7 text-[#d4a017]/50" />
-        </div>
+        <CreditCard className="mb-4 h-7 w-7 text-[#b8860b]" />
         <p className="text-sm font-medium text-foreground mb-1">No cards added yet</p>
         <p className="text-xs text-muted-foreground mb-5 max-w-xs">
           Add your existing credit cards to get better recommendations and track your portfolio
@@ -340,9 +338,7 @@ export function UserCardsManager() {
             className="flex items-center justify-between rounded-xl border border-border/50 p-3 hover:bg-muted/30 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#b8860b]/10 to-[#d4a017]/10">
-                <CreditCard className="h-5 w-5 text-[#b8860b]" />
-              </div>
+              <CreditCard className="h-5 w-5 shrink-0 text-[#b8860b]" />
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate text-foreground">{card.card_name}</p>
                 <p className="text-xs text-muted-foreground">{card.bank_name}</p>

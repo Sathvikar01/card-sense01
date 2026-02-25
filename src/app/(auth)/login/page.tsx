@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { trackInteraction } from '@/lib/interactions/client'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -56,6 +57,10 @@ function LoginForm() {
       }
 
       toast.success('Successfully logged in!')
+      await trackInteraction('auth_login_success', {
+        page: '/login',
+        entityType: 'auth',
+      })
       const next = searchParams.get('next')
       router.push(next || '/dashboard')
       router.refresh()

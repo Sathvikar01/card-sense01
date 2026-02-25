@@ -280,6 +280,7 @@ export interface ProfilePrefillData {
   primaryBank?: string | null
   hasFD?: boolean | null
   fdAmount?: number | null
+  existingCards?: string[] | null
 }
 
 interface AdvisorStore extends AdvisorFormState {
@@ -382,6 +383,10 @@ export const useAdvisorStore = create<AdvisorStore>()(
         if (data.fdAmount !== undefined && data.fdAmount !== null && data.fdAmount > 0) {
           updates.fdAmount = data.fdAmount
           filled.push('fdAmount')
+        }
+        if (Array.isArray(data.existingCards) && data.existingCards.length > 0) {
+          updates.existingCards = data.existingCards
+          filled.push('existingCards')
         }
 
         set({ ...updates, profilePrefilledFields: filled })

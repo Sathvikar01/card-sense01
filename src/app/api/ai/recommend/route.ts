@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { insertUserInteraction } from '@/lib/interactions/server'
 import {
   LOCAL_CARD_CATALOG,
   isMissingCreditCardsTableError,
@@ -576,8 +577,14 @@ const ruleBasedRecommendations = (
         ? relaxedEligibleCards
         : cards
 
+  const estimateRewardRate = (cardText: string) => {
+    if (/cashback/.test(cardText)) return 2.5
+    if (/travel|mile|lounge/.test(cardText)) return 2.0
+    if (/fuel/.test(cardText)) return 1.8
+    return 1.2
+  }
+
   const scoreCard = (card: CardForRecommendation) => {
-    let score = 0
     const bestFor = card.bestFor.map((value) => normalizeSpendCategory(value.toLowerCase()))
     const perkText = card.perks.join(' ').toLowerCase()
     const cardText = `${card.cardName} ${card.bank} ${bestFor.join(' ')} ${perkText}`.toLowerCase()
@@ -585,165 +592,102 @@ const ruleBasedRecommendations = (
     const hasCashbackSignals = /cashback|statement/.test(cardText)
     const hasTravelSignals = /travel|lounge|mile|air/.test(cardText)
     const hasUpiSignals = /upi|rupay|qr/.test(cardText)
+    const hasPrimaryBankBoost = Boolean(primaryBank && normalizeBank(card.bank).includes(primaryBank))
 
-    // --- Primary bank match (0-8) ---
-    if (primaryBank && normalizeBank(card.bank).includes(primaryBank)) {
-      score += 8
-    }
+    const eligibilityPenalty =
+      (card.minCibilScore && input.cibilScore < card.minCibilScore ? 45 : 0) +
+      (card.minIncome && input.annualIncome < card.minIncome ? 35 : 0) +
+      (card.minAge && estimatedAge < card.minAge ? 25 : 0) +
+      (card.maxAge && estimatedAge > card.maxAge ? 25 : 0)
+    const eligibilityFit = Math.max(0, Math.min(100, 100 - eligibilityPenalty + (hasSecuredSignals ? 8 : 0)))
 
-    // --- Category matching with precision weighting (0-30) ---
-    // Exact bestFor match is worth more than fuzzy text match
-    for (const category of topCategories) {
-      const normalized = normalizeSpendCategory(category)
-      const aliases = normalized === 'shopping' ? ['shopping', 'online_shopping'] : [normalized]
-      const isExactMatch = aliases.some((alias) => bestFor.includes(alias))
-      const pattern = CATEGORY_MATCH_PATTERNS[normalized]
-      const isFuzzyMatch = pattern ? pattern.test(cardText) : false
+    const matchedCategories = topCategories.filter((category) => {
+      const aliases =
+        category === 'shopping' ? ['shopping', 'online_shopping'] : [category]
+      return aliases.some((alias) => bestFor.includes(alias))
+    })
+    const categoryCoverage = topCategories.length > 0
+      ? matchedCategories.length / topCategories.length
+      : 0
+    const focusMatch = spendFocus
+      ? (spendFocus === 'shopping'
+        ? ['shopping', 'online_shopping'].some((alias) => bestFor.includes(alias))
+        : bestFor.includes(spendFocus))
+      : false
+    const spendFit = Math.max(
+      0,
+      Math.min(100, Math.round((categoryCoverage * 70) + (focusMatch ? 30 : 10)))
+    )
 
-      if (isExactMatch) {
-        score += 10 // strong signal: card explicitly lists this category
-      } else if (isFuzzyMatch) {
-        score += 3  // weak signal: text mentions related keywords
-      }
-    }
-
-    // --- Primary spend focus (0-14) ---
-    if (spendFocus) {
-      const normalized = normalizeSpendCategory(spendFocus)
-      const aliases = normalized === 'shopping' ? ['shopping', 'online_shopping'] : [normalized]
-      const isExactMatch = aliases.some((alias) => bestFor.includes(alias))
-      const pattern = CATEGORY_MATCH_PATTERNS[normalized]
-      const isFuzzyMatch = pattern ? pattern.test(cardText) : false
-
-      if (isExactMatch) {
-        score += 14
-      } else if (isFuzzyMatch) {
-        score += 4
-      }
-    }
-
-    // --- Value priority alignment (0-14) ---
+    let goalFit = 45
     if (valuePriority === 'build_credit_low_fee') {
-      score += card.annualFee === 0 ? 12 : card.annualFee <= 500 ? 6 : -10
-      if (hasSecuredSignals) score += 10
+      goalFit += card.annualFee === 0 ? 25 : card.annualFee <= 500 ? 10 : -15
+      if (hasSecuredSignals) goalFit += 20
     } else if (valuePriority === 'cashback_everyday') {
-      if (hasCashbackSignals) {
-        score += bestFor.some((b) => /cashback/.test(b)) ? 14 : 7
-      }
+      goalFit += hasCashbackSignals ? 30 : 0
     } else if (valuePriority === 'travel_perks') {
-      if (hasTravelSignals) {
-        score += bestFor.some((b) => /travel/.test(b)) ? 14 : 7
-      }
+      goalFit += hasTravelSignals ? 30 : 0
     } else if (valuePriority === 'upi_qr_rewards') {
-      if (hasUpiSignals) {
-        score += bestFor.some((b) => /upi|rupay/.test(b)) ? 14 : 7
-      }
+      goalFit += hasUpiSignals ? 30 : 0
     }
+    if (rewardPreference === 'travel' && hasTravelSignals) goalFit += 8
+    if (rewardPreference === 'cashback' && hasCashbackSignals) goalFit += 8
+    if (needsUpi && hasUpiSignals) goalFit += 8
+    if (travelFrequency === 'frequent' && hasTravelSignals) goalFit += 8
+    const normalizedGoalFit = Math.max(0, Math.min(100, goalFit))
 
-    // --- Reward preference (0-10) ---
-    if (rewardPreference === 'cashback') {
-      if (bestFor.some((b) => /cashback/.test(b))) score += 10
-      else if (hasCashbackSignals) score += 4
-    }
-    if (rewardPreference === 'travel') {
-      if (bestFor.some((b) => /travel/.test(b))) score += 10
-      else if (hasTravelSignals) score += 4
-    }
-    if (rewardPreference === 'points') {
-      if (bestFor.some((b) => /reward|point/.test(b))) score += 10
-      else if (/reward|point/.test(cardText)) score += 4
-    }
-
-    // --- Travel frequency (0-8) ---
-    if (travelFrequency === 'frequent') {
-      if (bestFor.some((b) => /travel/.test(b))) score += 8
-      else if (hasTravelSignals) score += 3
-    }
-
-    // --- UPI needs (0-8) ---
-    if (needsUpi) {
-      if (bestFor.some((b) => /upi|rupay/.test(b))) score += 8
-      else if (hasUpiSignals) score += 3
-    }
-
-    // --- Age-based adjustments ---
-    if (ageBand === '18_20') {
-      if (hasSecuredSignals) {
-        score += 14
-      } else {
-        score -= 10
-      }
-    }
-
-    // --- Income profile adjustments ---
-    if (incomeProfile === 'no_personal_income') {
-      if (card.minIncome && card.minIncome > 0) score -= 16
-      if (hasSecuredSignals) score += 14
-      if (card.annualFee === 0) score += 5
-    } else if (incomeProfile === 'stipend_or_part_time') {
-      if (card.minIncome && card.minIncome > input.annualIncome) score -= 8
-      if (hasSecuredSignals) score += 7
-      if (card.annualFee <= 1000) score += 5
-    } else if (incomeProfile === 'stable_income_above_6l') {
-      score += card.annualFee <= 5000 ? 3 : 2
-    }
-
-    // --- Secured card readiness ---
-    if (securedCardReadiness === 'have_fd_now' || securedCardReadiness === 'can_start_fd') {
-      if (hasSecuredSignals) {
-        score += 12
-      } else {
-        score -= 3
-      }
-    }
-    if (securedCardReadiness === 'unsecured_only' && hasSecuredSignals) {
-      score -= 10
-    }
-
-    // --- Annual fee tolerance (0-12) ---
+    let feeFit = 50
     if (annualFeeTolerance === 'free_only') {
-      score += card.annualFee === 0 ? 12 : card.annualFee <= 500 ? -6 : -14
+      feeFit = card.annualFee === 0 ? 100 : card.annualFee <= 500 ? 45 : 10
     } else if (annualFeeTolerance === 'up_to_1000') {
-      score += card.annualFee === 0 ? 10 : card.annualFee <= 1000 ? 8 : card.annualFee <= 2000 ? -2 : -8
+      feeFit = card.annualFee <= 1000 ? 90 : card.annualFee <= 2000 ? 55 : 20
     } else if (annualFeeTolerance === 'up_to_5000') {
-      score += card.annualFee <= 1000 ? 6 : card.annualFee <= 5000 ? 5 : -4
+      feeFit = card.annualFee <= 5000 ? 85 : 35
     } else if (annualFeeTolerance === 'premium_ok') {
-      score += card.annualFee > 5000 ? 6 : card.annualFee > 2000 ? 3 : 1
+      feeFit = card.annualFee > 5000 ? 75 : 65
     }
+    if (hasPrimaryBankBoost) feeFit = Math.min(100, feeFit + 5)
 
-    // --- Perk relevance bonus (0-8) ---
-    // Cards with more perks matching user intent get a bonus
-    let perkHits = 0
-    const userKeywords: string[] = []
-    if (valuePriority === 'cashback_everyday' || rewardPreference === 'cashback') userKeywords.push('cashback', 'statement credit')
-    if (valuePriority === 'travel_perks' || rewardPreference === 'travel' || travelFrequency === 'frequent') userKeywords.push('lounge', 'travel', 'mile', 'flight', 'hotel')
-    if (valuePriority === 'upi_qr_rewards' || needsUpi) userKeywords.push('upi', 'rupay', 'qr')
-    if (valuePriority === 'build_credit_low_fee') userKeywords.push('secured', 'credit build', 'no fee', 'zero fee')
-    for (const perk of card.perks) {
-      const perkLower = perk.toLowerCase()
-      if (userKeywords.some((kw) => perkLower.includes(kw))) {
-        perkHits++
-      }
-    }
-    score += Math.min(perkHits * 2, 8)
+    let diversificationFit = 85
+    const normalizedCardName = card.cardName.toLowerCase().replace(/\s+/g, ' ').trim()
+    if (existingCards.has(normalizedCardName)) diversificationFit = 20
+    else if (existingCards.size > 0 && normalizeBank(card.bank).includes(primaryBank)) diversificationFit = 55
 
-    // --- BestFor breadth bonus (0-4) ---
-    // Cards that are "best for" more relevant categories get a small boost
-    const relevantBestForCount = bestFor.filter((b) => {
-      return topCategories.some((tc) => {
-        const norm = normalizeSpendCategory(tc)
-        return b === norm || (norm === 'shopping' && b === 'online_shopping')
-      })
-    }).length
-    score += Math.min(relevantBestForCount * 2, 4)
+    const weightedRaw =
+      (eligibilityFit * 0.35) +
+      (spendFit * 0.30) +
+      (normalizedGoalFit * 0.20) +
+      (feeFit * 0.10) +
+      (diversificationFit * 0.05)
+    const normalizedScore = Math.max(35, Math.min(96, Math.round(weightedRaw)))
 
-    // Normalize score to 35-96 range with better distribution
-    // Max theoretical raw score is roughly 120+; map proportionally
-    const normalizedScore = 35 + Math.round((Math.max(0, score) / 110) * 61)
+    const estimatedMonthlySpend = input.monthlySpending || Object.values(input.spendingBreakdown).reduce((sum, value) => sum + value, 0)
+    const estimatedRewardRate = estimateRewardRate(cardText)
+    const estimatedAnnualValue = Math.round(((estimatedMonthlySpend * 12) * (estimatedRewardRate / 100)) - card.annualFee)
 
     return {
       card,
-      score: Math.max(35, Math.min(96, normalizedScore)),
+      score: normalizedScore,
+      annualValue: estimatedAnnualValue,
+      breakdown: {
+        eligibilityFit,
+        spendFit,
+        goalFit: normalizedGoalFit,
+        feeFit,
+        diversificationFit,
+        total: normalizedScore,
+      },
+      comparisonMetrics: {
+        annualFee: card.annualFee,
+        joiningFee: card.joiningFee,
+        rewardRate: estimatedRewardRate,
+        minIncomeRequired: card.minIncome,
+        minCreditScoreRequired: card.minCibilScore,
+        loungeAccess: /lounge|travel/.test(cardText),
+        fuelSurchargeWaiver: /fuel/.test(cardText),
+        forexMarkup: null as number | null,
+      },
+      reason: `${card.cardName} aligns with your ${toSpendingLabel(spendFocus)} priority and balances eligibility, rewards, and fees.`,
     }
   }
 
@@ -787,14 +731,18 @@ const ruleBasedRecommendations = (
 
   return {
     analysis: `Recommendations generated using your profile, spending patterns, and preferences.${usedRelaxedEligibility ? ' Strict income filters had no direct match, so near-fit cards (including secured options) were included.' : ''}`,
-    cards: ranked.map(({ card, score }) => ({
+    cards: ranked.map(({ card, score, annualValue, breakdown, comparisonMetrics, reason }) => ({
       id: card.id,
       name: card.cardName,
       bank: card.bank,
       score,
-      reason: `${card.cardName} fits your ${toSpendingLabel(spendFocus)} preference and current eligibility profile, while keeping fee-versus-benefit balance practical.`,
+      reason,
       keyPerks: card.perks.slice(0, 3),
       annualFee: card.annualFee,
+      joiningFee: card.joiningFee,
+      annualValue,
+      scoreBreakdown: breakdown,
+      comparisonMetrics,
     })),
   }
 }
@@ -803,7 +751,35 @@ const saveRecommendation = async (params: {
   supabase: Awaited<ReturnType<typeof createClient>>
   userId: string
   input: z.infer<typeof recommendationInputSchema>
-  cards: Array<{ id: string; name: string; bank: string; score: number; reason: string; keyPerks: string[]; annualFee: number }>
+  cards: Array<{
+    id: string
+    name: string
+    bank: string
+    score: number
+    reason: string
+    keyPerks: string[]
+    annualFee: number
+    joiningFee: number
+    annualValue: number
+    scoreBreakdown: {
+      eligibilityFit: number
+      spendFit: number
+      goalFit: number
+      feeFit: number
+      diversificationFit: number
+      total: number
+    }
+    comparisonMetrics: {
+      annualFee: number
+      joiningFee: number
+      rewardRate: number
+      minIncomeRequired: number | null
+      minCreditScoreRequired: number | null
+      loungeAccess: boolean
+      fuelSurchargeWaiver: boolean
+      forexMarkup: number | null
+    }
+  }>
   analysis: string
   model: string
 }) => {
@@ -817,7 +793,9 @@ const saveRecommendation = async (params: {
     score: card.score,
     reasoning: card.reason,
     keyPerks: card.keyPerks,
-    annualValue: card.annualFee,
+    annualValue: card.annualValue,
+    scoreBreakdown: card.scoreBreakdown,
+    comparisonMetrics: card.comparisonMetrics,
     rank: index + 1,
   }))
 
@@ -941,6 +919,19 @@ export async function POST(request: NextRequest) {
 
     const input = parsedBody.data
 
+    await insertUserInteraction({
+      supabase,
+      userId: user.id,
+      eventType: 'recommendation_requested',
+      page: '/advisor',
+      entityType: 'recommendation',
+      metadata: {
+        annualIncome: input.annualIncome,
+        cibilScore: input.cibilScore,
+        goalCount: input.creditGoals.length,
+      },
+    })
+
     // Fetch user's spending transactions to enhance spendingBreakdown
     const { data: txnData } = await supabase
       .from('spending_transactions')
@@ -994,6 +985,19 @@ export async function POST(request: NextRequest) {
       model: 'rule_based',
     })
 
+    await insertUserInteraction({
+      supabase,
+      userId: user.id,
+      eventType: 'recommendation_generated',
+      page: '/advisor',
+      entityType: 'recommendation',
+      entityId: recommendationId || undefined,
+      metadata: {
+        cardIds: result.cards.map((card) => card.id),
+        catalogSource,
+      },
+    })
+
     return NextResponse.json({
       status: 'success',
       cards: result.cards.map((card) => ({
@@ -1003,6 +1007,10 @@ export async function POST(request: NextRequest) {
         score: card.score,
         reason: card.reason,
         annualFee: card.annualFee,
+        joiningFee: card.joiningFee,
+        estimatedAnnualValue: card.annualValue,
+        scoreBreakdown: card.scoreBreakdown,
+        comparisonMetrics: card.comparisonMetrics,
         pros: card.keyPerks,
         bestCategories: [],
       })),

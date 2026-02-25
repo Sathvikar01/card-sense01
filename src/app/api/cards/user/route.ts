@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { insertUserInteraction } from '@/lib/interactions/server'
 
 const addCardSchema = z.object({
   card_name: z.string().min(1, 'Card name is required').max(200),
@@ -89,6 +90,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Failed to add card' }, { status: 500 })
     }
 
+    await insertUserInteraction({
+      supabase,
+      userId: user.id,
+      eventType: 'user_card_added',
+      page: '/profile',
+      entityType: 'user_card',
+      entityId: data.id,
+      metadata: {
+        cardName: data.card_name,
+        bankName: data.bank_name,
+      },
+    })
+
     return NextResponse.json({ card: data }, { status: 201 })
   } catch (error) {
     console.error('POST /api/cards/user error:', error)
@@ -124,6 +138,15 @@ export async function DELETE(request: NextRequest) {
       console.error('DELETE /api/cards/user error:', error)
       return NextResponse.json({ message: 'Failed to delete card' }, { status: 500 })
     }
+
+    await insertUserInteraction({
+      supabase,
+      userId: user.id,
+      eventType: 'user_card_removed',
+      page: '/profile',
+      entityType: 'user_card',
+      entityId: cardId,
+    })
 
     return NextResponse.json({ message: 'Card removed' })
   } catch (error) {

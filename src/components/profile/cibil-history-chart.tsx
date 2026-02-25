@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -38,6 +38,13 @@ interface CibilHistoryChartProps {
   onUpdate?: () => void
 }
 
+function parseScoreDate(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(`${value}T12:00:00Z`)
+  }
+  return new Date(value)
+}
+
 const SCORE_RANGES = [
   { min: 750, max: 900, label: 'Excellent', color: '#2563eb', bg: 'bg-[#2563eb]' },
   { min: 700, max: 749, label: 'Good', color: '#3b82f6', bg: 'bg-[#3b82f6]' },
@@ -53,14 +60,24 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
   const [scoreSource, setScoreSource] = useState('manual')
   const [notes, setNotes] = useState('')
 
-  // Transform data for Recharts
-  const chartData = history
-    .map((entry) => ({
-      date: format(new Date(entry.score_date), 'MMM yy'),
-      score: entry.credit_score,
-      fullDate: entry.score_date,
-    }))
-    .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+  const chartData = useMemo(() => {
+    const sorted = [...history].sort((a, b) => {
+      const diff = parseScoreDate(a.score_date).getTime() - parseScoreDate(b.score_date).getTime()
+      if (diff !== 0) return diff
+      return a.id.localeCompare(b.id)
+    })
+
+    return sorted.map((entry, index) => {
+      const parsed = parseScoreDate(entry.score_date)
+      return {
+        xKey: `${entry.score_date}-${entry.id}-${index}`,
+        tickLabel: format(parsed, 'MMM dd'),
+        score: entry.credit_score,
+        fullDateLabel: format(parsed, 'MMM dd, yyyy'),
+        scoreSource: entry.score_source || 'manual',
+      }
+    })
+  }, [history])
 
   const getScoreColor = (score: number) => {
     if (score >= 750) return '#2563eb'
@@ -69,10 +86,8 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
     return '#dc2626'
   }
 
-  const latestScore = history.length > 0
-    ? history.reduce((latest, entry) =>
-        new Date(entry.score_date) > new Date(latest.score_date) ? entry : latest
-      )
+  const latestScore = chartData.length > 0
+    ? chartData[chartData.length - 1]
     : null
 
   const handleAddScore = async () => {
@@ -263,21 +278,21 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
           <div className="flex items-center gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Current Score</p>
-              <p className="text-3xl font-bold tabular-nums" style={{ color: getScoreColor(latestScore.credit_score) }}>
-                {latestScore.credit_score}
+              <p className="text-3xl font-bold tabular-nums" style={{ color: getScoreColor(latestScore.score) }}>
+                {latestScore.score}
               </p>
             </div>
             <div className="h-10 w-px bg-border/60" />
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Rating</p>
               <p className="text-sm font-semibold text-foreground">
-                {latestScore.credit_score >= 750 ? 'Excellent' :
-                 latestScore.credit_score >= 700 ? 'Good' :
-                 latestScore.credit_score >= 650 ? 'Fair' : 'Poor'}
+                {latestScore.score >= 750 ? 'Excellent' :
+                 latestScore.score >= 700 ? 'Good' :
+                 latestScore.score >= 650 ? 'Fair' : 'Poor'}
               </p>
               <p className="text-[0.65rem] text-muted-foreground mt-0.5">
-                {format(new Date(latestScore.score_date), 'MMM dd, yyyy')}
-                {latestScore.score_source && ` \u00b7 ${latestScore.score_source}`}
+                {latestScore.fullDateLabel}
+                {latestScore.scoreSource && ` \u00b7 ${latestScore.scoreSource}`}
               </p>
             </div>
           </div>
@@ -291,11 +306,12 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
             <XAxis
-              dataKey="date"
+              dataKey="xKey"
               stroke="hsl(var(--muted-foreground))"
               fontSize={11}
               tickLine={false}
               axisLine={false}
+              tickFormatter={(_, index) => chartData[index]?.tickLabel || ''}
             />
             <YAxis
               domain={[300, 900]}
@@ -306,6 +322,12 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
               width={35}
             />
             <Tooltip
+              labelFormatter={(_, payload) => {
+                const point = payload?.[0]?.payload as { fullDateLabel?: string; scoreSource?: string } | undefined
+                if (!point) return ''
+                return point.scoreSource ? `${point.fullDateLabel} · ${point.scoreSource}` : (point.fullDateLabel || '')
+              }}
+              formatter={(value) => [`${value}`, 'Score']}
               contentStyle={{
                 backgroundColor: 'hsl(var(--background))',
                 border: '1px solid hsl(var(--border))',
