@@ -58,10 +58,10 @@ CREATE TABLE IF NOT EXISTS public.credit_cards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- Basic Information
-    bank TEXT NOT NULL,
+    bank TEXT,
     card_name TEXT NOT NULL,
     card_type TEXT NOT NULL CHECK (card_type IN ('entry_level', 'premium', 'super_premium', 'business', 'fuel', 'cashback', 'rewards', 'travel', 'shopping', 'lifestyle')),
-    network TEXT NOT NULL CHECK (network IN ('visa', 'mastercard', 'rupay', 'amex', 'diners')),
+    network TEXT CHECK (network IN ('visa', 'mastercard', 'rupay', 'amex', 'diners')),
 
     -- Fees
     annual_fee INTEGER NOT NULL DEFAULT 0 CHECK (annual_fee >= 0),
@@ -162,6 +162,10 @@ WHERE
     OR min_income_required IS NULL
     OR min_cibil_score IS NULL
     OR apply_url IS NULL;
+
+ALTER TABLE public.credit_cards
+    ALTER COLUMN bank DROP NOT NULL,
+    ALTER COLUMN network DROP NOT NULL;
 
 -- Indexes for credit_cards
 CREATE INDEX idx_credit_cards_bank ON public.credit_cards(bank);
@@ -329,10 +333,11 @@ CREATE TABLE IF NOT EXISTS public.education_articles (
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     content TEXT NOT NULL, -- Markdown content
+    summary TEXT,
     excerpt TEXT,
 
     -- Categorization
-    category TEXT NOT NULL CHECK (category IN ('basics', 'cibil', 'rewards', 'fees', 'security', 'tips', 'advanced')),
+    category TEXT NOT NULL CHECK (category IN ('basics', 'cibil', 'CIBIL', 'rewards', 'fees', 'security', 'tips', 'advanced')),
     difficulty TEXT NOT NULL DEFAULT 'beginner' CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
 
     -- Tags
@@ -342,6 +347,7 @@ CREATE TABLE IF NOT EXISTS public.education_articles (
     featured_image_url TEXT,
 
     -- Reading Time
+    read_time_minutes INTEGER DEFAULT 5 CHECK (read_time_minutes > 0),
     reading_time_minutes INTEGER DEFAULT 5 CHECK (reading_time_minutes > 0),
 
     -- Metadata

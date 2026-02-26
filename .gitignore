@@ -46,3 +46,4 @@ next-env.d.ts
 # temp files
 tmpclaude-*
 nul
+supabase/.temp/
