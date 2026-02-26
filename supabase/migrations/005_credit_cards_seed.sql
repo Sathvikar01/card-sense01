@@ -7,6 +7,34 @@ ALTER TABLE public.credit_cards
   ALTER COLUMN bank DROP NOT NULL,
   ALTER COLUMN network DROP NOT NULL;
 
+-- Older projects may not yet have canonical columns expected by this seed.
+ALTER TABLE public.credit_cards
+  ADD COLUMN IF NOT EXISTS bank_name TEXT,
+  ADD COLUMN IF NOT EXISTS card_network TEXT,
+  ADD COLUMN IF NOT EXISTS card_variant TEXT,
+  ADD COLUMN IF NOT EXISTS joining_fee INTEGER DEFAULT 0 CHECK (joining_fee >= 0),
+  ADD COLUMN IF NOT EXISTS annual_fee_waiver_spend INTEGER CHECK (annual_fee_waiver_spend >= 0),
+  ADD COLUMN IF NOT EXISTS renewal_fee INTEGER CHECK (renewal_fee >= 0),
+  ADD COLUMN IF NOT EXISTS min_income_salaried INTEGER CHECK (min_income_salaried >= 0),
+  ADD COLUMN IF NOT EXISTS min_income_self_employed INTEGER CHECK (min_income_self_employed >= 0),
+  ADD COLUMN IF NOT EXISTS min_cibil_score INTEGER CHECK (min_cibil_score >= 300 AND min_cibil_score <= 900),
+  ADD COLUMN IF NOT EXISTS requires_itr BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS requires_existing_relationship BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS reward_rate_default DECIMAL(10, 4),
+  ADD COLUMN IF NOT EXISTS milestone_benefits JSONB DEFAULT '{}'::JSONB,
+  ADD COLUMN IF NOT EXISTS lounge_access TEXT,
+  ADD COLUMN IF NOT EXISTS lounge_visits_per_quarter INTEGER,
+  ADD COLUMN IF NOT EXISTS fuel_surcharge_waiver_cap INTEGER,
+  ADD COLUMN IF NOT EXISTS movie_benefits TEXT,
+  ADD COLUMN IF NOT EXISTS dining_benefits TEXT,
+  ADD COLUMN IF NOT EXISTS travel_insurance_cover INTEGER,
+  ADD COLUMN IF NOT EXISTS purchase_protection_cover INTEGER,
+  ADD COLUMN IF NOT EXISTS golf_access BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS concierge_service BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS forex_markup DECIMAL(8, 4),
+  ADD COLUMN IF NOT EXISTS emi_conversion_available BOOLEAN DEFAULT true,
+  ADD COLUMN IF NOT EXISTS apply_url TEXT;
+
 -- HDFC Bank Cards
 INSERT INTO credit_cards (
   bank_name, card_name, card_network, card_type, card_variant,
