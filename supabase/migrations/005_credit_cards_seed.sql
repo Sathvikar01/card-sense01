@@ -1,6 +1,12 @@
 -- Credit Cards Seed Data for CardSense India
 -- This file contains 50+ popular Indian credit cards with realistic data
 
+-- Compatibility guard:
+-- Older environments may still have legacy columns as NOT NULL.
+ALTER TABLE public.credit_cards
+  ALTER COLUMN bank DROP NOT NULL,
+  ALTER COLUMN network DROP NOT NULL;
+
 -- HDFC Bank Cards
 INSERT INTO credit_cards (
   bank_name, card_name, card_network, card_type, card_variant,
@@ -381,6 +387,15 @@ INSERT INTO credit_cards (
  ARRAY['No lounge access', 'Average cashback rates'],
  ARRAY['online_shopping', 'cashback', 'beginners'],
  true, 70);
+
+-- Keep legacy compatibility columns populated for fallback code paths.
+UPDATE credit_cards
+SET
+  bank = COALESCE(bank, bank_name),
+  network = COALESCE(network, card_network)
+WHERE
+  bank IS NULL
+  OR network IS NULL;
 
 -- Update popularity scores for top cards
 UPDATE credit_cards SET popularity_score = 100 WHERE card_name IN ('Amazon Pay', 'ACE', 'SimplyCLICK', 'MoneyBack+');
