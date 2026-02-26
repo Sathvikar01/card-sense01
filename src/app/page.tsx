@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { ArrowRight, ShieldCheck, TrendingUp, Cpu, CreditCard } from 'lucide-react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
@@ -85,6 +86,7 @@ const steps = [
 ]
 
 export default function HomePage() {
+  const router = useRouter()
   const row1 = allCardIds.slice(0, 10)
   const row2 = allCardIds.slice(10, 20)
   const heroRef = useRef<HTMLElement>(null)
@@ -99,6 +101,14 @@ export default function HomePage() {
     offset: ['start start', 'end start'],
   })
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    if (!code) return
+
+    router.replace(`/auth/callback?${params.toString()}`)
+  }, [router])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
