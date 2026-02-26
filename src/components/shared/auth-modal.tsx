@@ -201,7 +201,6 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
-          queryParams: { access_type: 'offline', prompt: 'consent' },
         },
       })
       if (error) { toast.error(error.message); setIsGoogleLoading(false) }

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -42,6 +42,20 @@ function LoginForm() {
       password: '',
     },
   })
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (!error) return
+
+    if (error === 'auth-temporary-unavailable') {
+      toast.error('Google sign-in is temporarily unavailable. Please try again in a moment.')
+      return
+    }
+
+    if (error === 'auth-code-error') {
+      toast.error('Could not complete sign-in. Please try Google sign-in again.')
+    }
+  }, [searchParams])
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
@@ -90,14 +104,15 @@ function LoginForm() {
         return
       }
 
+      const next = searchParams.get('next')
+      const callbackUrl = next
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+        : `${window.location.origin}/auth/callback`
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
+          redirectTo: callbackUrl,
         },
       })
 
