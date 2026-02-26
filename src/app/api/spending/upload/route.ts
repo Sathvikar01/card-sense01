@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { parseCsvBankStatement } from '@/lib/parsers/csv-parser'
 import { PDFParse } from 'pdf-parse'
 import { ensurePdfParseWorkerConfigured } from '@/lib/pdf/worker'
+import { verifyTurnstileToken } from '@/lib/security/turnstile'
 
 function categorizeTransaction(description: string): string {
   const desc = description.toLowerCase()
@@ -98,6 +99,31 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData()
+    const turnstileTokenRaw = formData.get('turnstileToken')
+    const turnstileToken =
+      typeof turnstileTokenRaw === 'string' && turnstileTokenRaw.length > 0
+        ? turnstileTokenRaw
+        : null
+
+    const turnstileResult = await verifyTurnstileToken({
+      request,
+      token: turnstileToken,
+      expectedAction: 'statement_upload',
+    })
+
+    if (!turnstileResult.success) {
+      const status = turnstileResult.reason === 'misconfigured' ? 500 : 403
+      return NextResponse.json(
+        {
+          error:
+            status === 500
+              ? 'Security check is not configured'
+              : 'Security verification failed',
+        },
+        { status }
+      )
+    }
+
     const file = formData.get('file') as File
 
     if (!file) {

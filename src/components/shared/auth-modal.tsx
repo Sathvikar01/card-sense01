@@ -9,6 +9,7 @@ import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight, ArrowLeft, Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { ensureSupabaseAuthReachable } from '@/lib/supabase/connectivity'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -21,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { CardSenseIcon } from '@/components/shared/logo'
+import { TurnstileWidget } from '@/components/security/turnstile-widget'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -28,6 +30,12 @@ const loginSchema = z.object({
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
+
+const TURNSTILE_ENABLED =
+  /^(1|true|yes|on)$/i.test(process.env.NEXT_PUBLIC_ENABLE_TURNSTILE || '') &&
+  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
 
 interface AuthModalProps {
   open: boolean
@@ -44,6 +52,8 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
   const supabase = createClient()
 
@@ -58,6 +68,8 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
       setStep('form')
       setOtp(['', '', '', '', '', ''])
       setPendingEmail('')
+      setTurnstileToken('')
+      setTurnstileWidgetNonce(0)
       form.reset()
     }, 300)
   }
@@ -66,6 +78,8 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
     setTab(t)
     setStep('form')
     setOtp(['', '', '', '', '', ''])
+    setTurnstileToken('')
+    setTurnstileWidgetNonce((value) => value + 1)
     form.reset()
   }
 
@@ -73,6 +87,12 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
     setIsLoading(true)
     try {
       if (tab === 'login') {
+        const connectivity = await ensureSupabaseAuthReachable()
+        if (!connectivity.ok) {
+          toast.error(connectivity.message)
+          return
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
@@ -83,15 +103,35 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
         router.push(redirectTo || '/dashboard')
         router.refresh()
       } else {
+        if (TURNSTILE_ENABLED && !turnstileToken) {
+          toast.error('Please complete the security check')
+          return
+        }
+
         const destination = redirectTo || '/dashboard'
-        const { error } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
-          },
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            password: data.password,
+            turnstileToken: TURNSTILE_ENABLED ? turnstileToken : undefined,
+            redirectToPath: destination,
+          }),
         })
-        if (error) { toast.error(error.message); return }
+
+        const responseBody = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          toast.error(
+            typeof responseBody.error === 'string' ? responseBody.error : 'Failed to create account'
+          )
+          if (TURNSTILE_ENABLED) {
+            setTurnstileToken('')
+            setTurnstileWidgetNonce((value) => value + 1)
+          }
+          return
+        }
+
         setPendingEmail(data.email)
         setStep('otp')
         toast.success('A 6-digit code has been sent to your email.')
@@ -147,6 +187,13 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
     try {
+      const connectivity = await ensureSupabaseAuthReachable()
+      if (!connectivity.ok) {
+        toast.error(connectivity.message)
+        setIsGoogleLoading(false)
+        return
+      }
+
       const callbackUrl = redirectTo
         ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
         : `${window.location.origin}/auth/callback`
@@ -293,6 +340,18 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                               </FormItem>
                             )}
                           />
+
+                          {tab === 'signup' && TURNSTILE_ENABLED && (
+                            <div className="rounded-lg border border-gray-200 p-2 dark:border-gray-700">
+                              <TurnstileWidget
+                                key={turnstileWidgetNonce}
+                                siteKey={TURNSTILE_SITE_KEY}
+                                action="signup"
+                                onToken={setTurnstileToken}
+                                onError={() => toast.error('Unable to load security check. Please refresh.')}
+                              />
+                            </div>
+                          )}
 
                           {/* Fixed-height slot keeps layout stable across tabs */}
                           <div className="h-5 flex items-center justify-end">

@@ -93,7 +93,6 @@ export function SettingsClient({
   const supabase = createClient()
 
   /* Password change */
-  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPasswords, setShowPasswords] = useState(false)
@@ -141,7 +140,6 @@ export function SettingsClient({
       toast.error(error.message)
     } else {
       toast.success('Password updated successfully')
-      setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     }

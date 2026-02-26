@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import type { CreditCardListItem } from '@/types/credit-card'
 import { trackInteraction } from '@/lib/interactions/client'
+import { TurnstileWidget } from '@/components/security/turnstile-widget'
 
 type FlowStep = 'input' | 'loading' | 'results'
 
@@ -34,6 +35,12 @@ type AdvisorResult = {
   analysis: string
   cards: AdvisorCardResult[]
 }
+
+const TURNSTILE_ENABLED =
+  /^(1|true|yes|on)$/i.test(process.env.NEXT_PUBLIC_ENABLE_TURNSTILE || '') &&
+  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
 
 function mapCards(cards: Record<string, unknown>[] = []): AdvisorCardResult[] {
   return cards.map((card) => ({
@@ -91,6 +98,8 @@ export default function AdvisorPage() {
   const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [checkedSaved, setCheckedSaved] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
 
   useEffect(() => {
     void trackInteraction('advisor_started', {
@@ -180,6 +189,13 @@ export default function AdvisorPage() {
   }, [isNew])
 
   const handleComplete = async () => {
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      const message = 'Please complete the security check before requesting recommendations'
+      setError(message)
+      toast.error(message)
+      return
+    }
+
     try {
       setIsLoading(true)
       setError(null)
@@ -239,10 +255,22 @@ export default function AdvisorPage() {
       const response = await fetch('/api/ai/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(enrichedPayload),
+        body: JSON.stringify({
+          ...enrichedPayload,
+          turnstileToken: TURNSTILE_ENABLED ? turnstileToken : undefined,
+        }),
       })
 
       if (!response.ok) {
+        const recommendError = await response.json().catch(() => ({}))
+        if ([400, 401, 403].includes(response.status)) {
+          throw new Error(
+            typeof recommendError.error === 'string'
+              ? recommendError.error
+              : 'Failed to get recommendations'
+          )
+        }
+
         const beginnerResponse = await fetch('/api/ai/beginner', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -280,6 +308,10 @@ export default function AdvisorPage() {
       toast.error(message)
     } finally {
       setIsLoading(false)
+      if (TURNSTILE_ENABLED) {
+        setTurnstileToken('')
+        setTurnstileWidgetNonce((value) => value + 1)
+      }
     }
   }
 
@@ -327,6 +359,20 @@ export default function AdvisorPage() {
       {step === 'input' && (
         <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
           <AdvisorStepper onComplete={handleComplete} isLoading={isLoading} />
+          {TURNSTILE_ENABLED && (
+            <div className="border-t border-border/60 px-4 pb-4 pt-3 sm:px-6">
+              <p className="mb-2 text-xs text-muted-foreground">
+                Complete this quick security check to enable recommendation requests.
+              </p>
+              <TurnstileWidget
+                key={turnstileWidgetNonce}
+                siteKey={TURNSTILE_SITE_KEY}
+                action="ai_recommendation"
+                onToken={setTurnstileToken}
+                onError={() => toast.error('Unable to load security check. Please refresh.')}
+              />
+            </div>
+          )}
         </div>
       )}
 

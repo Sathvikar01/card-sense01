@@ -19,7 +19,7 @@ export function CardSenseLogo({ className, size = 'md', variant = 'full', dark =
 
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <CardSenseIcon size={s.icon} dark={dark} />
+      <CardSenseIcon size={s.icon} />
       {variant === 'full' && (
         <span className={cn(s.text, 'font-bold tracking-tight', dark ? 'text-white' : 'text-foreground')}>
           Card<span className={dark ? 'text-yellow-300' : 'text-gradient-gold'}>Sense</span>
@@ -29,7 +29,7 @@ export function CardSenseLogo({ className, size = 'md', variant = 'full', dark =
   )
 }
 
-export function CardSenseIcon({ size = 36, dark = false, className }: { size?: number; dark?: boolean; className?: string }) {
+export function CardSenseIcon({ size = 36, className }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}

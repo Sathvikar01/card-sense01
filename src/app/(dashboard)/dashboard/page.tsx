@@ -24,17 +24,6 @@ interface UserCardSummary {
   bank_name: string
 }
 
-const CibilScoreGauge = dynamic(
-  () => import('@/components/dashboard/cibil-score-gauge').then((m) => ({ default: m.CibilScoreGauge })),
-  {
-    loading: () => (
-      <div className="dash-card p-6">
-        <div className="h-40 shimmer rounded-xl" />
-      </div>
-    ),
-  }
-)
-
 const SpendingSummaryChart = dynamic(
   () =>
     import('@/components/dashboard/spending-summary-chart').then((m) => ({

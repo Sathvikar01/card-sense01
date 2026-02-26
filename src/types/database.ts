@@ -137,6 +137,15 @@ export interface Database {
           best_for: string[] | null
           apply_url: string | null
           application_url: string | null
+          bank: string | null
+          network: string | null
+          first_year_fee: number | null
+          fee_waiver_condition: string | null
+          min_income: number | null
+          eligible_employment_types: string[] | null
+          reward_point_value: number | null
+          benefits: string[] | null
+          card_image_url: string | null
           is_active: boolean
           popularity_score: number | null
           created_at: string
@@ -188,6 +197,15 @@ export interface Database {
           best_for?: string[] | null
           apply_url?: string | null
           application_url?: string | null
+          bank?: string | null
+          network?: string | null
+          first_year_fee?: number | null
+          fee_waiver_condition?: string | null
+          min_income?: number | null
+          eligible_employment_types?: string[] | null
+          reward_point_value?: number | null
+          benefits?: string[] | null
+          card_image_url?: string | null
           is_active?: boolean
           popularity_score?: number | null
           created_at?: string
@@ -239,6 +257,15 @@ export interface Database {
           best_for?: string[] | null
           apply_url?: string | null
           application_url?: string | null
+          bank?: string | null
+          network?: string | null
+          first_year_fee?: number | null
+          fee_waiver_condition?: string | null
+          min_income?: number | null
+          eligible_employment_types?: string[] | null
+          reward_point_value?: number | null
+          benefits?: string[] | null
+          card_image_url?: string | null
           is_active?: boolean
           popularity_score?: number | null
           created_at?: string
@@ -256,7 +283,7 @@ export interface Database {
           recommended_cards: Json
           ai_analysis_text: string | null
           ai_analysis: string | null
-          application_guide: string | null
+          application_guide: Json | null
           portfolio_strategy: string | null
           spending_analysis: Json | null
           spending_optimization_tips: Json | null
@@ -276,7 +303,7 @@ export interface Database {
           recommended_cards?: Json
           ai_analysis_text?: string | null
           ai_analysis?: string | null
-          application_guide?: string | null
+          application_guide?: Json | null
           portfolio_strategy?: string | null
           spending_analysis?: Json | null
           spending_optimization_tips?: Json | null
@@ -296,7 +323,7 @@ export interface Database {
           recommended_cards?: Json
           ai_analysis_text?: string | null
           ai_analysis?: string | null
-          application_guide?: string | null
+          application_guide?: Json | null
           portfolio_strategy?: string | null
           spending_analysis?: Json | null
           spending_optimization_tips?: Json | null
@@ -305,6 +332,47 @@ export interface Database {
           processing_time_ms?: number | null
           created_at?: string
           updated_at?: string | null
+        }
+      }
+      recommendation_logs: {
+        Row: {
+          id: string
+          recommendation_id: string
+          user_id: string
+          card_id: string
+          card_name: string
+          rank: number
+          rules_evaluated: Json
+          rule_scores: Json
+          final_decision_reason: string
+          explanation: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          recommendation_id: string
+          user_id: string
+          card_id: string
+          card_name: string
+          rank: number
+          rules_evaluated?: Json
+          rule_scores?: Json
+          final_decision_reason: string
+          explanation?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          recommendation_id?: string
+          user_id?: string
+          card_id?: string
+          card_name?: string
+          rank?: number
+          rules_evaluated?: Json
+          rule_scores?: Json
+          final_decision_reason?: string
+          explanation?: Json
+          created_at?: string
         }
       }
       user_cards: {
@@ -443,6 +511,7 @@ export interface Database {
           parsed_data: Json | null
           parsing_status: string
           parsing_error: string | null
+          parsed_at: string | null
           created_at: string
           updated_at: string | null
         }
@@ -458,6 +527,7 @@ export interface Database {
           parsed_data?: Json | null
           parsing_status?: string
           parsing_error?: string | null
+          parsed_at?: string | null
           created_at?: string
           updated_at?: string | null
         }
@@ -473,6 +543,7 @@ export interface Database {
           parsed_data?: Json | null
           parsing_status?: string
           parsing_error?: string | null
+          parsed_at?: string | null
           created_at?: string
           updated_at?: string | null
         }
@@ -533,6 +604,9 @@ export interface Database {
           is_published: boolean | null
           view_count: number | null
           published_at: string | null
+          featured_image_url: string | null
+          meta_description: string | null
+          meta_keywords: string[] | null
           created_at: string
           updated_at: string
         }
@@ -553,6 +627,9 @@ export interface Database {
           is_published?: boolean | null
           view_count?: number | null
           published_at?: string | null
+          featured_image_url?: string | null
+          meta_description?: string | null
+          meta_keywords?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -573,6 +650,9 @@ export interface Database {
           is_published?: boolean | null
           view_count?: number | null
           published_at?: string | null
+          featured_image_url?: string | null
+          meta_description?: string | null
+          meta_keywords?: string[] | null
           created_at?: string
           updated_at?: string
         }

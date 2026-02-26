@@ -59,7 +59,6 @@ interface CardFiltersProps {
   onNetworkChange: (value: string) => void
   onMaxFeeChange: (value: string) => void
   onSortByChange: (value: string) => void
-  onClearFilters: () => void
 }
 
 export function CardFilters({
@@ -73,7 +72,6 @@ export function CardFilters({
   onNetworkChange,
   onMaxFeeChange,
   onSortByChange,
-  onClearFilters,
 }: CardFiltersProps) {
   return (
     <div className="p-5 space-y-6">

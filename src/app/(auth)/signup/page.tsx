@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { createClient } from '@/lib/supabase/client'
+import { ensureSupabaseAuthReachable } from '@/lib/supabase/connectivity'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -103,6 +104,13 @@ export default function SignupPage() {
     setIsGoogleLoading(true)
 
     try {
+      const connectivity = await ensureSupabaseAuthReachable()
+      if (!connectivity.ok) {
+        toast.error(connectivity.message)
+        setIsGoogleLoading(false)
+        return
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

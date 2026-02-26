@@ -123,15 +123,6 @@ function DashboardSVG({ active }: { active?: boolean }) {
   )
 }
 
-function WandNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M11.5 2l5 5-12.5 12.5L-.5 14 11.5 2z" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} transform="scale(0.85) translate(1.5,1)" />
-      <path d="M13 1l.8 2 2 .8-2 .8L13 6.6l-.8-2-2-.8 2-.8z" fill="currentColor" opacity="0.5" />
-    </svg>
-  )
-}
-
 function BrainNavSVG({ active }: { active?: boolean }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

@@ -6,6 +6,7 @@ import {
   LOCAL_CARD_CATALOG,
   isMissingCreditCardsTableError,
 } from '@/lib/cards/local-catalog'
+import { verifyTurnstileToken } from '@/lib/security/turnstile'
 
 type CatalogSource = 'database' | 'local_fallback'
 
@@ -34,6 +35,72 @@ type FollowUpQuestion = {
   }>
 }
 
+type ScoreBreakdown = {
+  eligibilityFit: number
+  spendFit: number
+  goalFit: number
+  feeFit: number
+  diversificationFit: number
+  total: number
+}
+
+type ComparisonMetrics = {
+  annualFee: number
+  joiningFee: number
+  rewardRate: number
+  minIncomeRequired: number | null
+  minCreditScoreRequired: number | null
+  loungeAccess: boolean
+  fuelSurchargeWaiver: boolean
+  forexMarkup: number | null
+}
+
+type RecommendationRuleEvaluation = {
+  ruleId: string
+  label: string
+  weight: number
+  score: number
+  contribution: number
+  matched: boolean
+  detail: string
+}
+
+type RecommendationRuleScores = {
+  eligibilityFit: number
+  spendFit: number
+  goalFit: number
+  feeFit: number
+  diversificationFit: number
+  weightedRaw: number
+  finalScore: number
+}
+
+type WhyThisCardExplanation = {
+  headline: string
+  summary: string
+  finalDecisionReason: string
+  rulesEvaluated: RecommendationRuleEvaluation[]
+  ruleScores: RecommendationRuleScores
+}
+
+type RecommendationCardResult = {
+  id: string
+  name: string
+  bank: string
+  score: number
+  reason: string
+  finalDecisionReason: string
+  keyPerks: string[]
+  annualFee: number
+  joiningFee: number
+  annualValue: number
+  scoreBreakdown: ScoreBreakdown
+  comparisonMetrics: ComparisonMetrics
+  rulesEvaluated: RecommendationRuleEvaluation[]
+  ruleScores: RecommendationRuleScores
+  whyThisCard: WhyThisCardExplanation
+}
+
 const recommendationInputSchema = z.object({
   cibilScore: z.coerce.number().min(300).max(900),
   monthlyIncome: z.coerce.number().nonnegative(),
@@ -57,6 +124,15 @@ const recommendationInputSchema = z.object({
     })
     .optional(),
   followUpAnswers: z.record(z.string(), z.string()).optional().default({}),
+})
+
+const recommendationRequestSchema = recommendationInputSchema.extend({
+  turnstileToken: z.string().min(1, 'Missing security token').optional(),
+})
+
+const recommendationExplainQuerySchema = z.object({
+  recommendationId: z.string().uuid('Invalid recommendationId'),
+  cardId: z.string().min(1, 'cardId is required'),
 })
 
 const REQUIRED_FOLLOW_UP_IDS = [
@@ -253,6 +329,13 @@ const SPEND_FOCUS_DETAILS: Record<string, { label: string; description: string }
   },
 }
 
+const VALUE_PRIORITY_LABELS: Record<string, string> = {
+  build_credit_low_fee: 'building credit with low fees',
+  cashback_everyday: 'maximizing everyday cashback',
+  travel_perks: 'getting travel and lounge perks',
+  upi_qr_rewards: 'UPI QR reward coverage',
+}
+
 const normalizeSpendCategory = (category: string | undefined) => {
   if (!category) return 'other'
   if (category === 'online_shopping') return 'shopping'
@@ -444,17 +527,6 @@ const getTopSpendingCategories = (spendingBreakdown: Record<string, number>) => 
     .map(([category]) => category)
 }
 
-const CATEGORY_MATCH_PATTERNS: Record<string, RegExp> = {
-  groceries: /grocery|supermarket|essential/,
-  dining: /dining|restaurant|food|zomato|swiggy/,
-  shopping: /shopping|online|ecommerce|flipkart|amazon/,
-  travel: /travel|flight|hotel|lounge|airline|rail|cab/,
-  fuel: /fuel|petrol|diesel/,
-  utilities: /utility|bill|electricity|recharge|broadband/,
-  education: /education|student|course|learning|tuition/,
-  entertainment: /entertainment|movie|ott|streaming/,
-}
-
 const getFollowUpAnswer = (
   answers: Record<string, string>,
   keys: string[],
@@ -471,7 +543,7 @@ const getFollowUpAnswer = (
 const ruleBasedRecommendations = (
   input: z.infer<typeof recommendationInputSchema>,
   cards: CardForRecommendation[]
-) => {
+): { analysis: string; cards: RecommendationCardResult[] } => {
   const answers = input.followUpAnswers || {}
   const topCategories = getTopSpendingCategories(input.spendingBreakdown).map((category) =>
     normalizeSpendCategory(category.toLowerCase())
@@ -659,11 +731,96 @@ const ruleBasedRecommendations = (
       (normalizedGoalFit * 0.20) +
       (feeFit * 0.10) +
       (diversificationFit * 0.05)
+    const weightedRawRounded = Number(weightedRaw.toFixed(2))
     const normalizedScore = Math.max(35, Math.min(96, Math.round(weightedRaw)))
 
-    const estimatedMonthlySpend = input.monthlySpending || Object.values(input.spendingBreakdown).reduce((sum, value) => sum + value, 0)
+    const estimatedMonthlySpend =
+      input.monthlySpending ||
+      Object.values(input.spendingBreakdown).reduce((sum, value) => sum + value, 0)
     const estimatedRewardRate = estimateRewardRate(cardText)
-    const estimatedAnnualValue = Math.round(((estimatedMonthlySpend * 12) * (estimatedRewardRate / 100)) - card.annualFee)
+    const estimatedAnnualValue = Math.round(
+      ((estimatedMonthlySpend * 12) * (estimatedRewardRate / 100)) - card.annualFee
+    )
+
+    const ruleScores: RecommendationRuleScores = {
+      eligibilityFit,
+      spendFit,
+      goalFit: normalizedGoalFit,
+      feeFit,
+      diversificationFit,
+      weightedRaw: weightedRawRounded,
+      finalScore: normalizedScore,
+    }
+
+    const rulesEvaluated: RecommendationRuleEvaluation[] = [
+      {
+        ruleId: 'eligibility_fit',
+        label: 'Eligibility Fit',
+        weight: 0.35,
+        score: eligibilityFit,
+        contribution: Number((eligibilityFit * 0.35).toFixed(2)),
+        matched: eligibilityFit >= 60,
+        detail: `Checks age, CIBIL, and income profile (${incomeProfile}) with secured-card readiness (${securedCardReadiness}).`,
+      },
+      {
+        ruleId: 'spend_fit',
+        label: 'Spend Alignment',
+        weight: 0.30,
+        score: spendFit,
+        contribution: Number((spendFit * 0.30).toFixed(2)),
+        matched: spendFit >= 60,
+        detail: `Matches your top categories and primary focus (${toSpendingLabel(spendFocus)}).`,
+      },
+      {
+        ruleId: 'goal_fit',
+        label: 'Goal Alignment',
+        weight: 0.20,
+        score: normalizedGoalFit,
+        contribution: Number((normalizedGoalFit * 0.20).toFixed(2)),
+        matched: normalizedGoalFit >= 60,
+        detail: `Optimizes for selected value priority (${VALUE_PRIORITY_LABELS[valuePriority] || valuePriority}).`,
+      },
+      {
+        ruleId: 'fee_fit',
+        label: 'Fee Comfort',
+        weight: 0.10,
+        score: feeFit,
+        contribution: Number((feeFit * 0.10).toFixed(2)),
+        matched: feeFit >= 60,
+        detail: `Compares annual fee against your fee tolerance (${annualFeeTolerance}).`,
+      },
+      {
+        ruleId: 'diversification_fit',
+        label: 'Portfolio Diversification',
+        weight: 0.05,
+        score: diversificationFit,
+        contribution: Number((diversificationFit * 0.05).toFixed(2)),
+        matched: diversificationFit >= 60,
+        detail: 'Avoids duplicating existing cards and balances bank exposure.',
+      },
+    ]
+
+    const strongestSignals = [...rulesEvaluated]
+      .filter((rule) => rule.matched)
+      .sort((a, b) => b.contribution - a.contribution)
+      .slice(0, 2)
+      .map((rule) => rule.label.toLowerCase())
+
+    const focusLabel = toSpendingLabel(spendFocus)
+    const valuePriorityLabel = VALUE_PRIORITY_LABELS[valuePriority] || 'overall rewards value'
+    const finalDecisionReason =
+      `${card.cardName} ranks highly because it fits your ${focusLabel} spending behavior, aligns with your goal of ${valuePriorityLabel}, and remains competitive on eligibility and fees.`
+
+    const whyThisCard: WhyThisCardExplanation = {
+      headline: `Why ${card.cardName}?`,
+      summary:
+        strongestSignals.length > 0
+          ? `Top factors were ${strongestSignals.join(' and ')}.`
+          : 'This card showed a balanced fit across all rule dimensions.',
+      finalDecisionReason,
+      rulesEvaluated,
+      ruleScores,
+    }
 
     return {
       card,
@@ -687,7 +844,11 @@ const ruleBasedRecommendations = (
         fuelSurchargeWaiver: /fuel/.test(cardText),
         forexMarkup: null as number | null,
       },
-      reason: `${card.cardName} aligns with your ${toSpendingLabel(spendFocus)} priority and balances eligibility, rewards, and fees.`,
+      reason: finalDecisionReason,
+      finalDecisionReason,
+      rulesEvaluated,
+      ruleScores,
+      whyThisCard,
     }
   }
 
@@ -727,23 +888,59 @@ const ruleBasedRecommendations = (
     }
   }
 
+  ranked = ranked.map((entry) => {
+    const finalRuleScores: RecommendationRuleScores = {
+      ...entry.ruleScores,
+      finalScore: entry.score,
+    }
+    return {
+      ...entry,
+      breakdown: {
+        ...entry.breakdown,
+        total: entry.score,
+      },
+      ruleScores: finalRuleScores,
+      whyThisCard: {
+        ...entry.whyThisCard,
+        ruleScores: finalRuleScores,
+      },
+    }
+  })
+
   const usedRelaxedEligibility = strictEligibleCards.length === 0
 
   return {
     analysis: `Recommendations generated using your profile, spending patterns, and preferences.${usedRelaxedEligibility ? ' Strict income filters had no direct match, so near-fit cards (including secured options) were included.' : ''}`,
-    cards: ranked.map(({ card, score, annualValue, breakdown, comparisonMetrics, reason }) => ({
-      id: card.id,
-      name: card.cardName,
-      bank: card.bank,
-      score,
-      reason,
-      keyPerks: card.perks.slice(0, 3),
-      annualFee: card.annualFee,
-      joiningFee: card.joiningFee,
-      annualValue,
-      scoreBreakdown: breakdown,
-      comparisonMetrics,
-    })),
+    cards: ranked.map(
+      ({
+        card,
+        score,
+        annualValue,
+        breakdown,
+        comparisonMetrics,
+        reason,
+        finalDecisionReason,
+        rulesEvaluated,
+        ruleScores,
+        whyThisCard,
+      }) => ({
+        id: card.id,
+        name: card.cardName,
+        bank: card.bank,
+        score,
+        reason,
+        finalDecisionReason,
+        keyPerks: card.perks.slice(0, 3),
+        annualFee: card.annualFee,
+        joiningFee: card.joiningFee,
+        annualValue,
+        scoreBreakdown: breakdown,
+        comparisonMetrics,
+        rulesEvaluated,
+        ruleScores,
+        whyThisCard,
+      })
+    ),
   }
 }
 
@@ -751,35 +948,7 @@ const saveRecommendation = async (params: {
   supabase: Awaited<ReturnType<typeof createClient>>
   userId: string
   input: z.infer<typeof recommendationInputSchema>
-  cards: Array<{
-    id: string
-    name: string
-    bank: string
-    score: number
-    reason: string
-    keyPerks: string[]
-    annualFee: number
-    joiningFee: number
-    annualValue: number
-    scoreBreakdown: {
-      eligibilityFit: number
-      spendFit: number
-      goalFit: number
-      feeFit: number
-      diversificationFit: number
-      total: number
-    }
-    comparisonMetrics: {
-      annualFee: number
-      joiningFee: number
-      rewardRate: number
-      minIncomeRequired: number | null
-      minCreditScoreRequired: number | null
-      loungeAccess: boolean
-      fuelSurchargeWaiver: boolean
-      forexMarkup: number | null
-    }
-  }>
+  cards: RecommendationCardResult[]
   analysis: string
   model: string
 }) => {
@@ -796,6 +965,9 @@ const saveRecommendation = async (params: {
     annualValue: card.annualValue,
     scoreBreakdown: card.scoreBreakdown,
     comparisonMetrics: card.comparisonMetrics,
+    rulesEvaluated: card.rulesEvaluated,
+    ruleScores: card.ruleScores,
+    finalDecisionReason: card.finalDecisionReason,
     rank: index + 1,
   }))
 
@@ -890,6 +1062,39 @@ const saveRecommendation = async (params: {
   return recommendationId
 }
 
+const saveRecommendationLogs = async (params: {
+  supabase: Awaited<ReturnType<typeof createClient>>
+  userId: string
+  recommendationId: string | null
+  cards: RecommendationCardResult[]
+}) => {
+  const { supabase, userId, recommendationId, cards } = params
+  if (!recommendationId || cards.length === 0) {
+    return
+  }
+
+  const payloads = cards.map((card, index) => ({
+    recommendation_id: recommendationId,
+    user_id: userId,
+    card_id: card.id,
+    card_name: card.name,
+    rank: index + 1,
+    rules_evaluated: card.rulesEvaluated,
+    rule_scores: card.ruleScores,
+    final_decision_reason: card.finalDecisionReason,
+    explanation: card.whyThisCard,
+  }))
+
+  const { error } = await supabase.from('recommendation_logs').insert(payloads)
+  if (error) {
+    if (/recommendation_logs/i.test(error.message) && /does not exist/i.test(error.message)) {
+      console.warn('recommendation_logs table not found. Run latest migrations to enable explanation logs.')
+      return
+    }
+    console.error('Failed to save recommendation logs:', error)
+  }
+}
+
 const hasFollowUpAnswers = (answers: Record<string, string>) => {
   const hasRequiredAnswers = REQUIRED_FOLLOW_UP_IDS.every((id) => Boolean(answers[id]))
   if (hasRequiredAnswers) return true
@@ -909,7 +1114,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawBody = await request.json()
-    const parsedBody = recommendationInputSchema.safeParse(rawBody)
+    const parsedBody = recommendationRequestSchema.safeParse(rawBody)
     if (!parsedBody.success) {
       return NextResponse.json(
         { error: 'Invalid recommendation input', details: parsedBody.error.flatten() },
@@ -917,7 +1122,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const input = parsedBody.data
+    const { turnstileToken, ...input } = parsedBody.data
+
+    const turnstileResult = await verifyTurnstileToken({
+      request,
+      token: turnstileToken,
+      expectedAction: 'ai_recommendation',
+    })
+
+    if (!turnstileResult.success) {
+      const status = turnstileResult.reason === 'misconfigured' ? 500 : 403
+      return NextResponse.json(
+        {
+          error:
+            status === 500
+              ? 'Security check is not configured'
+              : 'Security verification failed',
+        },
+        { status }
+      )
+    }
 
     await insertUserInteraction({
       supabase,
@@ -985,6 +1209,13 @@ export async function POST(request: NextRequest) {
       model: 'rule_based',
     })
 
+    await saveRecommendationLogs({
+      supabase,
+      userId: user.id,
+      recommendationId,
+      cards: result.cards,
+    })
+
     await insertUserInteraction({
       supabase,
       userId: user.id,
@@ -1006,11 +1237,22 @@ export async function POST(request: NextRequest) {
         bank: card.bank,
         score: card.score,
         reason: card.reason,
+        finalDecisionReason: card.finalDecisionReason,
         annualFee: card.annualFee,
         joiningFee: card.joiningFee,
         estimatedAnnualValue: card.annualValue,
         scoreBreakdown: card.scoreBreakdown,
         comparisonMetrics: card.comparisonMetrics,
+        rulesEvaluated: card.rulesEvaluated,
+        ruleScores: card.ruleScores,
+        whyThisCard: {
+          headline: card.whyThisCard.headline,
+          summary: card.whyThisCard.summary,
+          finalDecisionReason: card.finalDecisionReason,
+          endpoint: recommendationId
+            ? `/api/ai/recommend?recommendationId=${recommendationId}&cardId=${encodeURIComponent(card.id)}`
+            : null,
+        },
         pros: card.keyPerks,
         bestCategories: [],
       })),
@@ -1024,6 +1266,105 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error'
     console.error('Recommendation error:', error)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (!user || authError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const query = recommendationExplainQuerySchema.safeParse({
+      recommendationId: request.nextUrl.searchParams.get('recommendationId'),
+      cardId: request.nextUrl.searchParams.get('cardId'),
+    })
+
+    if (!query.success) {
+      return NextResponse.json(
+        { error: 'Invalid explanation query', details: query.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { recommendationId, cardId } = query.data
+    const { data, error } = await supabase
+      .from('recommendation_logs')
+      .select(
+        'recommendation_id, card_id, card_name, rank, rules_evaluated, rule_scores, final_decision_reason, explanation, created_at'
+      )
+      .eq('user_id', user.id)
+      .eq('recommendation_id', recommendationId)
+      .eq('card_id', cardId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) {
+      const message = error.message || 'Failed to fetch explanation'
+      if (/recommendation_logs/i.test(message) && /does not exist/i.test(message)) {
+        return NextResponse.json(
+          { error: 'Recommendation explanation logs are not enabled yet. Run latest migrations.' },
+          { status: 503 }
+        )
+      }
+      return NextResponse.json({ error: message }, { status: 500 })
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: 'No explanation found for this recommendation and card' },
+        { status: 404 }
+      )
+    }
+
+    const explanation =
+      data.explanation && typeof data.explanation === 'object'
+        ? (data.explanation as Record<string, unknown>)
+        : {}
+    const rulesEvaluated = Array.isArray(data.rules_evaluated)
+      ? (data.rules_evaluated as RecommendationRuleEvaluation[])
+      : []
+    const parsedRuleScores =
+      data.rule_scores && typeof data.rule_scores === 'object'
+        ? (data.rule_scores as Record<string, unknown>)
+        : {}
+
+    const fallbackRuleScores: RecommendationRuleScores = {
+      eligibilityFit: asNumber(parsedRuleScores.eligibilityFit),
+      spendFit: asNumber(parsedRuleScores.spendFit),
+      goalFit: asNumber(parsedRuleScores.goalFit),
+      feeFit: asNumber(parsedRuleScores.feeFit),
+      diversificationFit: asNumber(parsedRuleScores.diversificationFit),
+      weightedRaw: asNumber(parsedRuleScores.weightedRaw),
+      finalScore: asNumber(parsedRuleScores.finalScore),
+    }
+
+    return NextResponse.json({
+      status: 'success',
+      explanation: {
+        recommendationId: data.recommendation_id,
+        cardId: data.card_id,
+        cardName: data.card_name,
+        rank: data.rank,
+        headline: asString(explanation.headline, `Why ${data.card_name}?`),
+        summary: asString(explanation.summary, data.final_decision_reason),
+        finalDecisionReason: data.final_decision_reason,
+        rulesEvaluated,
+        ruleScores: fallbackRuleScores,
+        generatedAt: data.created_at,
+      },
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    console.error('Recommendation explanation error:', error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

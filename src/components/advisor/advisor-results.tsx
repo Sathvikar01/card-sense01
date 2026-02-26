@@ -10,7 +10,6 @@ import { LayoutGrid, List, TrendingUp, Award, ArrowRight, GitCompare, Wallet, Sh
 import { useRouter } from 'next/navigation'
 import { useAnalysisStore } from '@/store/use-analysis-store'
 import { motion } from 'framer-motion'
-import type { UserPersona } from '@/lib/store/advisor-store'
 import type { SavedAdvisorCard, SavedAdvisorResult, ProfileSummaryData } from '@/lib/store/advisor-store'
 import { trackInteraction } from '@/lib/interactions/client'
 

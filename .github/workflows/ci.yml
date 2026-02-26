@@ -2,15 +2,27 @@ name: CI
 
 on:
   push:
-    branches:
-      - master
   pull_request:
-    branches:
-      - master
+  workflow_dispatch:
+    inputs:
+      run_smoke:
+        description: 'Run optional Playwright smoke test'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
 
 jobs:
-  lint-and-build:
+  app:
+    name: Lint and Build
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+      GEMINI_API_KEY: ci-gemini-key
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,7 +37,103 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run ci:lint
 
-      - name: Build
+      - name: Build Next.js
+        run: npm run ci:build
+
+  migrations:
+    name: Supabase Migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: cardsense_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cardsense_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cardsense_ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply Supabase migrations
+        run: npm run ci:migrations
+
+  smoke:
+    name: Playwright Smoke (Optional)
+    needs: app
+    if: ${{ vars.CI_RUN_PLAYWRIGHT_SMOKE == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_smoke == 'true') }}
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+      GEMINI_API_KEY: ci-gemini-key
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Next.js
         run: npm run build
+
+      - name: Start app
+        run: |
+          npm run start -- --port 3000 > /tmp/next-start.log 2>&1 &
+          echo $! > /tmp/next-start.pid
+
+      - name: Wait for app
+        run: |
+          for i in {1..60}; do
+            if curl -sSf http://127.0.0.1:3000 > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "App did not start in time"
+          cat /tmp/next-start.log || true
+          exit 1
+
+      - name: Run smoke test
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+        run: npm run test:smoke
+
+      - name: Stop app
+        if: always()
+        run: |
+          if [ -f /tmp/next-start.pid ]; then
+            kill "$(cat /tmp/next-start.pid)" || true
+          fi

@@ -218,7 +218,6 @@ export default function CardsPage() {
                 onNetworkChange={(value) => handleFilterChange('network', value)}
                 onMaxFeeChange={(value) => handleFilterChange('maxFee', value)}
                 onSortByChange={setSortBy}
-                onClearFilters={handleClearFilters}
               />
             </div>
           </SheetContent>

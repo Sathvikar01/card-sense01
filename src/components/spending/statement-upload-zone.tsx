@@ -3,14 +3,23 @@
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { TurnstileWidget } from '@/components/security/turnstile-widget'
 
 interface StatementUploadZoneProps {
   onUploadComplete: () => void
 }
 
+const TURNSTILE_ENABLED =
+  /^(1|true|yes|on)$/i.test(process.env.NEXT_PUBLIC_ENABLE_TURNSTILE || '') &&
+  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+
 export function StatementUploadZone({ onUploadComplete }: StatementUploadZoneProps) {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
   const [result, setResult] = useState<{
     inserted: number
     summary: { total: number; count: number; debits: number; credits: number }
@@ -33,12 +42,20 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
         return
       }
 
+      if (TURNSTILE_ENABLED && !turnstileToken) {
+        toast.error('Please complete the security check')
+        return
+      }
+
       setUploading(true)
       setResult(null)
 
       try {
         const formData = new FormData()
         formData.append('file', file)
+        if (TURNSTILE_ENABLED) {
+          formData.append('turnstileToken', turnstileToken)
+        }
 
         const res = await fetch('/api/spending/upload', {
           method: 'POST',
@@ -59,9 +76,13 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
         toast.error('Failed to upload file')
       } finally {
         setUploading(false)
+        if (TURNSTILE_ENABLED) {
+          setTurnstileToken('')
+          setTurnstileWidgetNonce((value) => value + 1)
+        }
       }
     },
-    [onUploadComplete]
+    [onUploadComplete, turnstileToken]
   )
 
   const handleDrop = useCallback(
@@ -147,6 +168,19 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
           className="hidden"
         />
       </div>
+
+      {TURNSTILE_ENABLED && (
+        <div className="rounded-lg border border-border/60 p-3">
+          <p className="mb-2 text-xs text-muted-foreground">Security check</p>
+          <TurnstileWidget
+            key={turnstileWidgetNonce}
+            siteKey={TURNSTILE_SITE_KEY}
+            action="statement_upload"
+            onToken={setTurnstileToken}
+            onError={() => toast.error('Unable to load security check. Please refresh.')}
+          />
+        </div>
+      )}
 
       {result && (
         <div className="rounded-xl border border-[#d4a017]/25 bg-[#fdf3d7]/30 p-4">
