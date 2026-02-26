@@ -44,8 +44,46 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
     }
   }
 
+  const getAdvanceBlockReason = (): string | null => {
+    switch (current) {
+      case 0: {
+        const prefilled = new Set(store.profilePrefilledFields || [])
+        const missing: string[] = []
+
+        if (!(prefilled.has('creditScore') || Boolean(store.creditScore))) {
+          missing.push('credit score')
+        }
+        if (!(prefilled.has('employmentType') || Boolean(store.employmentType))) {
+          missing.push('employment type')
+        }
+        if (!(prefilled.has('monthlyIncome') || store.monthlyIncome > 0)) {
+          missing.push('monthly income')
+        }
+        if (!(prefilled.has('city') || Boolean(store.city))) {
+          missing.push('city')
+        }
+        if (!(prefilled.has('primaryBank') || Boolean(store.primaryBank))) {
+          missing.push('primary bank')
+        }
+
+        if (missing.length === 0) return null
+        if (missing.length === 1) return `Add ${missing[0]} to continue.`
+        return `Complete: ${missing.join(', ')}.`
+      }
+      case 2:
+        return 'Select at least one spending category to continue.'
+      case 3:
+        return 'Choose your primary goal to get recommendations.'
+      default:
+        return null
+    }
+  }
+
+  const canAdvanceNow = canAdvance()
+  const blockedReason = canAdvanceNow ? null : getAdvanceBlockReason()
+
   const handleNext = () => {
-    if (!canAdvance()) return
+    if (!canAdvanceNow) return
     store.markStepComplete(current)
     if (current === 3) {
       onComplete()
@@ -159,13 +197,14 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
         <button
           type="button"
           onClick={handleNext}
-          disabled={!canAdvance() || isLoading}
+          disabled={!canAdvanceNow || isLoading}
           className={cn(
-            'flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all duration-200 min-w-[160px] justify-center',
-            canAdvance() && !isLoading
-              ? 'bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-md shadow-[#b8860b]/25 hover:shadow-[#b8860b]/40'
-              : 'bg-muted text-muted-foreground cursor-default'
+            'flex items-center gap-2 rounded-xl border px-6 py-2.5 text-sm font-semibold transition-all duration-200 min-w-[160px] justify-center',
+            canAdvanceNow && !isLoading
+              ? 'border-transparent bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-md shadow-[#b8860b]/25 hover:shadow-[#b8860b]/40'
+              : 'border-border/80 bg-slate-100 text-slate-600 cursor-default'
           )}
+          aria-label={current === 3 ? 'Get recommendations' : 'Next step'}
         >
           {isLoading ? (
             <>
@@ -184,7 +223,7 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
             </>
           ) : (
             <>
-              Continue
+              Next
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -192,6 +231,11 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
           )}
         </button>
       </div>
+      {blockedReason && !isLoading && (
+        <div className="px-6 pb-5 -mt-1 text-right">
+          <p className="text-xs text-amber-700">{blockedReason}</p>
+        </div>
+      )}
     </div>
   )
 }
