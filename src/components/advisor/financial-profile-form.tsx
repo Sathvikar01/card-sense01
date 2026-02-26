@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, IndianRupee } from 'lucide-react'
+
+const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 export interface FinancialProfileFormData {
   annualIncome: number
@@ -84,8 +85,8 @@ export function FinancialProfileForm({ onSubmit, isLoading }: FinancialProfileFo
   })
   const [goals, setGoals] = useState<string[]>([])
 
-  const handleSpendingChange = (key: string, value: number[]) => {
-    setSpending((prev) => ({ ...prev, [key]: value[0] }))
+  const handleSpendingChange = (key: string, value: number) => {
+    setSpending((prev) => ({ ...prev, [key]: Math.max(0, Math.min(50000, value)) }))
   }
 
   const handleGoalToggle = (goal: string) => {
@@ -143,6 +144,7 @@ export function FinancialProfileForm({ onSubmit, isLoading }: FinancialProfileFo
                 onChange={(e) => setAnnualIncome(Math.max(0, Number(e.target.value)))}
                 min={0}
                 step={10000}
+                className={HIDE_SPINNERS}
               />
               <p className="text-xs text-gray-500">{incomeHelpText}</p>
             </div>
@@ -214,6 +216,7 @@ export function FinancialProfileForm({ onSubmit, isLoading }: FinancialProfileFo
                 onChange={(e) => setFdAmount(Number(e.target.value))}
                 min={0}
                 step={10000}
+                className={HIDE_SPINNERS}
               />
             </div>
           )}
@@ -231,12 +234,14 @@ export function FinancialProfileForm({ onSubmit, isLoading }: FinancialProfileFo
                   <span className="text-gray-700">{cat.label}</span>
                   <span className="font-medium">Rs. {spending[cat.key]?.toLocaleString('en-IN')}</span>
                 </div>
-                <Slider
-                  value={[spending[cat.key] || 0]}
-                  onValueChange={(val) => handleSpendingChange(cat.key, val)}
+                <Input
+                  type="number"
                   min={0}
                   max={50000}
                   step={500}
+                  value={spending[cat.key] || 0}
+                  onChange={(event) => handleSpendingChange(cat.key, Number(event.target.value) || 0)}
+                  className={`${HIDE_SPINNERS} max-w-[220px]`}
                 />
               </div>
             ))}

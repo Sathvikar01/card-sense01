@@ -157,7 +157,7 @@
     -moz-appearance: textfield;
   }
 
-  :is(button, a, div, span)[class*="rounded-full"][class*="bg-"]:has(> svg):not(:has(> span, > p, > input, > textarea, > img)) {
+  :is(button, a, div, span)[class*="rounded-"][class*="bg-"]:has(> svg):not(:has(> span, > p, > input, > textarea, > img, > div, > strong, > em)) {
     background: transparent !important;
     border-color: transparent !important;
     box-shadow: none !important;

@@ -3,10 +3,19 @@
 import { useAdvisorStore, type CreditScoreRange, type EmploymentType } from '@/lib/store/advisor-store'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
 
 const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
+const PREFILLED_FIELD_LABELS: Record<string, string> = {
+  creditScore: 'Credit score',
+  employmentType: 'Employment',
+  city: 'City',
+  primaryBank: 'Primary bank',
+  hasFD: 'Fixed deposit status',
+  fdAmount: 'FD amount',
+  existingCards: 'Existing cards',
+}
 
 const SCORE_RANGES: { value: CreditScoreRange; label: string; sublabel: string; color: string }[] = [
   { value: 'no_history', label: 'No history', sublabel: 'First-time applicant', color: 'bg-slate-400' },
@@ -38,6 +47,20 @@ export function ProfileBasicsStep() {
   const store = useAdvisorStore()
   const prefilled = new Set(store.profilePrefilledFields)
   const prefilledList = store.profilePrefilledFields
+    .map((field) => {
+      if (field === 'monthlyIncome') {
+        return {
+          field,
+          label: `Income (${formatIncome(store.monthlyIncome)})`,
+        }
+      }
+
+      const label = PREFILLED_FIELD_LABELS[field]
+      if (!label) return null
+
+      return { field, label }
+    })
+    .filter((item): item is { field: string; label: string } => Boolean(item))
 
   const showCreditScore = !prefilled.has('creditScore')
   const showEmployment = !prefilled.has('employmentType')
@@ -62,19 +85,12 @@ export function ProfileBasicsStep() {
             Prefilled From Profile
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {prefilledList.map((field) => (
+            {prefilledList.map((item) => (
               <span
-                key={field}
+                key={item.field}
                 className="rounded-full border border-[#d4a017]/30 bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
               >
-                {field === 'creditScore' && 'Credit score'}
-                {field === 'employmentType' && 'Employment'}
-                {field === 'monthlyIncome' && `Income (${formatIncome(store.monthlyIncome)})`}
-                {field === 'city' && 'City'}
-                {field === 'primaryBank' && 'Primary bank'}
-                {field === 'hasFD' && 'Fixed deposit status'}
-                {field === 'fdAmount' && 'FD amount'}
-                {field === 'existingCards' && 'Existing cards'}
+                {item.label}
               </span>
             ))}
           </div>
@@ -113,8 +129,7 @@ export function ProfileBasicsStep() {
                   {selected && (
                     <div className="absolute top-2 right-2.5">
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="8" className="fill-primary" />
-                        <path d="M5 8L7 10L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4.5 8L7 10.5L11.5 6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
                       </svg>
                     </div>
                   )}
@@ -176,18 +191,27 @@ export function ProfileBasicsStep() {
 
       {/* Age */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-foreground">Age</Label>
-          <span className="text-sm font-semibold tabular-nums text-primary">{store.age} years</span>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="advisor-age" className="text-sm font-medium text-foreground">Age</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="advisor-age"
+              type="number"
+              min={18}
+              max={70}
+              step={1}
+              value={store.age}
+              onChange={(e) => {
+                const parsed = Number.parseInt(e.target.value, 10)
+                if (Number.isNaN(parsed)) return
+                const bounded = Math.max(18, Math.min(70, parsed))
+                store.updateField('age', bounded)
+              }}
+              className={cn('w-24 rounded-xl text-center tabular-nums', HIDE_SPINNERS)}
+            />
+            <span className="text-sm text-muted-foreground">years</span>
+          </div>
         </div>
-        <Slider
-          value={[store.age]}
-          onValueChange={([v]) => store.updateField('age', v)}
-          min={18}
-          max={70}
-          step={1}
-          className="w-full"
-        />
       </div>
 
       {/* City & Primary Bank row */}

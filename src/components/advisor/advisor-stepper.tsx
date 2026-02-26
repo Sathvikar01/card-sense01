@@ -80,31 +80,19 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
                   onClick={() => { if (accessible) store.setStep(step.index) }}
                   disabled={!accessible}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 group',
+                    'flex flex-col items-start gap-1.5 text-left group',
                     !accessible && 'cursor-default'
                   )}
                 >
-                  {/* Circle */}
-                  <div
+                  <span
                     className={cn(
-                      'flex items-center justify-center h-9 w-9 rounded-full text-sm font-bold transition-all duration-200',
-                      active
-                        ? 'bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-white shadow-md shadow-[#b8860b]/30'
-                        : completed
-                          ? 'bg-[#fdf3d7] border-2 border-[#d4a017] text-[#b8860b]'
-                          : 'bg-white border-2 border-border text-muted-foreground/60'
+                      'text-[11px] font-semibold tabular-nums leading-none',
+                      active ? 'text-[#b8860b]' : completed ? 'text-foreground/70' : 'text-muted-foreground/50'
                     )}
                   >
-                    {completed && !active ? (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M4 8L6.5 10.5L12 5" stroke="#b8860b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    ) : (
-                      <span>{step.index + 1}</span>
-                    )}
-                  </div>
-                  {/* Label */}
-                  <div className="text-center">
+                    {step.index + 1}
+                  </span>
+                  <div>
                     <p className={cn(
                       'text-xs font-semibold leading-tight transition-colors',
                       active ? 'text-[#b8860b]' : completed ? 'text-foreground/70' : 'text-muted-foreground/50'
@@ -117,14 +105,20 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
                     )}>
                       {step.sublabel}
                     </p>
+                    <span
+                      className={cn(
+                        'mt-1 block h-[1.5px] w-16 transition-colors duration-200',
+                        active ? 'bg-[#d4a017]' : completed ? 'bg-[#d4a017]/45' : 'bg-border/60'
+                      )}
+                    />
                   </div>
                 </button>
 
                 {/* Connector line (not after last) */}
                 {idx < STEPS.length - 1 && (
-                  <div className="flex-1 mx-3 mb-4">
+                  <div className="flex-1 mx-3 mb-6">
                     <div className={cn(
-                      'h-[1.5px] w-full rounded-full transition-colors duration-300',
+                      'h-[1.5px] w-full transition-colors duration-300',
                       store.completedSteps.includes(step.index) ? 'bg-[#d4a017]/60' : 'bg-border/60'
                     )} />
                   </div>

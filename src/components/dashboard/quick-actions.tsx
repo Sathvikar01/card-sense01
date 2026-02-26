@@ -10,7 +10,7 @@ const quickActions = [
     description: 'Run profile-based card matching',
     icon: SparkQaSVG,
     href: '/advisor',
-    iconGradient: 'from-[#b8860b] to-[#d4a017]',
+    iconColor: 'text-[#b8860b]',
     hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
   {
@@ -18,7 +18,7 @@ const quickActions = [
     description: 'Add transactions for accuracy',
     icon: ChartQaSVG,
     href: '/spending',
-    iconGradient: 'from-emerald-500 to-green-600',
+    iconColor: 'text-emerald-600',
     hoverGlow: 'group-hover:shadow-emerald-500/10',
   },
   {
@@ -26,7 +26,7 @@ const quickActions = [
     description: 'Explore the full catalog',
     icon: CardQaSVG,
     href: '/cards',
-    iconGradient: 'from-blue-500 to-cyan-600',
+    iconColor: 'text-blue-600',
     hoverGlow: 'group-hover:shadow-blue-500/10',
   },
   {
@@ -34,7 +34,7 @@ const quickActions = [
     description: 'Refresh eligibility score',
     icon: ShieldQaSVG,
     href: '/profile',
-    iconGradient: 'from-[#b8860b] to-[#d4a017]',
+    iconColor: 'text-[#b8860b]',
     hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
 ]
@@ -71,7 +71,7 @@ export function QuickActions() {
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${action.iconGradient} shadow-lg transition-transform duration-300 group-hover:scale-110`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center ${action.iconColor} transition-transform duration-300 group-hover:scale-110`}
                   >
                     <IconComp />
                   </div>
@@ -108,8 +108,8 @@ export function QuickActions() {
 function SparkQaSVG() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M10 2l2 5.5L17.5 10l-5.5 2L10 17.5l-2-5.5L2.5 10l5.5-2z" fill="white" opacity="0.9" />
-      <path d="M15 2l.6 1.8 1.8.6-1.8.6-.6 1.8-.6-1.8L12.6 4.4l1.8-.6z" fill="white" opacity="0.5" />
+      <path d="M10 2l2 5.5L17.5 10l-5.5 2L10 17.5l-2-5.5L2.5 10l5.5-2z" fill="currentColor" opacity="0.9" />
+      <path d="M15 2l.6 1.8 1.8.6-1.8.6-.6 1.8-.6-1.8L12.6 4.4l1.8-.6z" fill="currentColor" opacity="0.5" />
     </svg>
   )
 }
@@ -117,10 +117,10 @@ function SparkQaSVG() {
 function ChartQaSVG() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M2.5 16.5h15" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-      <rect x="4" y="9" width="3" height="7.5" rx="1" fill="white" opacity="0.85" />
-      <rect x="8.5" y="5" width="3" height="11.5" rx="1" fill="white" opacity="0.7" />
-      <rect x="13" y="7" width="3" height="9.5" rx="1" fill="white" opacity="0.55" />
+      <path d="M2.5 16.5h15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="4" y="9" width="3" height="7.5" rx="1" fill="currentColor" opacity="0.85" />
+      <rect x="8.5" y="5" width="3" height="11.5" rx="1" fill="currentColor" opacity="0.7" />
+      <rect x="13" y="7" width="3" height="9.5" rx="1" fill="currentColor" opacity="0.55" />
     </svg>
   )
 }
@@ -128,9 +128,9 @@ function ChartQaSVG() {
 function CardQaSVG() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <rect x="2" y="4.5" width="16" height="11" rx="2.5" stroke="white" strokeWidth="1.5" fill="none" />
-      <line x1="2" y1="8.5" x2="18" y2="8.5" stroke="white" strokeWidth="1.5" />
-      <rect x="5" y="11.5" width="4.5" height="1.5" rx="0.75" fill="white" opacity="0.5" />
+      <rect x="2" y="4.5" width="16" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <line x1="2" y1="8.5" x2="18" y2="8.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="5" y="11.5" width="4.5" height="1.5" rx="0.75" fill="currentColor" opacity="0.5" />
     </svg>
   )
 }
@@ -138,8 +138,8 @@ function CardQaSVG() {
 function ShieldQaSVG() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M10 2L4 4.5v4.5c0 3.8 2.8 7 6 8.5 3.2-1.5 6-4.7 6-8.5V4.5L10 2z" stroke="white" strokeWidth="1.5" fill="none" />
-      <path d="M7 10l2 2 4-4" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 2L4 4.5v4.5c0 3.8 2.8 7 6 8.5 3.2-1.5 6-4.7 6-8.5V4.5L10 2z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

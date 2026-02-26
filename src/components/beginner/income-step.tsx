@@ -6,7 +6,7 @@ import { useBeginnerFlowStore } from '@/lib/store/beginner-flow-store'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
+import { Input } from '@/components/ui/input'
 import { Wallet } from 'lucide-react'
 
 const EMPLOYMENT_TYPES = [
@@ -18,6 +18,7 @@ const EMPLOYMENT_TYPES = [
 ] as const
 
 type EmploymentOptionValue = (typeof EMPLOYMENT_TYPES)[number]['value']
+const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 export function IncomeStep() {
   const { employmentType, monthlyIncome, annualIncome, updateField } = useBeginnerFlowStore()
@@ -41,8 +42,8 @@ export function IncomeStep() {
     updateField('employmentType', value as EmploymentOptionValue)
   }
 
-  const handleIncomeChange = (values: number[]) => {
-    updateField('monthlyIncome', values[0])
+  const handleIncomeChange = (value: number) => {
+    updateField('monthlyIncome', Math.max(0, Math.min(500000, value)))
   }
 
   return (
@@ -88,14 +89,15 @@ export function IncomeStep() {
             </div>
           </div>
 
-          <Slider
+          <Input
             id="monthlyIncome"
+            type="number"
             min={0}
             max={500000}
             step={2500}
-            value={[monthlyIncome]}
-            onValueChange={handleIncomeChange}
-            className="py-4"
+            value={monthlyIncome}
+            onChange={(event) => handleIncomeChange(Number(event.target.value) || 0)}
+            className={`${HIDE_SPINNERS} max-w-md`}
           />
 
           <div className="flex justify-between text-sm text-gray-500">

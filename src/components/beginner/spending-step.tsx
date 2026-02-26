@@ -5,7 +5,7 @@
 import { useBeginnerFlowStore } from '@/lib/store/beginner-flow-store'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Slider } from '@/components/ui/slider'
+import { Input } from '@/components/ui/input'
 import { ShoppingCart, Utensils, ShoppingBag, Fuel, Zap, Film, Plane, Activity } from 'lucide-react'
 import type { SpendingBreakdown } from '@/types/financial-profile'
 
@@ -19,6 +19,7 @@ const SPENDING_CATEGORIES = [
   { key: 'travel' as const, label: 'Travel', icon: Plane, color: 'text-blue-600' },
   { key: 'other' as const, label: 'Other Expenses', icon: Activity, color: 'text-gray-600' },
 ]
+const HIDE_SPINNERS = '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 export function SpendingStep() {
   const { spending, updateSpending, getTotalMonthlySpend } = useBeginnerFlowStore()
@@ -31,8 +32,8 @@ export function SpendingStep() {
     }).format(amount)
   }
 
-  const handleSpendingChange = (category: keyof SpendingBreakdown, value: number[]) => {
-    updateSpending(category, value[0])
+  const handleSpendingChange = (category: keyof SpendingBreakdown, value: number) => {
+    updateSpending(category, Math.max(0, Math.min(50000, value)))
   }
 
   const totalSpend = getTotalMonthlySpend()
@@ -98,14 +99,15 @@ export function SpendingStep() {
                   </div>
                 </div>
 
-                <Slider
+                <Input
                   id={category.key}
+                  type="number"
                   min={0}
                   max={50000}
                   step={500}
-                  value={[amount]}
-                  onValueChange={(value) => handleSpendingChange(category.key, value)}
-                  className="py-2"
+                  value={amount}
+                  onChange={(event) => handleSpendingChange(category.key, Number(event.target.value) || 0)}
+                  className={`${HIDE_SPINNERS} max-w-[220px]`}
                 />
 
                 {/* Visual bar representation */}
