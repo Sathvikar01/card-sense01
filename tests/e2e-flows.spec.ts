@@ -1,6 +1,31 @@
 import { expect, test } from '@playwright/test'
 import { clickByRole, expectVisible, fillByPlaceholder } from './helpers/ui'
 
+const makeDetailedCard = (id: string, name: string, bank: string) => ({
+  id,
+  bank_name: bank,
+  card_name: name,
+  card_type: 'cashback',
+  card_network: 'visa',
+  joining_fee: 0,
+  annual_fee: 999,
+  annual_fee_waiver_spend: 150000,
+  reward_rate_default: 2,
+  lounge_access: 'none',
+  fuel_surcharge_waiver: false,
+  golf_access: false,
+  min_cibil_score: 700,
+  min_income_salaried: 300000,
+  min_age: 21,
+  max_age: 65,
+  requires_itr: false,
+  pros: ['Solid rewards'],
+  cons: ['Has annual fee'],
+  best_for: ['shopping', 'groceries'],
+  apply_url: null,
+  forex_markup: 3.5,
+})
+
 const mockInteractionsEndpoint = async (page: import('@playwright/test').Page) => {
   await page.route('**/api/interactions**', async (route) => {
     await route.fulfill({
@@ -268,4 +293,135 @@ test('Cards browsing pagination', async ({ page }) => {
 
   const overlap = paginationResult.firstIds.filter((id: string) => paginationResult.secondIds.includes(id))
   expect(overlap).toHaveLength(0)
+})
+
+test('Compare page keeps persisted cards and does not redirect', async ({ page }) => {
+  await mockInteractionsEndpoint(page)
+
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'cardsense-analysis-store',
+      JSON.stringify({
+        state: {
+          comparedCardIds: ['card-1', 'card-2'],
+          comparedCards: [
+            {
+              id: 'card-1',
+              bank_name: 'HDFC Bank',
+              card_name: 'HDFC Rewards',
+              card_type: 'cashback',
+              annual_fee: 999,
+              reward_rate_default: 2,
+              lounge_access: 'none',
+              best_for: ['shopping'],
+              popularity_score: 90,
+            },
+            {
+              id: 'card-2',
+              bank_name: 'SBI',
+              card_name: 'SBI Prime',
+              card_type: 'cashback',
+              annual_fee: 1499,
+              reward_rate_default: 2.2,
+              lounge_access: 'none',
+              best_for: ['groceries'],
+              popularity_score: 88,
+            },
+          ],
+        },
+        version: 0,
+      })
+    )
+  })
+
+  await page.route('**/api/cards/card-1', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(makeDetailedCard('card-1', 'HDFC Rewards', 'HDFC Bank')),
+    })
+  })
+
+  await page.route('**/api/cards/card-2', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(makeDetailedCard('card-2', 'SBI Prime', 'SBI')),
+    })
+  })
+
+  await page.goto('/cards/compare')
+  await expectVisible(
+    page.getByRole('heading', { name: /Card Comparison/i }),
+    'Compare page heading'
+  )
+  await expect(page).toHaveURL(/\/cards\/compare/)
+  await expectVisible(page.getByText(/Comparing 2 cards side-by-side/i), 'Compare count text')
+})
+
+test('Advisor spending step is prefilled from spending tracker data', async ({ page }) => {
+  await mockInteractionsEndpoint(page)
+
+  await page.route('**/api/profile/cibil', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        history: [{ credit_score: 745, score_date: '2026-02-01' }],
+      }),
+    })
+  })
+
+  await page.route('**/api/profile', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        profile: {
+          annual_income: 900000,
+          employment_type: 'salaried',
+          city: 'Bengaluru',
+          primary_bank: 'HDFC Bank',
+        },
+      }),
+    })
+  })
+
+  await page.route('**/api/cards/user', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ cards: [] }),
+    })
+  })
+
+  await page.route('**/api/spending', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        transactions: [],
+        aggregates: {
+          total: 22000,
+          by_category: {
+            groceries: 12000,
+            dining: 6000,
+            fuel: 4000,
+          },
+          count: 3,
+        },
+      }),
+    })
+  })
+
+  await page.goto('/advisor?new=1')
+
+  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 1)')
+  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 2)')
+
+  await expectVisible(page.getByText(/Select your top spending categories/i), 'Spending step title')
+  await expectVisible(
+    page.getByText(/INR 22,000/i),
+    'Prefilled monthly spending total from tracker'
+  )
 })

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createPublicServerClient } from '@/lib/supabase/public-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,10 @@ import {
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import type { CreditCard } from '@/types/credit-card'
-import { getLocalCreditCardById, isMissingCreditCardsTableError } from '@/lib/cards/local-catalog'
+import {
+  getLocalCreditCardByIdentifier,
+  isUuid,
+} from '@/lib/cards/local-catalog'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -29,34 +32,42 @@ interface PageProps {
 
 interface CardQueryResult {
   data: Record<string, unknown> | null
-  error: { message?: string } | null
+  error: { message?: string; code?: string } | null
 }
 
 export default async function CardDetailPage({ params }: PageProps) {
-  const { id } = await params
-  const supabase = await createClient()
+  const { id: rawId } = await params
+  const id = decodeURIComponent(rawId)
+  const localCard = getLocalCreditCardByIdentifier(id)
 
-  const { data: card, error } = (await supabase
-    .from('credit_cards')
-    .select('*')
-    .eq('id', id)
-    .eq('is_active', true)
-    .single()) as CardQueryResult
+  if (localCard && !isUuid(id)) {
+    const cardData = localCard
+    return <CardDetailContent cardData={cardData} />
+  }
 
-  const fallbackCard =
-    isMissingCreditCardsTableError(error?.message) ? getLocalCreditCardById(id) : null
+  const supabase = createPublicServerClient()
+  const byIdQuery = supabase.from('credit_cards').select('*').eq('is_active', true)
+  const { data: card, error } = (await (isUuid(id)
+    ? byIdQuery.eq('id', id).maybeSingle()
+    : byIdQuery.ilike('card_name', id).limit(1).maybeSingle())) as CardQueryResult
 
-  const resolvedCard = card ?? fallbackCard
+  const fallbackCard = localCard
 
   if (error && !fallbackCard) {
     notFound()
   }
 
+  const resolvedCard = card ?? fallbackCard
   if (!resolvedCard) {
     notFound()
   }
 
   const cardData = resolvedCard as unknown as CreditCard
+
+  return <CardDetailContent cardData={cardData} />
+}
+
+function CardDetailContent({ cardData }: { cardData: CreditCard }) {
 
   const formatCardType = (type: string) => {
     return type.split('_').map(word =>

@@ -283,6 +283,10 @@ export interface ProfilePrefillData {
   existingCards?: string[] | null
 }
 
+export interface SpendingPrefillData {
+  byCategory?: Record<string, number> | null
+}
+
 interface AdvisorStore extends AdvisorFormState {
   savedResult: SavedAdvisorResult | null
   profilePrefilledFields: string[]
@@ -298,7 +302,28 @@ interface AdvisorStore extends AdvisorFormState {
   getTotalMonthlySpend: () => number
   getApiPayload: () => Record<string, unknown>
   prefillFromProfile: (data: ProfilePrefillData) => void
+  prefillFromSpending: (data: SpendingPrefillData) => void
 }
+
+const SPENDING_CATEGORY_MAP: Record<string, string> = {
+  shopping: 'online_shopping',
+  bills: 'utilities',
+  insurance: 'utilities',
+  emi: 'rent',
+}
+
+const ADVISOR_SPENDING_CATEGORIES = new Set([
+  'groceries',
+  'fuel',
+  'dining',
+  'travel',
+  'online_shopping',
+  'utilities',
+  'rent',
+  'entertainment',
+  'healthcare',
+  'education',
+])
 
 export const useAdvisorStore = create<AdvisorStore>()(
   persist(
@@ -390,6 +415,56 @@ export const useAdvisorStore = create<AdvisorStore>()(
         }
 
         set({ ...updates, profilePrefilledFields: filled })
+      },
+
+      prefillFromSpending: (data: SpendingPrefillData) => {
+        const byCategory = data.byCategory || {}
+        const normalizedEntries = Object.entries(byCategory)
+          .map(([category, rawAmount]) => {
+            const mappedCategory = SPENDING_CATEGORY_MAP[category] || category
+            const amount = Number(rawAmount)
+            if (!ADVISOR_SPENDING_CATEGORIES.has(mappedCategory) || !Number.isFinite(amount) || amount <= 0) {
+              return null
+            }
+            return [mappedCategory, Math.round(amount)] as const
+          })
+          .filter((entry): entry is readonly [string, number] => entry !== null)
+
+        if (normalizedEntries.length === 0) {
+          return
+        }
+
+        set((state) => {
+          const hasExistingSpend = Object.values(state.spendingAmounts).some((amount) => amount > 0)
+          const mergedSpending: Record<string, number> = {}
+          for (const [category, amount] of normalizedEntries) {
+            mergedSpending[category] = (mergedSpending[category] || 0) + amount
+          }
+
+          const nextSpendingAmounts = hasExistingSpend ? state.spendingAmounts : mergedSpending
+          const rankedCategories = Object.entries(nextSpendingAmounts)
+            .filter(([, amount]) => amount > 0)
+            .sort((a, b) => b[1] - a[1])
+            .map(([category]) => category)
+            .slice(0, 5)
+          const nextTopCategories =
+            state.topSpendingCategories.length > 0 ? state.topSpendingCategories : rankedCategories
+          const monthlySpendEstimate = Object.values(nextSpendingAmounts).reduce(
+            (sum, amount) => sum + amount,
+            0
+          )
+          const nextPrefilledFields = Array.from(
+            new Set([...state.profilePrefilledFields, 'topSpendingCategories', 'spendingAmounts'])
+          )
+
+          return {
+            spendingAmounts: nextSpendingAmounts,
+            topSpendingCategories: nextTopCategories,
+            monthlySpendEstimate:
+              monthlySpendEstimate > 0 ? monthlySpendEstimate : state.monthlySpendEstimate,
+            profilePrefilledFields: nextPrefilledFields,
+          }
+        })
       },
 
       getTotalMonthlySpend: () => {

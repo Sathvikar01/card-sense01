@@ -46,17 +46,22 @@ function withKey(value: string, index: number) {
 
 export default function CardComparePage() {
   const router = useRouter()
-  const { comparedCardIds, comparedCards, clearComparison } = useAnalysisStore()
+  const { comparedCardIds, comparedCards, clearComparison, hasHydrated } = useAnalysisStore()
   const [cards, setCards] = useState<CreditCard[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!hasHydrated) {
+      return
+    }
+
     const fallbackIds = comparedCards.map((card) => card.id)
     const ids = Array.from(
       new Set((comparedCardIds.length > 0 ? comparedCardIds : fallbackIds).filter(Boolean))
     )
     if (ids.length < 2) {
-      router.replace('/cards')
+      setCards([])
+      setLoading(false)
       return
     }
 
@@ -85,11 +90,9 @@ export default function CardComparePage() {
               comparedCount: resolved.length,
             },
           })
-        } else {
-          router.replace('/cards')
         }
       } catch {
-        router.replace('/cards')
+        setCards([])
       } finally {
         setLoading(false)
       }
@@ -102,7 +105,7 @@ export default function CardComparePage() {
     })
 
     fetchCards()
-  }, [comparedCardIds, comparedCards, router])
+  }, [comparedCardIds, comparedCards, hasHydrated])
 
   const count = cards.length
   const gridTemplate = useMemo(

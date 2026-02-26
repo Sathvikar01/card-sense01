@@ -111,10 +111,11 @@ export default function AdvisorPage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const [profileRes, cibilRes, cardsRes] = await Promise.all([
+        const [profileRes, cibilRes, cardsRes, spendingRes] = await Promise.all([
           fetch('/api/profile'),
           fetch('/api/profile/cibil'),
           fetch('/api/cards/user'),
+          fetch('/api/spending'),
         ])
 
         if (profileRes.ok) {
@@ -142,6 +143,12 @@ export default function AdvisorPage() {
             fdAmount: profile?.fd_amount,
             existingCards,
           })
+        }
+
+        if (spendingRes.ok) {
+          const spendingData = await spendingRes.json()
+          const byCategory = (spendingData?.aggregates?.by_category || {}) as Record<string, number>
+          store.prefillFromSpending({ byCategory })
         }
       } catch {
         // Non-fatal, user can still fill advisor manually

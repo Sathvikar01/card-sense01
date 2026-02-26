@@ -851,9 +851,33 @@ export const toCreditCardListItem = (card: CreditCard): CreditCardListItem => ({
   popularity_score: card.popularity_score,
 })
 
+const normalizeIdentifier = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
 export const getLocalCreditCardById = (id: string) => {
   return LOCAL_CARD_CATALOG.find((card) => card.id === id)
 }
+
+export const getLocalCreditCardByIdentifier = (identifier: string) => {
+  const normalized = normalizeIdentifier(identifier)
+  if (!normalized) return null
+
+  const byId = LOCAL_CARD_CATALOG.find((card) => card.id === normalized)
+  if (byId) return byId
+
+  return (
+    LOCAL_CARD_CATALOG.find((card) => normalizeIdentifier(card.card_name) === normalized) ?? null
+  )
+}
+
+export const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value.trim()
+  )
 
 export const isMissingCreditCardsTableError = (message: string | undefined) => {
   if (!message) return false

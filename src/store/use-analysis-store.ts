@@ -9,6 +9,7 @@ interface AnalysisState {
   status: AnalysisStatus;
   analysis: SpendingAnalysis | null;
   errorMessage: string | null;
+  hasHydrated: boolean;
   comparedCardIds: string[];
   comparedCards: CreditCardListItem[];
   selectedMonth: string | null;
@@ -21,6 +22,7 @@ interface AnalysisState {
   clearComparison: () => void;
   setComparisonFromCards: (cards: CreditCardListItem[]) => void;
   setSelectedMonth: (month: string | null) => void;
+  setHasHydrated: (hydrated: boolean) => void;
 }
 
 export const useAnalysisStore = create<AnalysisState>()(
@@ -29,6 +31,7 @@ export const useAnalysisStore = create<AnalysisState>()(
       status: "idle",
       analysis: null,
       errorMessage: null,
+      hasHydrated: false,
       comparedCardIds: [],
       comparedCards: [],
       selectedMonth: null,
@@ -77,6 +80,7 @@ export const useAnalysisStore = create<AnalysisState>()(
       },
 
       setSelectedMonth: (month) => set({ selectedMonth: month }),
+      setHasHydrated: (hydrated) => set({ hasHydrated: hydrated }),
     }),
     {
       name: "cardsense-analysis-store",
@@ -84,6 +88,9 @@ export const useAnalysisStore = create<AnalysisState>()(
         comparedCardIds: state.comparedCardIds,
         comparedCards: state.comparedCards,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
