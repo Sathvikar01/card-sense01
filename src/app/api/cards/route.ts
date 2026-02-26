@@ -219,6 +219,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  if (!cards || cards.length === 0) {
+    const { count: activeCatalogCount, error: activeCatalogCountError } = await supabase
+      .from('credit_cards')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+
+    if (
+      (typeof activeCatalogCount === 'number' && activeCatalogCount === 0) ||
+      isMissingCreditCardsTableError(activeCatalogCountError?.message)
+    ) {
+      return getFallbackCardsResponse({
+        search,
+        bank,
+        cardType,
+        network,
+        maxFee,
+        minIncome,
+        sortBy,
+        fields,
+        limit,
+        offset,
+      })
+    }
+  }
+
   let total: number | undefined
   if (offset === 0) {
     let countQuery = supabase
