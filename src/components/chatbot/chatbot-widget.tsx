@@ -141,7 +141,7 @@ export function ChatbotWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Toggle chat"
-        className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-white shadow-lg shadow-[#b8860b]/25 hover:shadow-[#b8860b]/40 transition-all"
+        className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6 flex h-12 w-12 items-center justify-center rounded-md bg-transparent text-[#b8860b] transition-colors hover:text-[#d4a017]"
       >
         {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
       </button>

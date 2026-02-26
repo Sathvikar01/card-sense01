@@ -166,9 +166,9 @@ export function SpendingProfileStep() {
                 <p className="text-sm font-medium text-foreground pr-5">{opt.label}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
                 {selected && (
-                  <div className="absolute top-2.5 right-2.5 h-5 w-5 rounded-full bg-gradient-to-br from-[#b8860b] to-[#d4a017] flex items-center justify-center shadow-sm">
+                  <div className="absolute top-2.5 right-2.5 flex h-5 w-5 items-center justify-center text-[#b8860b]">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 5L4 7L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 )}

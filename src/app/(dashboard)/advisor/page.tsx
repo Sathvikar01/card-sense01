@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 import { AdvisorStepper } from '@/components/advisor/advisor-stepper'
 import { AdvisorLoading } from '@/components/advisor/advisor-loading'
@@ -90,8 +89,6 @@ function toBrowseCards(cards: AdvisorCardResult[]): CreditCardListItem[] {
 
 export default function AdvisorPage() {
   const store = useAdvisorStore()
-  const searchParams = useSearchParams()
-  const isNew = searchParams.get('new') === '1'
 
   const [step, setStep] = useState<FlowStep>('input')
   const [isLoading, setIsLoading] = useState(false)
@@ -100,6 +97,26 @@ export default function AdvisorPage() {
   const [checkedSaved, setCheckedSaved] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
   const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
+
+  const persistResult = (nextResult: AdvisorResult) => {
+    setResult(nextResult)
+    setStep('results')
+
+    store.setSavedResult({
+      analysis: nextResult.analysis,
+      cards: nextResult.cards.map((card) => ({ ...card })),
+      persona: store.detectedPersona,
+      profileSummary: {
+        monthlyIncome: store.monthlyIncome,
+        creditScore: store.creditScore,
+        persona: store.detectedPersona ?? undefined,
+        primaryGoal: store.primaryGoal,
+        topSpending: store.topSpendingCategories,
+        age: store.age,
+        employment: store.employmentType,
+      },
+    })
+  }
 
   useEffect(() => {
     void trackInteraction('advisor_started', {
@@ -160,22 +177,25 @@ export default function AdvisorPage() {
   }, [])
 
   useEffect(() => {
-    if (isNew) {
-      setCheckedSaved(true)
-      return
+    let cancelled = false
+
+    if (store.savedResult?.cards?.length) {
+      setResult({
+        analysis: store.savedResult.analysis || '',
+        cards: store.savedResult.cards.map((card) => ({ ...card })),
+      })
+      setStep('results')
     }
 
     const hydrateSaved = async () => {
       try {
         const res = await fetch('/api/recommendations/latest')
         if (!res.ok) {
-          setCheckedSaved(true)
           return
         }
 
         const data = await res.json()
         if (!data.recommendation?.cards?.length) {
-          setCheckedSaved(true)
           return
         }
 
@@ -183,17 +203,26 @@ export default function AdvisorPage() {
           analysis: data.recommendation.analysis || '',
           cards: mapCards(data.recommendation.cards as Record<string, unknown>[]),
         }
-        setResult(mapped)
-        setStep('results')
+        if (cancelled) {
+          return
+        }
+        persistResult(mapped)
       } catch {
         // ignore
       } finally {
-        setCheckedSaved(true)
+        if (!cancelled) {
+          setCheckedSaved(true)
+        }
       }
     }
 
-    hydrateSaved()
-  }, [isNew])
+    void hydrateSaved()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleComplete = async () => {
     if (TURNSTILE_ENABLED && !turnstileToken) {
@@ -295,18 +324,16 @@ export default function AdvisorPage() {
           analysis: data.overall_analysis || '',
           cards: mapCards((data.recommendations || data.cards || []) as Record<string, unknown>[]),
         }
-        setResult(mapped)
-        setStep('results')
+        persistResult(mapped)
         toast.success('Recommendations ready')
         return
       }
 
       const data = await response.json()
-      setResult({
+      persistResult({
         analysis: data.analysis || '',
         cards: mapCards((data.cards || []) as Record<string, unknown>[]),
       })
-      setStep('results')
       toast.success('Recommendations ready')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to get recommendations'
@@ -337,7 +364,7 @@ export default function AdvisorPage() {
 
   const browseCards = useMemo(() => toBrowseCards(result?.cards || []), [result])
 
-  if (!checkedSaved && !isNew) {
+  if (!checkedSaved && !result) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <svg className="animate-spin h-7 w-7 text-[#b8860b]" viewBox="0 0 24 24" fill="none">

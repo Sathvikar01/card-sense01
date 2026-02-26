@@ -243,7 +243,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -425,7 +425,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     {/* Back button */}
                     <button
                       onClick={() => setStep('form')}
-                      className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-gray-500 transition-colors hover:text-gray-700"
                     >
                       <ArrowLeft className="h-4 w-4" />
                     </button>

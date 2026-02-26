@@ -146,6 +146,23 @@
     @apply border-border outline-ring/50;
   }
 
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  :is(button, a, div, span)[class*="rounded-full"][class*="bg-"]:has(> svg):not(:has(> span, > p, > input, > textarea, > img)) {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
