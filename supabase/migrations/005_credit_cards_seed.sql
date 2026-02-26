@@ -93,7 +93,7 @@ INSERT INTO credit_cards (
  2999, 2999, 200000, 2999,
  200000, 250000, 700, 21, 70,
  false, false,
- 1.0, '{"dining': {"rate": 10.0, "unit": "points_per_100"}, "grocery": {"rate": 10.0, "unit": "points_per_100"}, "departmental": {"rate": 10.0, "unit": "points_per_100"}}',
+ 1.0, '{"dining": {"rate": 10.0, "unit": "points_per_100"}, "grocery": {"rate": 10.0, "unit": "points_per_100"}, "departmental": {"rate": 10.0, "unit": "points_per_100"}}',
  '{"points": 3000, "description": "3000 reward points on card activation"}',
  'domestic_only', 8, true, 100,
  3.5, true,

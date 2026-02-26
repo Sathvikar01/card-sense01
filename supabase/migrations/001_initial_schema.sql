@@ -112,6 +112,57 @@ CREATE TABLE IF NOT EXISTS public.credit_cards (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Add canonical column names used by seed and runtime queries.
+-- These are kept alongside legacy columns for backward compatibility.
+ALTER TABLE public.credit_cards
+    ADD COLUMN IF NOT EXISTS bank_name TEXT,
+    ADD COLUMN IF NOT EXISTS card_network TEXT,
+    ADD COLUMN IF NOT EXISTS card_variant TEXT,
+    ADD COLUMN IF NOT EXISTS image_url TEXT,
+    ADD COLUMN IF NOT EXISTS joining_fee INTEGER DEFAULT 0 CHECK (joining_fee >= 0),
+    ADD COLUMN IF NOT EXISTS annual_fee_waiver_spend INTEGER CHECK (annual_fee_waiver_spend >= 0),
+    ADD COLUMN IF NOT EXISTS renewal_fee INTEGER CHECK (renewal_fee >= 0),
+    ADD COLUMN IF NOT EXISTS min_income_salaried INTEGER CHECK (min_income_salaried >= 0),
+    ADD COLUMN IF NOT EXISTS min_income_self_employed INTEGER CHECK (min_income_self_employed >= 0),
+    ADD COLUMN IF NOT EXISTS min_income_required INTEGER CHECK (min_income_required >= 0),
+    ADD COLUMN IF NOT EXISTS min_cibil_score INTEGER CHECK (min_cibil_score >= 300 AND min_cibil_score <= 900),
+    ADD COLUMN IF NOT EXISTS requires_itr BOOLEAN DEFAULT false,
+    ADD COLUMN IF NOT EXISTS requires_existing_relationship BOOLEAN DEFAULT false,
+    ADD COLUMN IF NOT EXISTS reward_rate_default DECIMAL(10, 4),
+    ADD COLUMN IF NOT EXISTS milestone_benefits JSONB DEFAULT '{}'::JSONB,
+    ADD COLUMN IF NOT EXISTS lounge_access TEXT,
+    ADD COLUMN IF NOT EXISTS lounge_visits_per_quarter INTEGER,
+    ADD COLUMN IF NOT EXISTS fuel_surcharge_waiver_cap INTEGER,
+    ADD COLUMN IF NOT EXISTS movie_benefits TEXT,
+    ADD COLUMN IF NOT EXISTS dining_benefits TEXT,
+    ADD COLUMN IF NOT EXISTS travel_insurance_cover INTEGER,
+    ADD COLUMN IF NOT EXISTS purchase_protection_cover INTEGER,
+    ADD COLUMN IF NOT EXISTS golf_access BOOLEAN DEFAULT false,
+    ADD COLUMN IF NOT EXISTS concierge_service BOOLEAN DEFAULT false,
+    ADD COLUMN IF NOT EXISTS forex_markup DECIMAL(8, 4),
+    ADD COLUMN IF NOT EXISTS emi_conversion_available BOOLEAN DEFAULT true,
+    ADD COLUMN IF NOT EXISTS apply_url TEXT;
+
+UPDATE public.credit_cards
+SET
+    bank_name = COALESCE(bank_name, bank),
+    card_network = COALESCE(card_network, network),
+    renewal_fee = COALESCE(renewal_fee, annual_fee),
+    min_income_salaried = COALESCE(min_income_salaried, min_income),
+    min_income_self_employed = COALESCE(min_income_self_employed, min_income),
+    min_income_required = COALESCE(min_income_required, min_income),
+    min_cibil_score = COALESCE(min_cibil_score, min_credit_score),
+    apply_url = COALESCE(apply_url, application_url)
+WHERE
+    bank_name IS NULL
+    OR card_network IS NULL
+    OR renewal_fee IS NULL
+    OR min_income_salaried IS NULL
+    OR min_income_self_employed IS NULL
+    OR min_income_required IS NULL
+    OR min_cibil_score IS NULL
+    OR apply_url IS NULL;
+
 -- Indexes for credit_cards
 CREATE INDEX idx_credit_cards_bank ON public.credit_cards(bank);
 CREATE INDEX idx_credit_cards_card_type ON public.credit_cards(card_type);
