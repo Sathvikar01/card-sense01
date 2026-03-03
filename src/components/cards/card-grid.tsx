@@ -13,7 +13,7 @@ interface CardGridProps {
 export function CardGrid({ cards, loading }: CardGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
           <div key={index} className="stat-card-premium space-y-4 p-5">
             <div className="mx-auto h-[126px] w-[200px] shimmer rounded-xl" />
@@ -43,7 +43,7 @@ export function CardGrid({ cards, loading }: CardGridProps) {
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, idx) => (
           <motion.div
             key={card.id}

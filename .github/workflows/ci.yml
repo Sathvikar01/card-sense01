@@ -81,9 +81,8 @@ jobs:
         run: npm run ci:migrations
 
   smoke:
-    name: Playwright Smoke (Optional)
+    name: Playwright Smoke
     needs: app
-    if: ${{ vars.CI_RUN_PLAYWRIGHT_SMOKE == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_smoke == 'true') }}
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co

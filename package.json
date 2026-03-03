@@ -12,11 +12,12 @@
     "ci:lint": "npm run lint",
     "ci:build": "npm run build",
     "ci:migrations": "bash scripts/ci/apply-supabase-migrations.sh",
-    "test:e2e": "playwright test tests/e2e-flows.spec.ts",
+    "test:e2e": "playwright test tests/e2e-flows.spec.ts tests/recommendation-heuristics.spec.ts",
     "test:smoke": "playwright test tests/smoke.spec.ts",
     "schema:verify": "tsx scripts/verify-schema.ts",
     "check:ci": "npm run schema:verify && npm run lint && npm run build",
-    "seed:education": "tsx scripts/seed-education.ts"
+    "seed:education": "tsx scripts/seed-education.ts",
+    "train:weights": "tsx scripts/train-recommendation-weights.ts"
   },
   "dependencies": {
     "@google/genai": "^1.41.0",

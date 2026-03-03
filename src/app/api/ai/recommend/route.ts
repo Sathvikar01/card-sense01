@@ -7,6 +7,7 @@ import {
   isMissingCreditCardsTableError,
 } from '@/lib/cards/local-catalog'
 import { verifyTurnstileToken } from '@/lib/security/turnstile'
+import { getRecommendationWeightConfig } from '@/lib/recommendations/weight-config'
 
 type CatalogSource = 'database' | 'local_fallback'
 
@@ -71,6 +72,15 @@ type RecommendationRuleScores = {
   goalFit: number
   feeFit: number
   diversificationFit: number
+  weightsUsed: {
+    eligibilityFit: number
+    spendFit: number
+    goalFit: number
+    feeFit: number
+    diversificationFit: number
+    primaryGoalBoost: number
+    answerInfluence: Record<string, number>
+  }
   weightedRaw: number
   finalScore: number
 }
@@ -597,6 +607,13 @@ const ruleBasedRecommendations = (
   const needsUpi = getFollowUpAnswer(answers, ['upi_usage'], 'not_needed') === 'critical'
     || valuePriority === 'upi_qr_rewards'
 
+  const weightConfig = getRecommendationWeightConfig()
+  const answerInfluenceMultiplier = Object.entries(weightConfig.answerInfluence).reduce(
+    (multiplier, [key, factor]) => (answers[key] ? multiplier * factor : multiplier),
+    1
+  )
+  const normalizedInfluenceMultiplier = Math.min(1.35, Math.max(0.85, answerInfluenceMultiplier))
+
   if (!valuePriority) {
     if (rewardPreference === 'travel' || travelFrequency === 'frequent') {
       valuePriority = 'travel_perks'
@@ -707,6 +724,7 @@ const ruleBasedRecommendations = (
     if (needsUpi && hasUpiSignals) goalFit += 8
     if (travelFrequency === 'frequent' && hasTravelSignals) goalFit += 8
     const normalizedGoalFit = Math.max(0, Math.min(100, goalFit))
+    const boostedGoalFit = Math.min(100, normalizedGoalFit * weightConfig.primaryGoalBoost)
 
     let feeFit = 50
     if (annualFeeTolerance === 'free_only') {
@@ -725,12 +743,13 @@ const ruleBasedRecommendations = (
     if (existingCards.has(normalizedCardName)) diversificationFit = 20
     else if (existingCards.size > 0 && normalizeBank(card.bank).includes(primaryBank)) diversificationFit = 55
 
-    const weightedRaw =
-      (eligibilityFit * 0.35) +
-      (spendFit * 0.30) +
-      (normalizedGoalFit * 0.20) +
-      (feeFit * 0.10) +
-      (diversificationFit * 0.05)
+    const weightedRawBase =
+      (eligibilityFit * weightConfig.baseWeights.eligibilityFit) +
+      (spendFit * weightConfig.baseWeights.spendFit) +
+      (boostedGoalFit * weightConfig.baseWeights.goalFit) +
+      (feeFit * weightConfig.baseWeights.feeFit) +
+      (diversificationFit * weightConfig.baseWeights.diversificationFit)
+    const weightedRaw = weightedRawBase * normalizedInfluenceMultiplier
     const weightedRawRounded = Number(weightedRaw.toFixed(2))
     const normalizedScore = Math.max(35, Math.min(96, Math.round(weightedRaw)))
 
@@ -745,9 +764,14 @@ const ruleBasedRecommendations = (
     const ruleScores: RecommendationRuleScores = {
       eligibilityFit,
       spendFit,
-      goalFit: normalizedGoalFit,
+      goalFit: boostedGoalFit,
       feeFit,
       diversificationFit,
+      weightsUsed: {
+        ...weightConfig.baseWeights,
+        primaryGoalBoost: weightConfig.primaryGoalBoost,
+        answerInfluence: weightConfig.answerInfluence,
+      },
       weightedRaw: weightedRawRounded,
       finalScore: normalizedScore,
     }
@@ -756,45 +780,71 @@ const ruleBasedRecommendations = (
       {
         ruleId: 'eligibility_fit',
         label: 'Eligibility Fit',
-        weight: 0.35,
+        weight: weightConfig.baseWeights.eligibilityFit,
         score: eligibilityFit,
-        contribution: Number((eligibilityFit * 0.35).toFixed(2)),
+        contribution: Number(
+          (
+            eligibilityFit *
+            weightConfig.baseWeights.eligibilityFit *
+            normalizedInfluenceMultiplier
+          ).toFixed(2)
+        ),
         matched: eligibilityFit >= 60,
         detail: `Checks age, CIBIL, and income profile (${incomeProfile}) with secured-card readiness (${securedCardReadiness}).`,
       },
       {
         ruleId: 'spend_fit',
         label: 'Spend Alignment',
-        weight: 0.30,
+        weight: weightConfig.baseWeights.spendFit,
         score: spendFit,
-        contribution: Number((spendFit * 0.30).toFixed(2)),
+        contribution: Number(
+          (
+            spendFit *
+            weightConfig.baseWeights.spendFit *
+            normalizedInfluenceMultiplier
+          ).toFixed(2)
+        ),
         matched: spendFit >= 60,
         detail: `Matches your top categories and primary focus (${toSpendingLabel(spendFocus)}).`,
       },
       {
         ruleId: 'goal_fit',
         label: 'Goal Alignment',
-        weight: 0.20,
-        score: normalizedGoalFit,
-        contribution: Number((normalizedGoalFit * 0.20).toFixed(2)),
-        matched: normalizedGoalFit >= 60,
-        detail: `Optimizes for selected value priority (${VALUE_PRIORITY_LABELS[valuePriority] || valuePriority}).`,
+        weight: weightConfig.baseWeights.goalFit,
+        score: boostedGoalFit,
+        contribution: Number(
+          (
+            boostedGoalFit *
+            weightConfig.baseWeights.goalFit *
+            normalizedInfluenceMultiplier
+          ).toFixed(2)
+        ),
+        matched: boostedGoalFit >= 60,
+        detail: `Optimizes for selected value priority (${VALUE_PRIORITY_LABELS[valuePriority] || valuePriority}), with extra emphasis on your primary goal.`,
       },
       {
         ruleId: 'fee_fit',
         label: 'Fee Comfort',
-        weight: 0.10,
+        weight: weightConfig.baseWeights.feeFit,
         score: feeFit,
-        contribution: Number((feeFit * 0.10).toFixed(2)),
+        contribution: Number(
+          (feeFit * weightConfig.baseWeights.feeFit * normalizedInfluenceMultiplier).toFixed(2)
+        ),
         matched: feeFit >= 60,
         detail: `Compares annual fee against your fee tolerance (${annualFeeTolerance}).`,
       },
       {
         ruleId: 'diversification_fit',
         label: 'Portfolio Diversification',
-        weight: 0.05,
+        weight: weightConfig.baseWeights.diversificationFit,
         score: diversificationFit,
-        contribution: Number((diversificationFit * 0.05).toFixed(2)),
+        contribution: Number(
+          (
+            diversificationFit *
+            weightConfig.baseWeights.diversificationFit *
+            normalizedInfluenceMultiplier
+          ).toFixed(2)
+        ),
         matched: diversificationFit >= 60,
         detail: 'Avoids duplicating existing cards and balances bank exposure.',
       },
@@ -809,7 +859,7 @@ const ruleBasedRecommendations = (
     const focusLabel = toSpendingLabel(spendFocus)
     const valuePriorityLabel = VALUE_PRIORITY_LABELS[valuePriority] || 'overall rewards value'
     const finalDecisionReason =
-      `${card.cardName} ranks highly because it fits your ${focusLabel} spending behavior, aligns with your goal of ${valuePriorityLabel}, and remains competitive on eligibility and fees.`
+      `${card.cardName} ranks highly because it fits your ${focusLabel} spending behavior, aligns strongly with your primary goal of ${valuePriorityLabel}, and remains competitive on eligibility and fees.`
 
     const whyThisCard: WhyThisCardExplanation = {
       headline: `Why ${card.cardName}?`,
@@ -1343,6 +1393,18 @@ export async function GET(request: NextRequest) {
       goalFit: asNumber(parsedRuleScores.goalFit),
       feeFit: asNumber(parsedRuleScores.feeFit),
       diversificationFit: asNumber(parsedRuleScores.diversificationFit),
+      weightsUsed:
+        parsedRuleScores.weightsUsed && typeof parsedRuleScores.weightsUsed === 'object'
+          ? (parsedRuleScores.weightsUsed as RecommendationRuleScores['weightsUsed'])
+          : {
+              eligibilityFit: 0.3,
+              spendFit: 0.25,
+              goalFit: 0.25,
+              feeFit: 0.15,
+              diversificationFit: 0.05,
+              primaryGoalBoost: 1.15,
+              answerInfluence: {},
+            },
       weightedRaw: asNumber(parsedRuleScores.weightedRaw),
       finalScore: asNumber(parsedRuleScores.finalScore),
     }

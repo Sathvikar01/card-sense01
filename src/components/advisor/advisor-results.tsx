@@ -97,9 +97,9 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
         rank === 1 ? 'bg-primary' : rank === 2 ? 'bg-primary/60' : 'bg-primary/30'
       )} />
 
-      <div className="p-5 pl-6 space-y-4">
+      <div className="p-4 pl-5 sm:p-5 sm:pl-6 space-y-4">
         {/* Header row */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <span className="flex items-center justify-center h-6 w-6 rounded-md bg-muted text-[11px] font-bold text-muted-foreground tabular-nums">
@@ -113,18 +113,18 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
         </div>
 
         {/* Key metrics */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg bg-muted/30 p-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Annual Fee</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">
               {card.annualFee === 0 ? 'Free' : `INR ${card.annualFee.toLocaleString('en-IN')}`}
             </p>
           </div>
-          <div className="rounded-lg bg-muted/30 p-2.5">
+          <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Reward Rate</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">{card.rewardRate}%</p>
           </div>
-          <div className="rounded-lg bg-muted/30 p-2.5">
+          <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Est. Value/yr</p>
             <p className="text-sm font-semibold text-primary mt-0.5">
               {card.estimatedAnnualValue > 0 ? `INR ${card.estimatedAnnualValue.toLocaleString('en-IN')}` : '--'}
@@ -150,7 +150,7 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
         )}
 
         {/* Pros & Cons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {card.pros.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Advantages</p>
@@ -218,10 +218,10 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
           </div>
 
           {/* Content */}
-          <div className="space-y-4 px-5 pb-5 pt-4">
+          <div className="space-y-4 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
 
             {/* Header: rank badge + card info + score */}
-            <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={cn(
@@ -237,7 +237,7 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
                 <h3 className="text-base font-semibold leading-tight text-foreground">{card.name}</h3>
               </div>
               {/* Match score badge */}
-              <div className="shrink-0 flex items-center justify-center h-9 w-9 rounded-full border-2 border-primary/20 bg-primary/5 text-sm font-bold text-primary tabular-nums">
+            <div className="shrink-0 flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-primary/20 bg-primary/5 text-sm font-bold text-primary tabular-nums">
                 {card.score}
               </div>
             </div>
@@ -616,7 +616,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {result.cards.map((card, index) => (
             <motion.div
               key={card.id}
