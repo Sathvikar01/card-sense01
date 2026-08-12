@@ -1,12 +1,10 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
@@ -53,7 +51,7 @@ function CategoryTooltip({ active, payload }: CategoryTooltipProps) {
   if (active && payload && payload.length > 0) {
     const { category, amount, percentage } = payload[0].payload
     return (
-      <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
+      <div className="rounded-lg bg-background p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground capitalize">
           {CATEGORY_LABELS[category] || category}
         </p>
@@ -73,14 +71,14 @@ function CategoryTooltip({ active, payload }: CategoryTooltipProps) {
 export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <section>
+        <div>
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <TrendingUp className="h-5 w-5" />
             Spending Breakdown
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h2>
+        </div>
+        <div className="mt-5">
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <TrendingUp className="h-16 w-16 mb-4 text-muted-foreground/30" />
             <p className="text-sm font-medium">No spending data yet</p>
@@ -88,32 +86,31 @@ export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
               Track your spending to see insights here
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     )
   }
 
   const topCategory = data[0]
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <section>
+      <div>
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <TrendingUp className="h-5 w-5" />
           Spending Breakdown
-        </CardTitle>
+        </h2>
         <p className="text-sm text-muted-foreground mt-1">
           % of avg monthly expenditure by category
         </p>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="mt-5">
         <div className="w-full h-[260px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
               margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
               <XAxis
                 dataKey="category"
                 tick={{ fill: '#6b7280', fontSize: 11 }}
@@ -141,7 +138,7 @@ export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
+        <div className="mt-4 grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3 sm:gap-4">
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Top Category</p>
             <p className="text-sm font-semibold text-foreground capitalize">
@@ -157,7 +154,7 @@ export function SpendingSummaryChart({ data }: SpendingSummaryChartProps) {
             <p className="text-sm font-semibold text-foreground">{data.length}</p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

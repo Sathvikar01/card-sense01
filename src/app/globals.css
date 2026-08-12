@@ -160,6 +160,7 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
+    overflow-x: hidden;
     font-family: var(--font-body);
     background-image:
       radial-gradient(ellipse 80% 60% at 70% -10%, oklch(0.90 0.06 270 / 0.25), transparent),
@@ -704,6 +705,104 @@
 
 html.dark {
   color-scheme: dark;
+}
+
+@media (max-width: 640px) {
+  html {
+    overflow-x: hidden;
+  }
+
+  body {
+    min-width: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-slot="button"],
+  [data-slot="select-trigger"] {
+    min-height: 2.75rem;
+  }
+
+  [data-slot="select-trigger"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [data-slot="select-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"] {
+    max-height: min(24rem, calc(100dvh - 5rem));
+  }
+}
+
+/* Calm visual system: keep the interface tactile, quiet, and legible. */
+@layer base {
+  body {
+    background-image: none !important;
+    background-attachment: initial !important;
+  }
+}
+
+@layer components {
+  .cardsense-card,
+  .cardsense-panel,
+  .dash-card,
+  .stat-card-premium,
+  .quick-action-card,
+  .recommendation-card {
+    border-radius: 1rem;
+    border-color: var(--border);
+    background: var(--card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: var(--shadow-soft);
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .cardsense-card::before,
+  .quick-action-card::before {
+    display: none;
+  }
+
+  .cardsense-card:hover,
+  .dash-card:hover,
+  .stat-card-premium:hover,
+  .quick-action-card:hover,
+  .recommendation-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .cardsense-panel {
+    box-shadow: none;
+  }
+
+  .card-holographic::before {
+    display: none;
+  }
+
+  .txn-row:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--card);
+  }
+
+  .glow-primary,
+  .glow-accent {
+    box-shadow: none;
+  }
+
+  .ambient-orb {
+    animation: none;
+    opacity: 0.12;
+  }
+
+  .text-gradient-primary,
+  .text-gradient-gold {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: #b8860b;
+    filter: none;
+  }
 }
 
 button,

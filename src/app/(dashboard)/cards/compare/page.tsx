@@ -431,7 +431,7 @@ export default function CardComparePage() {
         </div>
       </motion.div>
 
-      <div className={cn('grid gap-4', count === 2 ? 'grid-cols-2' : 'grid-cols-3')}>
+      <div className={cn('grid gap-4', count === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3')}>
         {cards.map((card) => (
           <div key={card.id} className="stat-card-premium space-y-3 p-4">
             <p className="truncate text-xs font-medium text-muted-foreground">

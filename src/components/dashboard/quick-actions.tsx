@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
 
 const quickActions = [
   {
@@ -11,7 +10,6 @@ const quickActions = [
     icon: SparkQaSVG,
     href: '/advisor',
     iconColor: 'text-[#b8860b]',
-    hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
   {
     title: 'Track Spending',
@@ -19,7 +17,6 @@ const quickActions = [
     icon: ChartQaSVG,
     href: '/spending',
     iconColor: 'text-emerald-600',
-    hoverGlow: 'group-hover:shadow-emerald-500/10',
   },
   {
     title: 'Browse Cards',
@@ -27,7 +24,6 @@ const quickActions = [
     icon: CardQaSVG,
     href: '/cards',
     iconColor: 'text-blue-600',
-    hoverGlow: 'group-hover:shadow-blue-500/10',
   },
   {
     title: 'Update CIBIL',
@@ -35,7 +31,6 @@ const quickActions = [
     icon: ShieldQaSVG,
     href: '/profile',
     iconColor: 'text-[#b8860b]',
-    hoverGlow: 'group-hover:shadow-[#b8860b]/10',
   },
 ]
 
@@ -59,19 +54,14 @@ export function QuickActions() {
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-4">
         {quickActions.map((action) => {
           const IconComp = action.icon
           return (
             <Link key={action.title} href={action.href} className="group">
-              <motion.div
-                className={`quick-action-card h-full p-4 ${action.hoverGlow}`}
-                whileHover={{ y: -4 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              >
-                <div className="flex items-start gap-3">
+              <div className="flex h-full items-start gap-3 py-3">
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center ${action.iconColor} transition-transform duration-300 group-hover:scale-110`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center ${action.iconColor}`}
                   >
                     <IconComp />
                   </div>
@@ -79,13 +69,8 @@ export function QuickActions() {
                     <h3 className="text-sm font-semibold text-foreground">{action.title}</h3>
                     <p className="mt-0.5 text-xs text-muted-foreground">{action.description}</p>
                   </div>
-                </div>
-
-                <div className="mt-3 flex items-center text-xs font-medium text-[#b8860b] opacity-0 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200 group-hover:opacity-100 group-hover:translate-x-1">
-                  Open
-                  <ArrowRightQaSVG />
-                </div>
-              </motion.div>
+                <ArrowRightQaSVG />
+              </div>
             </Link>
           )
         })}

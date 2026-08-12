@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
-import { AdvisorStepper } from '@/components/advisor/advisor-stepper'
 import { AdvisorLoading } from '@/components/advisor/advisor-loading'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CompareBar } from '@/components/cards/compare-bar'
@@ -15,8 +14,10 @@ import { toast } from 'sonner'
 import type { CreditCardListItem } from '@/types/credit-card'
 import { trackInteraction } from '@/lib/interactions/client'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
+import { FollowUpQuestionStep } from '@/components/advisor/follow-up-question-step'
+import { RESEARCHED_QUESTIONS } from '@/components/advisor/researched-questions'
 
-type FlowStep = 'input' | 'loading' | 'results'
+type FlowStep = 'follow-up' | 'loading' | 'results'
 
 type AdvisorCardResult = {
   id: string
@@ -153,12 +154,14 @@ function toBrowseCards(cards: AdvisorCardResult[]): CreditCardListItem[] {
 export default function AdvisorPage() {
   const store = useAdvisorStore()
 
-  const [step, setStep] = useState<FlowStep>('input')
+  const [step, setStep] = useState<FlowStep>('follow-up')
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [turnstileToken, setTurnstileToken] = useState('')
   const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
+  const [followUpAnswers, setFollowUpAnswers] = useState<Record<string, string>>({})
+  const [monthlySpend, setMonthlySpend] = useState('')
 
   const persistResult = (nextResult: AdvisorResult) => {
     setResult(nextResult)
@@ -282,13 +285,15 @@ export default function AdvisorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleComplete = async () => {
+  const handleComplete = async (answers: Record<string, string>) => {
     if (TURNSTILE_ENABLED && !turnstileToken) {
       const message = 'Please complete the security check before requesting recommendations'
       setError(message)
       toast.error(message)
       return
     }
+
+    const keepTurnstileToken = false
 
     try {
       setIsLoading(true)
@@ -307,64 +312,18 @@ export default function AdvisorPage() {
         },
       })
 
-      const age = (payload.age as number) || 28
-      const annualIncome = (payload.annualIncome as number) || 0
-      const hasFD = payload.hasFixedDeposits as boolean
-      const willingSecured = payload.willingSecuredCard as boolean
-      const topCategories = (payload.topSpendingCategories as string[]) || []
-      const primaryGoal = (payload.primaryGoal as string) || 'rewards_cashback'
-
-      const ageBand = age <= 20 ? '18_20' : age <= 24 ? '21_24' : age <= 30 ? '25_30' : '31_plus'
-      const incomeProfile = annualIncome <= 0
-        ? 'no_personal_income'
-        : annualIncome <= 300000
-          ? 'stipend_or_part_time'
-          : annualIncome <= 600000
-            ? 'stable_income_upto_6l'
-            : 'stable_income_above_6l'
-      const securedReadiness = hasFD ? 'have_fd_now' : willingSecured ? 'can_start_fd' : 'unsecured_only'
-      const spendFocus = topCategories[0] === 'online_shopping' ? 'shopping' : (topCategories[0] || 'shopping')
-      const goalToValue: Record<string, string> = {
-        credit_building: 'build_credit_low_fee',
-        debt_management: 'build_credit_low_fee',
-        low_interest: 'build_credit_low_fee',
-        rewards_cashback: 'cashback_everyday',
-        fuel_savings: 'cashback_everyday',
-        online_shopping: 'cashback_everyday',
-        travel_perks: 'travel_perks',
-        premium_lifestyle: 'travel_perks',
-      }
-
       const enrichedPayload = {
         ...payload,
-        followUpAnswers: {
-          age_band: ageBand,
-          income_profile: incomeProfile,
-          secured_card_readiness: securedReadiness,
-          primary_spend_focus: spendFocus,
-          value_priority: goalToValue[primaryGoal] || 'cashback_everyday',
-          annual_fee_tolerance: store.annualFeeTolerance === 'zero'
-            ? 'free_only'
-            : store.annualFeeTolerance === 'under_500'
-              ? 'up_to_500'
-              : store.annualFeeTolerance === 'under_2000'
-                ? 'up_to_2000'
-                : store.annualFeeTolerance === 'under_5000'
-                  ? 'up_to_5000'
-                  : 'premium_ok',
-          reward_preference: store.preferredRewardType === 'miles' ? 'travel' : store.preferredRewardType,
-          travel_frequency: store.travelFrequency === 'frequently'
-            ? 'frequent'
-            : store.travelFrequency === 'occasionally'
-              ? 'occasional'
-              : 'rare',
-          upi_usage: store.upiUsage,
-          payment_behavior: store.paymentBehavior,
-          discipline_level: store.disciplineLevel,
-          international_spend: store.usesCardAbroad ? 'yes' : 'no',
-          intro_offer_interest: store.interestedInIntroOffers ? 'yes' : 'no',
-          card_complexity: store.cardComplexity,
-        },
+        city: store.city || 'Not provided',
+        primaryBank: store.primaryBank || 'Not provided',
+        monthlySpending: Number(monthlySpend) || 0,
+        monthlySpendEstimate: Number(monthlySpend) || 0,
+        spendingBreakdown: Number(monthlySpend) > 0
+          ? {
+              [answers.primary_spend_focus === 'shopping' ? 'online_shopping' : answers.primary_spend_focus]: Number(monthlySpend),
+            }
+          : payload.spendingBreakdown,
+        followUpAnswers: answers,
       }
 
       const response = await fetch('/api/ai/recommend', {
@@ -376,39 +335,13 @@ export default function AdvisorPage() {
         }),
       })
 
+      const data = await response.json().catch(() => ({}))
       if (!response.ok) {
-        const recommendError = await response.json().catch(() => ({}))
-        if ([400, 401, 403].includes(response.status)) {
-          throw new Error(
-            typeof recommendError.error === 'string'
-              ? recommendError.error
-              : 'Failed to get recommendations'
-          )
-        }
-
-        const beginnerResponse = await fetch('/api/ai/beginner', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (!beginnerResponse.ok) {
-          const errorData = await beginnerResponse.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Failed to get recommendations')
-        }
-
-        const beginnerData = await beginnerResponse.json()
-        const data = beginnerData.data ?? beginnerData
-        const mapped = {
-          analysis: data.overall_analysis || '',
-          cards: mapCards((data.recommendations || data.cards || []) as Record<string, unknown>[]),
-        }
-        persistResult(mapped)
-        toast.success('Recommendations ready')
-        return
+        throw new Error(
+          typeof data.error === 'string' ? data.error : 'Failed to get recommendations'
+        )
       }
 
-      const data = await response.json()
       persistResult({
         analysis: data.analysis || '',
         cards: mapCards((data.cards || []) as Record<string, unknown>[]),
@@ -417,11 +350,11 @@ export default function AdvisorPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to get recommendations'
       setError(message)
-      setStep('input')
+      setStep('follow-up')
       toast.error(message)
     } finally {
       setIsLoading(false)
-      if (TURNSTILE_ENABLED) {
+      if (TURNSTILE_ENABLED && !keepTurnstileToken) {
         setTurnstileToken('')
         setTurnstileWidgetNonce((value) => value + 1)
       }
@@ -436,9 +369,11 @@ export default function AdvisorPage() {
     }
     store.setSavedResult(null)
     store.reset()
-    setStep('input')
+    setStep('follow-up')
     setResult(null)
     setError(null)
+    setFollowUpAnswers({})
+    setMonthlySpend('')
   }
 
   const browseCards = useMemo(() => toBrowseCards(result?.cards || []), [result])
@@ -458,17 +393,27 @@ export default function AdvisorPage() {
         </p>
       </div>
 
-      {error && step === 'input' && (
+      {error && step === 'follow-up' && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      {step === 'input' && (
-        <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
-          <AdvisorStepper onComplete={handleComplete} isLoading={isLoading} />
+      {step === 'follow-up' && (
+        <>
+          <FollowUpQuestionStep
+            questions={RESEARCHED_QUESTIONS}
+            answers={followUpAnswers}
+            monthlySpend={monthlySpend}
+            onAnswer={(questionId, value) => {
+              setFollowUpAnswers((current) => ({ ...current, [questionId]: value }))
+            }}
+            onMonthlySpendChange={setMonthlySpend}
+            onSubmit={() => void handleComplete(followUpAnswers)}
+            isSubmitting={isLoading}
+          />
           {TURNSTILE_ENABLED && (
-            <div className="border-t border-border/60 px-4 pb-4 pt-3 sm:px-6">
+            <div className="pt-2">
               <p className="mb-2 text-xs text-muted-foreground">
                 Complete this quick security check to enable recommendation requests.
               </p>
@@ -481,11 +426,11 @@ export default function AdvisorPage() {
               />
             </div>
           )}
-        </div>
+        </>
       )}
 
       {step === 'loading' && (
-        <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+        <div>
           <AdvisorLoading />
         </div>
       )}
@@ -503,13 +448,13 @@ export default function AdvisorPage() {
           </div>
 
           {result.analysis && (
-            <div className="rounded-xl border border-border/60 bg-white p-4 text-sm leading-relaxed text-foreground/90">
+            <div className="border-y border-border/60 py-4 text-sm leading-relaxed text-foreground/90">
               {result.analysis}
             </div>
           )}
 
           {explainabilityEnabled && (
-            <div className="rounded-2xl border border-border/60 bg-white p-4 sm:p-5">
+            <div className="border-y border-border/60 py-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why these picks</p>
@@ -523,7 +468,7 @@ export default function AdvisorPage() {
                 </Badge>
               </div>
 
-              <div className="mt-4 rounded-xl border border-border/60 bg-background/70 px-3">
+              <div className="mt-4 px-1">
                 <Accordion type="single" collapsible>
                   {result.cards.map((card, index) => {
                     const summary = card.whyThisCard?.summary || card.finalDecisionReason || card.reason

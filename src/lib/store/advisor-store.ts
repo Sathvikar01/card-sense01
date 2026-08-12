@@ -513,7 +513,9 @@ export const useAdvisorStore = create<AdvisorStore>()(
       getApiPayload: () => {
         const s = get()
         const scoreMap: Record<CreditScoreRange, number> = {
-          no_history: 0,
+          // Keep the no-history state valid for the API and let the scoring
+          // rules decide which cards are realistic for a first-time user.
+          no_history: 300,
           below_600: 550,
           '600_649': 625,
           '650_699': 675,

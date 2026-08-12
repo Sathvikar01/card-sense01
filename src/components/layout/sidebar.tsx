@@ -6,7 +6,6 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
 import { CardSenseIcon } from '@/components/shared/logo'
 
 const navigation = [
@@ -24,21 +23,11 @@ export function Sidebar() {
 
   return (
     <div className="hidden md:fixed md:inset-y-0 md:flex md:w-72 md:flex-col md:p-3">
-      <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/30 bg-white/50 px-4 pb-4 pt-5 shadow-xl shadow-black/[0.03] backdrop-blur-2xl">
+      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card px-4 pb-4 pt-5 shadow-sm">
         {/* Gradient glow at top */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#d4a017]/8 via-[#e8c04a]/4 to-transparent"
-        />
-
         {/* Brand */}
         <Link href="/" className="relative z-10 flex items-center gap-3 rounded-xl px-2 py-2">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <CardSenseIcon size={44} />
-          </motion.div>
+          <CardSenseIcon size={44} />
           <div>
             <p className="text-lg font-bold tracking-tight text-foreground">
               Card<span className="text-gradient-gold">Sense</span>
@@ -48,7 +37,7 @@ export function Sidebar() {
         </Link>
 
         {/* Divider */}
-        <div className="relative z-10 mx-2 mt-5 h-[1px] bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+        <div className="relative z-10 mx-2 mt-5 h-px bg-border" />
 
         {/* Navigation */}
         <nav className="relative z-10 mt-5 flex-1 space-y-0.5">
@@ -76,12 +65,7 @@ export function Sidebar() {
                 {isActive && (
                   <>
                     <ChevronRight className="h-3.5 w-3.5 text-[#b8860b]/50" />
-                    <motion.div
-                      layoutId="sidebar-active-bg"
-                      className="absolute inset-0 rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/50"
-                      style={{ zIndex: -1 }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                    />
+                    <span className="absolute inset-0 -z-10 rounded-xl border border-[#d4a017]/30 bg-[#fdf3d7]/50" />
                   </>
                 )}
               </Link>
@@ -90,9 +74,9 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom tip */}
-        <div className="relative z-10 mt-4 overflow-hidden rounded-2xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/60 to-[#fdf3d7]/40 px-4 py-3.5 backdrop-blur-sm">
+        <div className="relative z-10 mt-4 overflow-hidden rounded-xl border border-[#d4a017]/20 bg-[#fdf3d7]/45 px-4 py-3.5">
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#b8860b]">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" fill="white" opacity="0.9" />
               </svg>

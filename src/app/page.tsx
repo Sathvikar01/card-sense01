@@ -90,7 +90,6 @@ export default function HomePage() {
   const row1 = allCardIds.slice(0, 10)
   const row2 = allCardIds.slice(10, 20)
   const heroRef = useRef<HTMLElement>(null)
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
   const [authModal, setAuthModal] = useState<{ open: boolean; redirectTo: string }>({ open: false, redirectTo: '/dashboard' })
 
   const openAuth = (redirectTo: string) => setAuthModal({ open: true, redirectTo })
@@ -110,30 +109,15 @@ export default function HomePage() {
     router.replace(`/auth/callback?${params.toString()}`)
   }, [router])
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!heroRef.current) return
-      const rect = heroRef.current.getBoundingClientRect()
-      setMousePos({
-        x: (e.clientX - rect.left) / rect.width,
-        y: (e.clientY - rect.top) / rect.height,
-      })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
-
   return (
     <div className="min-h-screen overflow-hidden">
       <AuthModal open={authModal.open} onClose={closeAuth} redirectTo={authModal.redirectTo} />
 
       {/* ====== Header ====== */}
-      <header className="relative z-50 border-b border-white/10 bg-white/60 backdrop-blur-2xl">
+      <header className="relative z-50 border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <CardSenseIcon size={40} />
-            </motion.div>
+            <CardSenseIcon size={40} />
             <span className="text-xl font-bold tracking-tight text-foreground">
               Card<span className="text-gradient-gold">Sense</span>
             </span>
@@ -171,8 +155,6 @@ export default function HomePage() {
             <motion.button
               onClick={() => openAuth('/dashboard')}
             className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#b8860b]/25"
-              whileHover={{ scale: 1.02, y: -1 }}
-              whileTap={{ scale: 0.98 }}
             >
               Get Started
               <ArrowRight className="h-4 w-4" />
@@ -184,34 +166,6 @@ export default function HomePage() {
       <main id="main-content" tabIndex={-1} className="outline-none">
         {/* ====== Hero Section ====== */}
         <motion.section ref={heroRef} style={{ opacity: heroOpacity }} className="relative overflow-hidden px-4 pb-4 pt-16 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
-          {/* Mouse-following spotlight */}
-          <div
-            className="pointer-events-none absolute inset-0 transition-all duration-300"
-            style={{
-              background: `radial-gradient(ellipse 600px 400px at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(212, 160, 23, 0.08) 0%, transparent 70%)`,
-            }}
-          />
-
-          {/* Floating background elements */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <motion.div
-              className="absolute -left-20 top-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-[#d4a017]/20 to-transparent blur-3xl"
-              animate={{ y: [0, 30, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.div
-              className="absolute -right-10 top-1/3 h-48 w-48 rounded-full bg-gradient-to-bl from-[#e8c04a]/20 to-transparent blur-2xl"
-              animate={{ y: [0, -20, 0], scale: [1, 0.95, 1] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            />
-            <motion.div
-              className="absolute bottom-1/4 left-1/3 h-32 w-32 rounded-full bg-gradient-to-tr from-blue-200/20 to-transparent blur-2xl"
-              animate={{ y: [0, 15, 0], x: [0, 10, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-            />
-            <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle, #d4a017 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          </div>
-
           <div className="relative mx-auto max-w-7xl">
             <div className="flex flex-col items-center text-center">
               {/* Badge */}
@@ -267,8 +221,6 @@ export default function HomePage() {
                 <motion.button
                   onClick={() => openAuth('/dashboard')}
                   className="group relative inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-8 py-4 text-base font-semibold text-white shadow-xl shadow-[#b8860b]/20"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#e8c04a] opacity-0 transition-opacity group-hover:opacity-100" />
                   <span className="relative">Get Started</span>
@@ -277,8 +229,6 @@ export default function HomePage() {
                 <motion.button
                   onClick={() => openAuth('/cards')}
                   className="group inline-flex items-center gap-2.5 rounded-2xl border-2 border-border/60 bg-white px-8 py-4 text-base font-semibold text-foreground transition-colors hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/50"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   Browse All Cards
                 </motion.button>
@@ -379,8 +329,6 @@ export default function HomePage() {
                   >
                     <motion.div
                       className={`cardsense-card h-full p-7 transition-colors ${point.accentBorder}`}
-                      whileHover={{ y: -6 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                     >
                       <div className="mb-5 flex items-center gap-4">
                         <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${point.iconBg} shadow-lg`}>
@@ -468,8 +416,6 @@ export default function HomePage() {
                 <motion.button
                   onClick={() => openAuth('/dashboard')}
                   className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-[#7a5500] shadow-xl"
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.97 }}
                 >
                   Create Free Account
                   <ArrowRight className="h-5 w-5" />

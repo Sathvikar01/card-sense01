@@ -44,7 +44,7 @@ export function CardsOwnedStack({ cards }: CardsOwnedStackProps) {
     return (
       <Link
         href="/profile"
-        className="dash-card relative overflow-hidden p-6 block group transition-[color,background-color,border-color,opacity,box-shadow,transform,width] hover:ring-2 hover:ring-[#d4a017]/30"
+        className="block px-1 py-2 group"
       >
         <div className="flex items-center justify-between">
           <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground/70">
@@ -70,7 +70,7 @@ export function CardsOwnedStack({ cards }: CardsOwnedStackProps) {
   return (
     <Link
       href="/profile"
-      className="dash-card relative overflow-hidden p-6 block group transition-[color,background-color,border-color,opacity,box-shadow,transform,width] hover:ring-2 hover:ring-[#d4a017]/30"
+      className="block px-1 py-2 group"
     >
       <div className="flex items-center justify-between">
         <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground/70">

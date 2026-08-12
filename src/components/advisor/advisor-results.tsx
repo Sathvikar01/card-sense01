@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { CardDetailLink } from '@/components/cards/card-detail-link'
-import { LayoutGrid, List, TrendingUp, Award, ArrowRight, GitCompare, Wallet, Shield, Target, Briefcase, User } from 'lucide-react'
+import { TrendingUp, Award, ArrowRight, GitCompare, Wallet, Shield, Target, Briefcase, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAnalysisStore } from '@/store/use-analysis-store'
 import { motion } from 'framer-motion'
@@ -114,7 +113,7 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
     : []
 
   return (
-    <div className="group relative rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm overflow-hidden transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-300 hover:border-primary/30 hover:shadow-[0_8px_32px_-8px_oklch(0.30_0.04_270/0.14)]">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       {/* Rank stripe */}
       <div className={cn(
         'absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl',
@@ -319,15 +318,12 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
   const explanationSnippet = card.whyThisCard?.summary || card.finalDecisionReason || card.reason
 
   return (
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-    >
+    <div>
       <CardDetailLink cardId={card.id} className="group block">
-        <div className="stat-card-premium overflow-hidden transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-violet-500/5">
+        <div className="rounded-xl bg-card overflow-hidden">
 
           {/* Card visual — identical to CardTile, no overlays */}
-          <div className="flex justify-center bg-gradient-to-b from-violet-50/30 to-transparent px-6 pb-2 pt-6">
+          <div className="flex justify-center px-6 pb-4 pt-6">
             <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank} interactive />
           </div>
 
@@ -339,7 +335,7 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
               <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={cn(
-                    'inline-flex items-center rounded-full px-2 py-[3px] text-[10px] font-bold text-white bg-gradient-to-r',
+                    'inline-flex items-center rounded-md border px-2 py-[3px] text-[10px] font-bold text-[#7a5500] bg-[#fdf3d7] border-[#d4a017]/20',
                     RANK_GRADIENTS[rank - 1] ?? RANK_GRADIENTS[2]
                   )}>
                     {rankLabel}
@@ -367,7 +363,7 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
             </div>
 
             {/* Key metrics — same pattern as CardTile */}
-            <div className="space-y-2.5 border-t border-border/30 pt-3">
+            <div className="space-y-2.5 pt-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Annual Fee</span>
                 <span className="font-semibold text-foreground">
@@ -427,14 +423,14 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
             />
 
             {/* CTA — same as CardTile */}
-            <div className="flex items-center justify-between border-t border-border/30 pt-3">
+            <div className="flex items-center justify-between pt-1">
               <span className="text-xs font-medium text-violet-600">View Details</span>
-              <ArrowRight className="h-3.5 w-3.5 text-violet-400 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="h-3.5 w-3.5 text-[#b8860b]" />
             </div>
           </div>
         </div>
       </CardDetailLink>
-    </motion.div>
+    </div>
   )
 }
 
@@ -521,7 +517,7 @@ function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-muted/20 p-5 space-y-4">
+    <div className="py-3 space-y-3">
       {/* Header */}
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Your Profile</p>
 
@@ -529,7 +525,7 @@ function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
       {(data.monthlyIncome || data.creditScore) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {data.monthlyIncome && (
-            <div className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/70 p-4">
+            <div className="flex items-start gap-3 py-2">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-600">
                 <Wallet className="h-4 w-4" />
               </div>
@@ -543,7 +539,7 @@ function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
             </div>
           )}
           {data.creditScore && (
-            <div className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/70 p-4">
+            <div className="flex items-start gap-3 py-2">
               <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', scoreStyle.iconBg)}>
                 <Shield className="h-4 w-4" />
               </div>
@@ -564,7 +560,7 @@ function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
       {secondaryItems.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {secondaryItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-2.5 rounded-xl border border-border/40 bg-background/50 px-3 py-2.5">
+            <div key={item.label} className="flex items-center gap-2.5 px-1 py-2">
               <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-md', item.iconBg)}>
                 {item.icon}
               </div>
@@ -586,7 +582,7 @@ function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
               const key = cat.toLowerCase().replace(/\s+/g, '_')
               const pillClass = SPENDING_PILL_COLORS[key] ?? SPENDING_PILL_COLORS.other
               return (
-                <span key={cat} className={cn('rounded-full border px-2.5 py-1 text-[11px] font-medium', pillClass)}>
+                <span key={cat} className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium', pillClass)}>
                   {cat.split(' ').map(cap).join(' ')}
                 </span>
               )
@@ -608,7 +604,6 @@ interface Props {
 }
 
 export function AdvisorResults({ result, onStartOver }: Props) {
-  const [viewMode, setViewMode] = useState<'detailed' | 'grid'>('detailed')
   const router = useRouter()
   const { setComparisonFromCards } = useAnalysisStore()
 
@@ -673,35 +668,8 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         </Button>
       </div>
 
-      {/* View mode toggle + Compare */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 w-fit">
-          <button
-            onClick={() => setViewMode('detailed')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
-              viewMode === 'detailed'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <List className="h-3.5 w-3.5" />
-            Detailed
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
-              viewMode === 'grid'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            Card View
-          </button>
-        </div>
-
+      {/* Compare */}
+      <div className="flex justify-end">
         {result.cards.length >= 2 && (
           <Button
             variant="outline"
@@ -718,7 +686,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
       {/* Profile summary */}
       {result.profileSummary && (
         typeof result.profileSummary === 'string' ? (
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
+          <div className="py-4">
             <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Profile summary</p>
             <p className="text-sm text-foreground/80 leading-relaxed">{result.profileSummary}</p>
           </div>
@@ -729,7 +697,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
 
         {/* Analysis */}
         {result.analysis && (
-          <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5">
+          <div className="py-4">
             <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Analysis</p>
             <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{result.analysis}</p>
           </div>
@@ -742,7 +710,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
           card.finalDecisionReason ||
           card.whyThisCard?.summary
         ) && (
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 sm:p-5">
+          <div className="py-4">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Transparency</p>
             <p className="mt-2 text-sm text-foreground/80 leading-relaxed">
               Your match score is built from five signals: eligibility, spend alignment, goal fit, fee comfort, and portfolio balance.
@@ -752,26 +720,18 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         )}
 
       {/* Card list / grid */}
-      {viewMode === 'detailed' ? (
-        <div className="space-y-4">
-          {result.cards.map((card, index) => (
-            <ResultCard key={card.id} card={card} rank={index + 1} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-          {result.cards.map((card, index) => (
-            <motion.div
-              key={card.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <RecommendedCardGridTile card={card} rank={index + 1} />
-            </motion.div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+        {result.cards.map((card, index) => (
+          <motion.div
+            key={card.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+          >
+            <RecommendedCardGridTile card={card} rank={index + 1} />
+          </motion.div>
+        ))}
+      </div>
 
       {/* Bottom actions */}
       <div className="flex items-center justify-center gap-3 pt-4">

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
+import { Settings as SettingsIcon } from 'lucide-react'
 
 interface TopbarProps {
   onMenuClick?: () => void
@@ -46,7 +47,7 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
 
   return (
     <div className="sticky top-0 z-40 px-4 pt-3 sm:px-6 lg:px-8">
-      <div className="flex h-16 items-center gap-3 rounded-2xl border border-white/30 bg-white/50 px-3 shadow-lg shadow-black/[0.03] backdrop-blur-2xl sm:px-5">
+      <div className="flex h-16 items-center gap-3 rounded-2xl border border-border bg-card px-3 shadow-sm sm:px-5">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
           <MenuSVG />
         </Button>
@@ -76,14 +77,14 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
               >
                 <Avatar className="h-8 w-8 border-2 border-violet-200/50 ring-2 ring-violet-100/30">
                   <AvatarImage src="" alt={displayName} />
-                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-[#b8860b] text-white text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <span className="hidden text-sm font-medium text-foreground sm:inline">{displayName.split(' ')[0]}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-60 rounded-xl border-white/40 bg-white/80 backdrop-blur-2xl" align="end">
+            <DropdownMenuContent className="w-60 rounded-xl border-border bg-card" align="end">
               <DropdownMenuLabel>
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium">{displayName}</p>
@@ -95,7 +96,7 @@ export function Topbar({ onMenuClick, userName = 'User', userEmail = '' }: Topba
                 <PersonSVG />
                 <span className="ml-2">Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/profile')}>
+              <DropdownMenuItem onClick={() => router.push('/settings')}>
                 <GearSVG />
                 <span className="ml-2">Settings</span>
               </DropdownMenuItem>
@@ -152,12 +153,7 @@ function PersonSVG() {
 }
 
 function GearSVG() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-    </svg>
-  )
+  return <SettingsIcon aria-hidden="true" className="h-4 w-4" />
 }
 
 function LogoutSVG() {

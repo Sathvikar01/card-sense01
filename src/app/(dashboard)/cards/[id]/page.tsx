@@ -2,10 +2,9 @@ import { createPublicServerClient } from '@/lib/supabase/public-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
 import {
   ArrowLeft,
   ExternalLink,
@@ -92,8 +91,8 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        <section className="lg:col-span-2">
+          <div>
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">{cardData.bank_name}</p>
@@ -107,8 +106,8 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                 </div>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          </div>
+          <div className="mt-5 space-y-4">
             <div className="flex justify-center py-4">
               <CreditCardVisual
                 cardId={cardData.id}
@@ -122,20 +121,19 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
             {cardData.description && (
               <p className="text-muted-foreground">{cardData.description}</p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
+          <section className="pl-5">
+            <div>
               <CardTitle className="text-lg">Quick Info</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            </div>
+            <div className="mt-4 space-y-3">
               <div className="flex justify-between items-start">
                 <span className="text-sm text-muted-foreground">Joining Fee</span>
                 <span className="font-semibold">{formatFee(cardData.joining_fee)}</span>
               </div>
-              <Separator />
               <div className="flex justify-between items-start">
                 <span className="text-sm text-muted-foreground">Annual Fee</span>
                 <span className="font-semibold">{formatFee(cardData.annual_fee)}</span>
@@ -152,7 +150,6 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   </div>
                 </>
               )}
-              <Separator />
               <div className="flex justify-between items-start">
                 <span className="text-sm text-muted-foreground">Estimated Base Return</span>
                 <span className="font-semibold">
@@ -161,7 +158,6 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
               </div>
               {cardData.min_income_salaried && (
                 <>
-                  <Separator />
                   <div className="flex justify-between items-start">
                     <span className="text-sm text-muted-foreground">Min Income</span>
                     <span className="font-semibold">
@@ -170,8 +166,8 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
           {cardData.apply_url && (
             <Button className="w-full" size="lg" asChild>
@@ -185,7 +181,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="mb-8 grid w-full grid-cols-2 sm:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
           <TabsTrigger value="benefits">Benefits</TabsTrigger>
@@ -196,14 +192,14 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {cardData.pros && cardData.pros.length > 0 && (
-              <Card>
-                <CardHeader>
+              <section className="pt-2">
+                <div className="mb-3">
                   <CardTitle className="flex items-center gap-2 text-green-600">
                     <CheckCircle2 className="h-5 w-5" />
                     Pros
                   </CardTitle>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div>
                   <ul className="space-y-2">
                     {cardData.pros.map((pro, index) => (
                       <li key={index} className="flex items-start gap-2">
@@ -212,19 +208,19 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                       </li>
                     ))}
                   </ul>
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             )}
 
             {cardData.cons && cardData.cons.length > 0 && (
-              <Card>
-                <CardHeader>
+              <section className="pt-2">
+                <div className="mb-3">
                   <CardTitle className="flex items-center gap-2 text-red-600">
                     <XCircle className="h-5 w-5" />
                     Cons
                   </CardTitle>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div>
                   <ul className="space-y-2">
                     {cardData.cons.map((con, index) => (
                       <li key={index} className="flex items-start gap-2">
@@ -233,20 +229,20 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                       </li>
                     ))}
                   </ul>
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             )}
           </div>
 
           {cardData.best_for && cardData.best_for.length > 0 && (
-            <Card>
-              <CardHeader>
+            <section className="pt-2">
+              <div className="mb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Info className="h-5 w-5" />
                   Best For
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div>
                 <div className="flex flex-wrap gap-2">
                   {cardData.best_for.map((tag, index) => (
                     <Badge key={index} variant="secondary">
@@ -254,20 +250,20 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                     </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           )}
         </TabsContent>
 
         <TabsContent value="rewards" className="space-y-6">
-          <Card>
-            <CardHeader>
+          <section className="pt-2">
+            <div className="mb-3">
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5" />
                 Reward Structure
               </CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <span className="font-medium">Estimated Base Return</span>
@@ -278,7 +274,6 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
 
                 {cardData.reward_rate_categories && Object.keys(cardData.reward_rate_categories).length > 0 && (
                   <>
-                    <Separator />
                     <div className="space-y-2">
                       <h4 className="font-semibold">Category-wise Rewards</h4>
                       <div className="grid gap-2">
@@ -300,18 +295,18 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   </>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
           {cardData.milestone_benefits && Object.keys(cardData.milestone_benefits).length > 0 && (
-            <Card>
-              <CardHeader>
+            <section className="pt-2">
+              <div className="mb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Gift className="h-5 w-5" />
                   Milestone Benefits
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div>
                 <div className="space-y-3">
                   {Object.entries(cardData.milestone_benefits).map(([key, milestone]) => (
                     <div key={key} className="p-3 border rounded-lg">
@@ -329,21 +324,21 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           )}
         </TabsContent>
 
         <TabsContent value="benefits" className="space-y-6">
           {cardData.welcome_benefits && (
-            <Card>
-              <CardHeader>
+            <section className="pt-2">
+              <div className="mb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Gift className="h-5 w-5" />
                   Welcome Benefits
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div>
                 <div className="space-y-3">
                   {cardData.welcome_benefits.description && (
                     <p className="text-sm">{cardData.welcome_benefits.description}</p>
@@ -369,18 +364,18 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           )}
 
-          <Card>
-            <CardHeader>
+          <section className="pt-2">
+            <div className="mb-3">
               <CardTitle className="flex items-center gap-2">
                 <Plane className="h-5 w-5" />
                 Lounge Access
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            </div>
+            <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Type</span>
                 <span className="font-semibold capitalize">{cardData.lounge_access.replace(/_/g, ' ')}</span>
@@ -394,21 +389,21 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   <span className="font-semibold">{cardData.lounge_visits_per_quarter}</span>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
           {(cardData.travel_insurance_cover ||
             cardData.purchase_protection_cover ||
             cardData.golf_access ||
             cardData.concierge_service) && (
-            <Card>
-              <CardHeader>
+            <section className="pt-2">
+              <div className="mb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
                   Insurance & Premium Services
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+              </div>
+              <div className="space-y-3">
                 {cardData.travel_insurance_cover && cardData.travel_insurance_cover > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Travel Insurance</span>
@@ -437,16 +432,16 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                     <Badge variant="secondary">Available</Badge>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           )}
 
           {(cardData.fuel_surcharge_waiver || cardData.movie_benefits || cardData.dining_benefits) && (
-            <Card>
-              <CardHeader>
+            <section className="pt-2">
+              <div className="mb-3">
                 <CardTitle>Additional Benefits</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+              </div>
+              <div className="space-y-3">
                 {cardData.fuel_surcharge_waiver && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -478,20 +473,20 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                     <p className="text-sm text-muted-foreground ml-6">{cardData.dining_benefits}</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           )}
         </TabsContent>
 
         <TabsContent value="fees" className="space-y-6">
-          <Card>
-            <CardHeader>
+          <section className="pt-2">
+            <div className="mb-3">
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
                 Fee Structure
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            </div>
+            <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-sm text-muted-foreground">Joining Fee</span>
@@ -516,23 +511,22 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
               </div>
               {cardData.forex_markup && (
                 <>
-                  <Separator />
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Forex Markup</span>
                     <span className="font-semibold">{cardData.forex_markup}%</span>
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </TabsContent>
 
         <TabsContent value="eligibility" className="space-y-6">
-          <Card>
-            <CardHeader>
+          <section className="pt-2">
+            <div className="mb-3">
               <CardTitle>Eligibility Criteria</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </div>
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cardData.min_income_salaried && (
                   <div>
@@ -561,7 +555,6 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   <p className="font-semibold">{cardData.min_age} - {cardData.max_age} years</p>
                 </div>
               </div>
-              <Separator />
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   {cardData.requires_itr ? (
@@ -588,8 +581,8 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   <span className="text-sm">EMI Conversion Available</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </TabsContent>
       </Tabs>
     </div>

@@ -23,6 +23,7 @@ import {
   SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet'
+import { Settings as SettingsIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { clearPrivateClientData } from '@/lib/privacy/client-data'
@@ -90,7 +91,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
     >
       <Avatar className="h-8 w-8 border-2 border-[#d4a017]/40 ring-2 ring-[#d4a017]/15">
         <AvatarImage src="" alt={displayName} />
-        <AvatarFallback className="bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-xs font-semibold text-white">
+        <AvatarFallback className="bg-[#b8860b] text-xs font-semibold text-white">
           {initials}
         </AvatarFallback>
       </Avatar>
@@ -100,14 +101,12 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      <div className="border-b border-border/40 bg-white/70 backdrop-blur-xl">
+      <div className="border-b border-border bg-card">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
 
           {/* Brand */}
           <Link href="/dashboard" className="flex shrink-0 items-center gap-2.5">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <CardSenseIcon size={34} />
-            </motion.div>
+            <CardSenseIcon size={34} />
             <span className="text-lg font-bold tracking-tight text-foreground">
               Card<span className="text-gradient-gold">Sense</span>
             </span>
@@ -131,7 +130,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
                   {isActive && (
                     <motion.div
                       layoutId="navbar-active-indicator"
-                      className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a017]"
+                      className="absolute inset-x-1 -bottom-[13px] h-0.5 bg-[#b8860b]"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -152,7 +151,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
               {isAdvisorActive && (
                 <motion.div
                   layoutId="navbar-active-indicator"
-                  className="absolute inset-x-1 -bottom-[13px] h-0.5 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a017]"
+                  className="absolute inset-x-1 -bottom-[13px] h-0.5 bg-[#b8860b]"
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
@@ -166,7 +165,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
               <DropdownMenuTrigger asChild>
                 {profileTriggerButton}
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-60 rounded-xl border-border/40 bg-white/90 backdrop-blur-2xl" align="end">
+              <DropdownMenuContent className="w-60 rounded-xl border-border bg-card" align="end">
                 <DropdownMenuLabel>
                   <div className="space-y-0.5">
                     <p className="text-sm font-medium">{displayName}</p>
@@ -200,7 +199,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
 
       {/* Mobile sheet menu */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-80 overflow-y-auto border-r-border/30 bg-white/95 p-0 backdrop-blur-2xl">
+        <SheetContent side="left" className="w-80 overflow-y-auto border-r-border/30 bg-card p-0">
           <SheetHeader className="border-b border-border/30 px-5 py-4">
             <SheetTitle asChild>
               <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
@@ -239,7 +238,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
 
           {/* Bottom tip */}
           <div className="mt-auto border-t border-border/30 p-4">
-              <div className="overflow-hidden rounded-2xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/60 to-[#fdf3d7]/40 px-4 py-3.5">
+              <div className="overflow-hidden rounded-xl border border-[#d4a017]/20 bg-[#fdf3d7]/45 px-4 py-3.5">
               <div className="flex items-start gap-3">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0 text-[#b8860b]">
                   <path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="currentColor" strokeWidth="1.2" fill="none" />
@@ -341,21 +340,11 @@ function MenuSVG() {
 }
 
 function GearNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
-      <path d="M14.6 11.15l1 .58a.56.56 0 01.2.77l-1.12 1.95a.56.56 0 01-.77.2l-1-.58c-.37.3-.78.55-1.23.72v1.17a.56.56 0 01-.56.56h-2.24a.56.56 0 01-.56-.56v-1.17c-.45-.17-.86-.42-1.23-.72l-1 .58a.56.56 0 01-.77-.2L4.2 12.5a.56.56 0 01.2-.77l1-.58a5.06 5.06 0 010-1.42l-1-.58a.56.56 0 01-.2-.77l1.12-1.95a.56.56 0 01.77-.2l1 .58c.37-.3.78-.55 1.23-.72V4.92a.56.56 0 01.56-.56h2.24c.31 0 .56.25.56.56v1.17c.45.17.86.42 1.23.72l1-.58a.56.56 0 01.77.2l1.12 1.95a.56.56 0 01-.2.77l-1 .58a5.06 5.06 0 010 1.42z" stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  )
+  return <SettingsIcon aria-hidden="true" className={cn('h-[18px] w-[18px]', active && 'fill-[#b8860b]/10')} />
 }
 
 function SettingsNavSVG() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M8 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M13.05 10.13l.9.52a.5.5 0 01.18.68l-1 1.74a.5.5 0 01-.68.18l-.9-.52a4.47 4.47 0 01-1.1.64v1.04a.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5v-1.04a4.47 4.47 0 01-1.1-.64l-.9.52a.5.5 0 01-.68-.18l-1-1.74a.5.5 0 01.18-.68l.9-.52a4.5 4.5 0 010-1.26l-.9-.52a.5.5 0 01-.18-.68l1-1.74a.5.5 0 01.68-.18l.9.52a4.47 4.47 0 011.1-.64V4.59a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1.04c.4.16.77.37 1.1.64l.9-.52a.5.5 0 01.68.18l1 1.74a.5.5 0 01-.18.68l-.9.52a4.5 4.5 0 010 1.26z" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  )
+  return <SettingsIcon aria-hidden="true" className="h-4 w-4" />
 }
 
 function LogoutSVG() {

@@ -5,11 +5,13 @@ import { usePathname } from 'next/navigation'
 import { MessageCircle, X, Send, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import ReactMarkdown from 'react-markdown'
+import { useAnalysisStore } from '@/store/use-analysis-store'
 
 const INITIAL_MESSAGE = { role: 'assistant' as const, text: 'Hi! I\'m your CardSense AI assistant. Ask me anything about credit cards, rewards, or your finances.' }
 
 export function ChatbotWidget() {
   const pathname = usePathname()
+  const comparedCardCount = useAnalysisStore((state) => state.comparedCardIds.length)
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
@@ -92,7 +94,7 @@ export function ChatbotWidget() {
         <div
           role="dialog"
           aria-label="CardSense Assistant"
-          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 flex max-h-[70dvh] flex-col overflow-hidden overscroll-contain rounded-2xl border bg-background shadow-xl sm:left-auto sm:right-4 sm:w-96"
+          className={`fixed left-3 right-3 z-50 flex max-h-[70dvh] flex-col overflow-hidden overscroll-contain rounded-2xl border bg-background shadow-xl sm:left-auto sm:right-4 sm:w-96 ${comparedCardCount > 0 ? 'bottom-[calc(14rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'}`}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white">
@@ -175,7 +177,7 @@ export function ChatbotWidget() {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? 'Close CardSense Assistant' : 'Open CardSense Assistant'}
         aria-expanded={open}
-        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-[#d4a017]/30 bg-background text-[#b8860b] shadow-lg transition-[background-color,color,transform] hover:-translate-y-0.5 hover:bg-[#fdf3d7] hover:text-[#a07808] focus-visible:ring-2 focus-visible:ring-[#d4a017] md:bottom-6 md:right-6"
+        className={`fixed right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-[#d4a017]/30 bg-background text-[#b8860b] shadow-lg transition-[background-color,color,transform] hover:-translate-y-0.5 hover:bg-[#fdf3d7] hover:text-[#a07808] focus-visible:ring-2 focus-visible:ring-[#d4a017] md:bottom-6 md:right-6 ${comparedCardCount > 0 ? 'bottom-[calc(14rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(5rem+env(safe-area-inset-bottom))]'}`}
       >
         {open ? <X aria-hidden="true" className="h-5 w-5" /> : <MessageCircle aria-hidden="true" className="h-5 w-5" />}
       </button>

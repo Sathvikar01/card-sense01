@@ -250,7 +250,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] bg-black/45"
             onClick={handleClose}
           />
 
@@ -269,7 +269,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
               role="dialog"
               aria-modal="true"
               aria-labelledby="auth-dialog-title"
-              className="relative h-[580px] max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden overscroll-contain rounded-3xl bg-white shadow-2xl shadow-black/20 dark:bg-gray-950"
+              className="relative h-[580px] max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden overscroll-contain rounded-2xl border border-border bg-card text-card-foreground shadow-lg"
               onClick={(event) => event.stopPropagation()}
             >
               {/* Close button */}
@@ -278,7 +278,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                 type="button"
                 aria-label="Close authentication dialog"
                 onClick={handleClose}
-                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-violet-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
@@ -299,10 +299,10 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       <div className="mx-auto mb-3 flex justify-center">
                         <CardSenseIcon size={48} />
                       </div>
-                      <h2 id="auth-dialog-title" className="text-xl font-bold text-gray-900 dark:text-white">
+                      <h2 id="auth-dialog-title" className="text-xl font-semibold text-foreground">
                         {tab === 'login' ? 'Welcome back' : 'Create your account'}
                       </h2>
-                      <p className="mt-1 text-sm text-gray-500 leading-snug">
+                      <p className="mt-1 text-sm leading-snug text-muted-foreground">
                         {tab === 'login'
                           ? 'Sign in to access your card recommendations'
                           : 'Get started with personalized card matching'}
@@ -310,14 +310,14 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     </div>
 
                     {/* Tab switcher */}
-                    <div className="mx-8 mt-5 flex rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+                    <div className="mx-8 mt-5 flex border-b border-border">
                       <button
                         type="button"
                         onClick={() => switchTab('login')}
-                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-[background-color,color,box-shadow] ${
+                        className={`flex-1 border-b-2 py-2 text-sm font-medium transition-colors ${
                           tab === 'login'
-                            ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                            ? 'border-[#b8860b] text-foreground'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
                         }`}
                       >
                         Sign In
@@ -325,10 +325,10 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       <button
                         type="button"
                         onClick={() => switchTab('signup')}
-                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-[background-color,color,box-shadow] ${
+                        className={`flex-1 border-b-2 py-2 text-sm font-medium transition-colors ${
                           tab === 'signup'
-                            ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                            ? 'border-[#b8860b] text-foreground'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
                         }`}
                       >
                         Sign Up
@@ -380,7 +380,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           />
 
                           {tab === 'signup' && TURNSTILE_ENABLED && (
-                            <div className="rounded-lg border border-gray-200 p-2 dark:border-gray-700">
+                              <div className="rounded-lg border border-border p-2">
                               <TurnstileWidget
                                 key={turnstileWidgetNonce}
                                 siteKey={TURNSTILE_SITE_KEY}
@@ -397,7 +397,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                               <Link
                                 href="/forgot-password"
                                 onClick={handleClose}
-                                className="text-xs text-violet-600 hover:text-violet-500"
+                                className="text-xs text-[#9a7208] hover:text-[#7f5e06]"
                               >
                                 Forgot password?
                               </Link>
@@ -406,7 +406,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
 
                           <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500"
+                            className="w-full bg-[#b8860b] text-white hover:bg-[#a07808]"
                             disabled={isLoading || isGoogleLoading}
                           >
                             {isLoading
@@ -427,7 +427,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           <span className="w-full border-t border-gray-200 dark:border-gray-700" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-gray-400 dark:bg-gray-950">Or continue with</span>
+                          <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
                         </div>
                       </div>
 
@@ -465,16 +465,16 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       type="button"
                       aria-label="Back to account form"
                       onClick={() => setStep('form')}
-                      className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-gray-500 transition-colors hover:text-gray-700"
+                      className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <ArrowLeft aria-hidden="true" className="h-4 w-4" />
                     </button>
 
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 border border-violet-100">
-                      <Mail className="h-7 w-7 text-violet-600" />
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl border border-[#b8860b]/25 bg-[#b8860b]/10">
+                      <Mail className="h-7 w-7 text-[#9a7208]" />
                     </div>
 
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Check your email</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Check your email</h2>
                     <p className="mt-2 text-center text-sm text-gray-500 max-w-xs">
                       We sent a 6-digit code to<br />
                       <span className="font-semibold text-gray-700">{pendingEmail}</span>
@@ -495,13 +495,13 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           value={digit}
                           onChange={(e) => handleOtpChange(i, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                          className="h-14 w-11 rounded-xl border-2 border-gray-200 bg-gray-50 text-center text-xl font-bold text-gray-900 transition-[border-color,background-color] focus:border-violet-500 focus:bg-white focus-visible:ring-2 focus-visible:ring-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="h-14 w-11 rounded-lg border-2 border-border bg-muted/30 text-center text-xl font-bold text-foreground transition-[border-color,background-color] focus:border-[#b8860b] focus:bg-background focus-visible:ring-2 focus-visible:ring-[#b8860b]/40"
                         />
                       ))}
                     </div>
 
                     <Button
-                      className="mt-7 w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500"
+                      className="mt-7 w-full bg-[#b8860b] text-white hover:bg-[#a07808]"
                       onClick={handleVerifyOtp}
                       disabled={isVerifying || otp.join('').length < 6}
                     >
@@ -518,7 +518,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       <button
                         type="button"
                         onClick={handleResendOtp}
-                        className="font-medium text-violet-600 hover:text-violet-500"
+                        className="font-medium text-[#9a7208] hover:text-[#7f5e06]"
                       >
                         Resend code
                       </button>

@@ -112,7 +112,7 @@ type RecommendationCardResult = {
 }
 
 const recommendationInputSchema = z.object({
-  cibilScore: z.coerce.number().min(300).max(900),
+  cibilScore: z.coerce.number().min(0).max(900),
   monthlyIncome: z.coerce.number().nonnegative(),
   annualIncome: z.coerce.number().nonnegative(),
   employmentType: z.string().min(1),
@@ -507,13 +507,15 @@ const fetchCatalog = async (supabase: Awaited<ReturnType<typeof createClient>>) 
     .limit(100)
 
   if (error) {
-    if (isMissingCreditCardsTableError(error.message)) {
-      return {
-        cards: mapLocalCatalog(),
-        source: 'local_fallback' as CatalogSource,
-      }
+    // The recommendation engine has a bundled catalog. A database outage or
+    // an older schema must not turn a local scoring request into a 500.
+    if (!isMissingCreditCardsTableError(error.message)) {
+      console.warn('Card catalog query failed; using bundled catalog:', error.message)
     }
-    throw new Error(`Failed to fetch card catalog: ${error.message}`)
+    return {
+      cards: mapLocalCatalog(),
+      source: 'local_fallback' as CatalogSource,
+    }
   }
 
   if (!data || data.length === 0) {
@@ -1039,6 +1041,8 @@ const saveRecommendation = async (params: {
     rank: index + 1,
   }))
 
+  // Use the base table contract first. Optional compatibility columns vary
+  // between deployed Supabase schemas and must not prevent saving a result.
   const recommendationPayloads: Array<Record<string, unknown>> = [
     {
       user_id: userId,
@@ -1046,24 +1050,7 @@ const saveRecommendation = async (params: {
       input_snapshot: input,
       recommended_cards: normalizedCards,
       ai_analysis_text: analysis,
-      ai_analysis: analysis,
       model_used: model,
-    },
-    {
-      user_id: userId,
-      recommendation_type: 'experienced',
-      input_snapshot: input,
-      recommended_cards: normalizedCards,
-      ai_analysis: analysis,
-      model_used: model,
-    },
-    {
-      user_id: userId,
-      flow_type: 'experienced_user',
-      input_data: input,
-      recommended_cards: normalizedCards,
-      ai_analysis: analysis,
-      ai_model_used: model,
     },
   ]
 

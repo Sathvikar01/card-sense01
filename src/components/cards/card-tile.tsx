@@ -6,7 +6,6 @@ import { CardDetailLink } from './card-detail-link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CreditCardVisual } from './credit-card-visual'
-import { motion } from 'framer-motion'
 import { useAnalysisStore } from '@/store/use-analysis-store'
 import { cn } from '@/lib/utils'
 
@@ -35,11 +34,7 @@ export function CardTile({ card }: CardTileProps) {
   }
 
   return (
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="relative"
-    >
+    <div className="relative">
       {/* Compare toggle — sits above the link so it doesn't navigate */}
       <Button
         type="button"
@@ -72,12 +67,12 @@ export function CardTile({ card }: CardTileProps) {
       <CardDetailLink cardId={card.id} className="group block">
         <div
           className={cn(
-            'stat-card-premium overflow-hidden transition-[box-shadow] duration-300 group-hover:shadow-xl group-hover:shadow-violet-500/5',
+            'stat-card-premium overflow-hidden',
             isCompared && 'ring-2 ring-[#b8860b]/40 ring-offset-1'
           )}
         >
           {/* Card visual */}
-          <div className="flex justify-center bg-gradient-to-b from-violet-50/30 to-transparent px-6 pb-2 pt-6">
+          <div className="flex justify-center border-b border-border/50 px-6 pb-4 pt-6">
             <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank_name} interactive />
           </div>
 
@@ -89,13 +84,13 @@ export function CardTile({ card }: CardTileProps) {
                 <h3 className="text-base font-semibold leading-tight text-foreground">{card.card_name}</h3>
               </div>
               {card.popularity_score >= 90 && (
-                <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-2.5 py-0.5 text-[0.55rem] uppercase tracking-wide text-white border-0 shadow-sm">
+                <Badge className="bg-[#fdf3d7] px-2.5 py-0.5 text-[0.55rem] uppercase tracking-wide text-[#7a5500] border-[#d4a017]/20">
                   Highly Rated
                 </Badge>
               )}
             </div>
 
-            <Badge variant="outline" className="rounded-full border-violet-200/50 bg-violet-50/50 text-[0.6rem] text-violet-700">
+            <Badge variant="outline" className="rounded-md border-border bg-muted/40 text-[0.6rem] text-muted-foreground">
               {formatCardType(card.card_type)}
             </Badge>
 
@@ -134,12 +129,12 @@ export function CardTile({ card }: CardTileProps) {
 
             {/* CTA */}
             <div className="flex items-center justify-between border-t border-border/30 pt-3">
-              <span className="text-xs font-medium text-violet-600">View Details</span>
-              <ArrowRight className="h-3.5 w-3.5 text-violet-400 transition-transform group-hover:translate-x-1" />
+              <span className="text-xs font-medium text-[#b8860b]">View Details</span>
+              <ArrowRight className="h-3.5 w-3.5 text-[#b8860b]" />
             </div>
           </div>
         </div>
       </CardDetailLink>
-    </motion.div>
+    </div>
   )
 }

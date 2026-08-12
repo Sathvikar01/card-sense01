@@ -33,6 +33,7 @@ const hasRedisConfig =
 
 const redis = hasRedisConfig ? Redis.fromEnv() : null
 const limiters = new Map<RuleId, Ratelimit>()
+const localCounters = new Map<string, { count: number; resetAt: number }>()
 
 const matchesPath = (pathname: string, basePath: string) =>
   pathname === basePath || pathname.startsWith(`${basePath}/`)
@@ -72,12 +73,23 @@ export async function enforceRateLimit(request: NextRequest) {
   if (!rule) return null
 
   if (!redis) {
-    if (process.env.NODE_ENV === 'production' && rule.sensitive) {
+    // Recommendations and other app features are deterministic and must not
+    // become unavailable just because an optional Redis limiter is missing.
+    // Keep a small best-effort per-instance limit instead of blocking requests.
+    const key = `${rule.id}:${getTrustedClientIp(request)}`
+    const now = Date.now()
+    const existing = localCounters.get(key)
+    const resetAt = existing && existing.resetAt > now ? existing.resetAt : now + 60 * 60 * 1000
+    const count = existing && existing.resetAt > now ? existing.count + 1 : 1
+
+    if (count > rule.limit) {
       return NextResponse.json(
-        { error: 'This service is temporarily unavailable. Please try again later.' },
-        { status: 503, headers: { 'Retry-After': '60' } }
+        { error: 'Too many requests. Please try again later.', retryAfterSeconds: Math.ceil((resetAt - now) / 1000) },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((resetAt - now) / 1000)) } }
       )
     }
+
+    localCounters.set(key, { count, resetAt })
     return null
   }
 
@@ -112,12 +124,8 @@ export async function enforceRateLimit(request: NextRequest) {
 
     return { headers }
   } catch {
-    if (rule.sensitive) {
-      return NextResponse.json(
-        { error: 'This service is temporarily unavailable. Please try again later.' },
-        { status: 503, headers: { 'Retry-After': '60' } }
-      )
-    }
+    // Redis is an abuse-control enhancement, not a dependency of the engine.
+    // Fail open so a transient limiter outage cannot break recommendations.
     return null
   }
 }

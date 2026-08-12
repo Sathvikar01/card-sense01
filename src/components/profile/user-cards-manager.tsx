@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Trash2, CreditCard, Loader2, Check, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ const CATALOG_CARDS = LOCAL_CARD_CATALOG
   .sort((a, b) => a.label.localeCompare(b.label))
 
 export function UserCardsManager() {
+  const router = useRouter()
   const [cards, setCards] = useState<UserCard[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -65,7 +67,7 @@ export function UserCardsManager() {
 
   const fetchCards = useCallback(async () => {
     try {
-      const res = await fetch('/api/cards/user')
+      const res = await fetch('/api/cards/user', { cache: 'no-store' })
       const data = await res.json()
       setCards(data.cards || [])
     } catch {
@@ -113,7 +115,8 @@ export function UserCardsManager() {
       toast.success('Card added successfully')
       setDialogOpen(false)
       resetForm()
-      fetchCards()
+      await fetchCards()
+      router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to add card')
     } finally {
@@ -127,7 +130,8 @@ export function UserCardsManager() {
       const res = await fetch(`/api/cards/user?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Card removed')
-        fetchCards()
+        await fetchCards()
+        router.refresh()
       } else {
         toast.error('Failed to remove card')
       }
@@ -149,7 +153,7 @@ export function UserCardsManager() {
           Add Card
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-2rem)]">
         <DialogHeader>
           <DialogTitle>Add a Card</DialogTitle>
           <DialogDescription>Add a credit card you currently own</DialogDescription>

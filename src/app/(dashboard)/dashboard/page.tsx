@@ -1,10 +1,12 @@
-import dynamic from 'next/dynamic'
+import { default as nextDynamic } from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import type { Recommendation } from '@/types/recommendation'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { getCibilScoreRating } from '@/lib/credit-score'
+
+export const dynamic = 'force-dynamic'
 
 interface DashboardProfile {
   id: string
@@ -26,7 +28,7 @@ interface UserCardSummary {
   bank_name: string
 }
 
-const SpendingSummaryChart = dynamic(
+const SpendingSummaryChart = nextDynamic(
   () =>
     import('@/components/dashboard/spending-summary-chart').then((m) => ({
       default: m.SpendingSummaryChart,
@@ -40,21 +42,7 @@ const SpendingSummaryChart = dynamic(
   }
 )
 
-const RecentRecommendations = dynamic(
-  () =>
-    import('@/components/dashboard/recent-recommendations').then((m) => ({
-      default: m.RecentRecommendations,
-    })),
-  {
-    loading: () => (
-      <div className="dash-card p-6">
-        <div className="h-40 shimmer rounded-xl" />
-      </div>
-    ),
-  }
-)
-
-const CardsOwnedStack = dynamic(
+const CardsOwnedStack = nextDynamic(
   () =>
     import('@/components/dashboard/cards-owned-stack').then((m) => ({
       default: m.CardsOwnedStack,
@@ -93,9 +81,7 @@ async function getDashboardData() {
     getProfileWithFallback(supabase, { userId: user.id, email: user.email ?? null }),
     supabase
       .from('recommendations')
-      .select(
-        'id, user_id, recommendation_type, input_snapshot, recommended_cards, ai_analysis, created_at'
-      )
+      .select('id, user_id, recommendation_type, input_snapshot, recommended_cards, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(3),
@@ -120,14 +106,29 @@ async function getDashboardData() {
 
   // Monthly spending for current month total
   const currentMonth = new Date()
-  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-  const currentMonthTotal =
-    spendingData?.reduce((sum, transaction) => {
-      if (new Date(transaction.transaction_date) >= firstDayOfMonth) {
-        return sum + Number(transaction.amount)
-      }
-      return sum
-    }, 0) || 0
+  const monthKey = (value: string) => value.slice(0, 7)
+  const currentMonthKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`
+  const monthlyTotals = new Map<string, number>()
+  spendingData?.forEach((transaction) => {
+    const key = monthKey(transaction.transaction_date)
+    monthlyTotals.set(key, (monthlyTotals.get(key) || 0) + Number(transaction.amount))
+  })
+  const latestTrackedMonth = [...monthlyTotals.keys()].sort().at(-1)
+  const trackedMonthKey = monthlyTotals.has(currentMonthKey) ? currentMonthKey : latestTrackedMonth
+  const currentMonthTotal = trackedMonthKey ? monthlyTotals.get(trackedMonthKey) || 0 : 0
+
+  const latestInput = (recommendations?.[0]?.input_snapshot || {}) as Record<string, unknown>
+  const snapshotBreakdown =
+    latestInput.spendingBreakdown && typeof latestInput.spendingBreakdown === 'object'
+      ? (latestInput.spendingBreakdown as Record<string, unknown>)
+      : {}
+  const snapshotSpendFromCategories = Object.values(snapshotBreakdown).reduce(
+    (sum: number, value) => sum + (Number(value) || 0),
+    0
+  )
+  const snapshotMonthlySpend =
+    Number(latestInput.monthlySpending || latestInput.monthlySpendEstimate) || snapshotSpendFromCategories
+  const dashboardMonthlyTotal = currentMonthTotal > 0 ? currentMonthTotal : snapshotMonthlySpend
 
   // Category percentage breakdown for chart
   const categoryAmounts: Record<string, number> = {}
@@ -145,7 +146,17 @@ async function getDashboardData() {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 8)
 
-  const monthlySpendingArray = categoryData
+  const snapshotCategoryData = Object.entries(snapshotBreakdown)
+    .map(([category, value]) => ({ category, amount: Number(value) || 0 }))
+    .filter((item) => item.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 8)
+  const chartDataSource = categoryData.length > 0 ? categoryData : snapshotCategoryData
+  const chartTotal = chartDataSource.reduce((sum, item) => sum + item.amount, 0)
+  const dashboardSpending = chartDataSource.map((item) => ({
+    ...item,
+    percentage: chartTotal > 0 ? Math.round((item.amount / chartTotal) * 100) : 0,
+  }))
 
   const totalCards = (userCardsResult.data as UserCardSummary[] | null)?.length ?? profile?.existing_cards_count ?? 0
   const userCards = (userCardsResult.data as UserCardSummary[] | null) ?? []
@@ -153,8 +164,8 @@ async function getDashboardData() {
   return {
     profile,
     recommendations: (recommendations || []) as Recommendation[],
-    monthlySpending: monthlySpendingArray,
-    currentMonthTotal,
+    monthlySpending: dashboardSpending,
+    currentMonthTotal: dashboardMonthlyTotal,
     totalCards,
     userCards,
   }
@@ -166,22 +177,16 @@ export default async function DashboardPage() {
 
   const cibilScore = profile?.credit_score || null
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
+  const topCards = recommendations[0]?.recommended_cards.slice(0, 3) || []
 
   const greeting = 'Welcome back'
 
   return (
     <div className="space-y-8">
       {/* ====== Welcome Hero ====== */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/80 via-white to-[#fdf3d7]/40 p-8 sm:p-10">
-        {/* Subtle mesh gradient blobs */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-[#d4a017]/8 blur-[80px]" />
-          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-[#e8c04a]/6 blur-[60px]" />
-          <div className="absolute right-1/3 top-0 h-40 w-40 rounded-full bg-[#d4a017]/5 blur-[60px]" />
-        </div>
-
+      <div className="relative overflow-hidden rounded-3xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/80 via-white to-[#fdf3d7]/40 p-8 pb-8 sm:p-10">
         <div className="relative z-10">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#b8860b]/70">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#b8860b]/70">
             {greeting}
           </p>
           <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
@@ -204,10 +209,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* ====== Bento Stats Grid ====== */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 border-y border-border/60 py-5 sm:grid-cols-2 lg:grid-cols-4">
         {/* CIBIL Score */}
-        <div className="dash-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/8 blur-[30px]" />
+        <div className="px-1 py-2 lg:border-r lg:border-border/50 lg:pr-5">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">CIBIL Score</p>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><path d="M8 1L2 3.5v4c0 3.5 2.6 6.3 6 7.5 3.4-1.2 6-4 6-7.5v-4L8 1z" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -236,8 +240,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Monthly Spend */}
-        <div className="dash-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/8 blur-[30px]" />
+        <div className="px-1 py-2 lg:border-r lg:border-border/50 lg:pr-5">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Monthly Spend</p>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><rect x="1" y="3" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M1 6h14" stroke="currentColor" strokeWidth="1.3" /><circle cx="12" cy="9.5" r="1" fill="currentColor" /><path d="M4 3V2a1 1 0 011-1h6a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1" opacity="0.5" /></svg>
@@ -254,15 +257,23 @@ export default async function DashboardPage() {
         <CardsOwnedStack cards={userCards} />
 
         {/* Top Picks */}
-        <div className="dash-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-500/8 blur-[30px]" />
+        <div className="px-1 py-2 lg:border-r lg:border-border/50 lg:pr-5">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Top Picks</p>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
-          <div className="mt-3">
-            <p className="text-3xl font-bold text-foreground">{recommendations.length}</p>
-            <p className="mt-1 text-[0.65rem] text-muted-foreground">Personalized recommendations</p>
+          <div className="mt-3 space-y-1.5">
+            {topCards.length > 0 ? topCards.map((card, index) => (
+              <a
+                key={card.cardId || `${card.cardName}-${index}`}
+                href="/recommendations"
+                className="block truncate text-xs font-medium text-foreground hover:text-[#b8860b]"
+              >
+                <span className="mr-1.5 text-muted-foreground">{index + 1}.</span>{card.cardName}
+              </a>
+            )) : (
+              <p className="text-xs text-muted-foreground">No recommendations yet</p>
+            )}
           </div>
         </div>
       </div>
@@ -271,10 +282,7 @@ export default async function DashboardPage() {
       <QuickActions />
 
       {/* ====== Main Content ====== */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RecentRecommendations recommendations={recommendations} />
-        <SpendingSummaryChart data={monthlySpending} />
-      </div>
+      <SpendingSummaryChart data={monthlySpending} />
     </div>
   )
 }

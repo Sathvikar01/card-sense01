@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { OnboardingWizard, type OnboardingProfileSnapshot } from '@/components/onboarding/onboarding-wizard'
 import { trackInteraction } from '@/lib/interactions/client'
 
@@ -26,6 +26,7 @@ const isComplete = (profile: OnboardingProfileSnapshot | null) => {
 
 export function OnboardingTrigger({ profile }: OnboardingTriggerProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const initiallyComplete = useMemo(() => isComplete(profile), [profile])
   const [completedInSession, setCompletedInSession] = useState(false)
   const [dismissedForSession, setDismissedForSession] = useState(false)
@@ -51,6 +52,9 @@ export function OnboardingTrigger({ profile }: OnboardingTriggerProps) {
 
   const handleCompleted = () => {
     setCompletedInSession(true)
+    // The wizard writes through API routes while this dashboard is a server component.
+    // Refresh the route so the new profile and owned cards are rendered immediately.
+    router.refresh()
   }
 
   if (complete) return null

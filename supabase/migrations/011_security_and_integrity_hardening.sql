@@ -1,15 +1,28 @@
 -- Harden privileged functions and make education counters atomic.
 
-ALTER FUNCTION public.handle_updated_at() SET search_path = public, pg_temp;
-ALTER FUNCTION public.handle_new_user() SET search_path = public, auth, pg_temp;
-ALTER FUNCTION public.sync_credit_score_to_profile() SET search_path = public, pg_temp;
-ALTER FUNCTION public.get_user_documents_folder() SET search_path = public, auth, pg_temp;
+DO $$
+BEGIN
+  IF to_regprocedure('public.handle_updated_at()') IS NOT NULL THEN
+    ALTER FUNCTION public.handle_updated_at() SET search_path = public, pg_temp;
+    REVOKE ALL ON FUNCTION public.handle_updated_at() FROM PUBLIC;
+  END IF;
 
-REVOKE ALL ON FUNCTION public.handle_updated_at() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.sync_credit_score_to_profile() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.get_user_documents_folder() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.get_user_documents_folder() TO authenticated;
+  IF to_regprocedure('public.handle_new_user()') IS NOT NULL THEN
+    ALTER FUNCTION public.handle_new_user() SET search_path = public, auth, pg_temp;
+    REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
+  END IF;
+
+  IF to_regprocedure('public.sync_credit_score_to_profile()') IS NOT NULL THEN
+    ALTER FUNCTION public.sync_credit_score_to_profile() SET search_path = public, pg_temp;
+    REVOKE ALL ON FUNCTION public.sync_credit_score_to_profile() FROM PUBLIC;
+  END IF;
+
+  IF to_regprocedure('public.get_user_documents_folder()') IS NOT NULL THEN
+    ALTER FUNCTION public.get_user_documents_folder() SET search_path = public, auth, pg_temp;
+    REVOKE ALL ON FUNCTION public.get_user_documents_folder() FROM PUBLIC;
+    GRANT EXECUTE ON FUNCTION public.get_user_documents_folder() TO authenticated;
+  END IF;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.increment_article_views(article_id UUID)
 RETURNS VOID

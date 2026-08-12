@@ -116,7 +116,7 @@ export function OnboardingWizard({
 
   const saveOwnedCard = async () => {
     if (!ownsCards || !cardName.trim() || !cardBank.trim()) return
-    await fetch('/api/cards/user', {
+    const res = await fetch('/api/cards/user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -125,6 +125,11 @@ export function OnboardingWizard({
         notes: 'Added during onboarding',
       }),
     })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error((err as { message?: string }).message || 'Failed to save your card')
+    }
   }
 
   const handleSubmit = async () => {
@@ -157,7 +162,7 @@ export function OnboardingWizard({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : undefined)}>
-      <DialogContent className="max-w-2xl border-[#d4a017]/30 bg-background/95 p-0 backdrop-blur-xl" showCloseButton>
+      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-2xl overflow-y-auto overscroll-contain border-[#d4a017]/30 bg-background/95 p-0 backdrop-blur-xl sm:max-h-[calc(100dvh-2rem)]" showCloseButton>
         <div className="rounded-t-2xl border-b border-[#d4a017]/20 bg-gradient-to-r from-[#fdf3d7]/70 via-background to-[#fdf3d7]/60 p-6">
           <DialogHeader className="text-left">
             <DialogTitle className="flex items-center gap-2 text-xl text-foreground">
