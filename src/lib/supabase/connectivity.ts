@@ -1,6 +1,3 @@
-const SUPABASE_AUTH_OUTAGE_MESSAGE =
-  'Supabase auth is unreachable from your network right now. If you are in India and see Cloudflare 525, try DNS 1.1.1.1 or 8.8.8.8, or use another network/VPN.'
-
 const CONNECTIVITY_RETRIES = 2
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -41,20 +38,30 @@ export async function ensureSupabaseAuthReachable() {
         return { ok: true as const }
       }
 
-      const isRetryable = response.status >= 500
+      if (response.status === 401 || response.status === 403) {
+        return {
+          ok: false as const,
+          message: 'Supabase authentication is misconfigured for this deployment. Please refresh the deployment environment variables.',
+        }
+      }
+
+      const isRetryable = response.status === 408 || response.status === 425 || response.status === 429 || response.status >= 500
       const isLastAttempt = attempt === CONNECTIVITY_RETRIES
       if (!isRetryable || isLastAttempt) {
         return {
           ok: false as const,
-          message: SUPABASE_AUTH_OUTAGE_MESSAGE,
+          message: `Supabase authentication could not be reached (HTTP ${response.status}). Please try again shortly.`,
         }
       }
-    } catch {
+    } catch (error) {
       const isLastAttempt = attempt === CONNECTIVITY_RETRIES
       if (isLastAttempt) {
+        const isTimeout = error instanceof DOMException && error.name === 'AbortError'
         return {
           ok: false as const,
-          message: SUPABASE_AUTH_OUTAGE_MESSAGE,
+          message: isTimeout
+            ? 'Supabase authentication timed out while connecting. Please try again shortly.'
+            : 'Supabase authentication could not be reached from this network. Please check your connection and try again.',
         }
       }
     }
@@ -64,6 +71,6 @@ export async function ensureSupabaseAuthReachable() {
 
   return {
     ok: false as const,
-    message: SUPABASE_AUTH_OUTAGE_MESSAGE,
+    message: 'Supabase authentication could not be reached. Please try again shortly.',
   }
 }
