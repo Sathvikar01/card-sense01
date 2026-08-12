@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { createClient } from '@/lib/supabase/client'
-import { ensureSupabaseAuthReachable } from '@/lib/supabase/connectivity'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -61,12 +60,6 @@ function LoginForm() {
     setIsLoading(true)
 
     try {
-      const connectivity = await ensureSupabaseAuthReachable()
-      if (!connectivity.ok) {
-        toast.error(connectivity.message)
-        return
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -96,13 +89,6 @@ function LoginForm() {
     setIsGoogleLoading(true)
 
     try {
-      const connectivity = await ensureSupabaseAuthReachable()
-      if (!connectivity.ok) {
-        toast.error(connectivity.message)
-        setIsGoogleLoading(false)
-        return
-      }
-
       const next = searchParams.get('next')
       const callbackUrl = next
         ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`

@@ -9,7 +9,6 @@ import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight, ArrowLeft, Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { ensureSupabaseAuthReachable } from '@/lib/supabase/connectivity'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -130,12 +129,6 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
     setIsLoading(true)
     try {
       if (tab === 'login') {
-        const connectivity = await ensureSupabaseAuthReachable()
-        if (!connectivity.ok) {
-          toast.error(connectivity.message)
-          return
-        }
-
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
@@ -230,13 +223,6 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
     try {
-      const connectivity = await ensureSupabaseAuthReachable()
-      if (!connectivity.ok) {
-        toast.error(connectivity.message)
-        setIsGoogleLoading(false)
-        return
-      }
-
       const callbackUrl = redirectTo
         ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
         : `${window.location.origin}/auth/callback`

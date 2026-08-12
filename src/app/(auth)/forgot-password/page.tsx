@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ensureSupabaseAuthReachable } from '@/lib/supabase/connectivity'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,12 +19,6 @@ export default function ForgotPasswordPage() {
 
     setIsSubmitting(true)
     try {
-      const connectivity = await ensureSupabaseAuthReachable()
-      if (!connectivity.ok) {
-        toast.error(connectivity.message)
-        return
-      }
-
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       })
