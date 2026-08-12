@@ -1,0 +1,145 @@
+export interface EducationResource {
+  title: string
+  summary: string
+  source: string
+  sourceType: 'Official' | 'Explainer'
+  topic: string
+  level: 'Start here' | 'Build confidence' | 'Go deeper'
+  minutes: number
+  url: string
+}
+
+// Curated from a Firecrawl review of CIBIL, RBI and beginner-friendly explainers.
+// External pages are intentionally kept as links: card fees, rewards and regulations change.
+export const EDUCATION_RESOURCES: EducationResource[] = [
+  {
+    title: "A first-time user's guide to establishing credit",
+    summary: 'A calm introduction to credit, CIBIL reports and the habits that make lenders trust you.',
+    source: 'TransUnion CIBIL',
+    sourceType: 'Official',
+    topic: 'Credit basics',
+    level: 'Start here',
+    minutes: 5,
+    url: 'https://www.cibil.com/blog/first-time-users-guide-to-establishing-credit',
+  },
+  {
+    title: "New to credit? Here's how to maintain a healthy CIBIL score",
+    summary: 'A simple checklist for building a credit profile when you are starting from zero.',
+    source: 'TransUnion CIBIL',
+    sourceType: 'Official',
+    topic: 'CIBIL score',
+    level: 'Start here',
+    minutes: 5,
+    url: 'https://www.cibil.com/blog/new-to-credit-heres-how-to-maintain-a-healthy-cibil-score',
+  },
+  {
+    title: 'What is a CIBIL Score?',
+    summary: 'The official definition of the 300–900 score and what it is designed to tell lenders.',
+    source: 'TransUnion CIBIL',
+    sourceType: 'Official',
+    topic: 'CIBIL score',
+    level: 'Start here',
+    minutes: 4,
+    url: 'https://www.cibil.com/blog/what-is-cibil-score',
+  },
+  {
+    title: 'The power of good credit habits',
+    summary: 'Real-life examples that connect on-time payments and sensible usage to future borrowing power.',
+    source: 'TransUnion CIBIL',
+    sourceType: 'Official',
+    topic: 'Good habits',
+    level: 'Build confidence',
+    minutes: 6,
+    url: 'https://www.cibil.com/blog/power-of-good-credit-habits',
+  },
+  {
+    title: 'RBI FAQs on credit and debit cards',
+    summary: 'A primary-source reference for card issuance, billing, lost cards, disputes and customer rights.',
+    source: 'Reserve Bank of India',
+    sourceType: 'Official',
+    topic: 'Safety & rights',
+    level: 'Build confidence',
+    minutes: 10,
+    url: 'https://www.rbi.org.in/commonman/English/Scripts/FAQs.aspx?Id=497',
+  },
+  {
+    title: 'Customer protection for unauthorised electronic transactions',
+    summary: 'The RBI notification to read when you want to understand reporting speed and customer liability.',
+    source: 'Reserve Bank of India',
+    sourceType: 'Official',
+    topic: 'Safety & rights',
+    level: 'Go deeper',
+    minutes: 8,
+    url: 'https://www.rbi.org.in/commonman/english/scripts/Notification.aspx?Id=2336',
+  },
+  {
+    title: 'Different types of credit cards in India',
+    summary: 'A broad explainer covering lifetime-free, secured, rewards, cashback, fuel and student cards.',
+    source: 'BankBazaar',
+    sourceType: 'Explainer',
+    topic: 'Choosing a card',
+    level: 'Start here',
+    minutes: 7,
+    url: 'https://www.bankbazaar.com/credit-card/different-types-of-credit-cards-in-india.html',
+  },
+  {
+    title: 'Advantages and disadvantages of credit cards',
+    summary: 'A balanced overview of convenience and rewards on one side, and interest and fees on the other.',
+    source: 'BankBazaar',
+    sourceType: 'Explainer',
+    topic: 'Credit basics',
+    level: 'Start here',
+    minutes: 6,
+    url: 'https://www.bankbazaar.com/credit-card/advantage-and-disadvantage-of-credit-card-in-india.html',
+  },
+  {
+    title: 'Credit card bill payment guide',
+    summary: 'A practical reference for payment methods and the difference between minimum due and total due.',
+    source: 'BankBazaar',
+    sourceType: 'Explainer',
+    topic: 'Payments',
+    level: 'Build confidence',
+    minutes: 6,
+    url: 'https://www.bankbazaar.com/credit-card-bill-payment.html',
+  },
+  {
+    title: 'Credit card reward points explained',
+    summary: 'A primer on earning, redemption and why a reward point is not automatically worth ₹1.',
+    source: 'BankBazaar',
+    sourceType: 'Explainer',
+    topic: 'Rewards',
+    level: 'Build confidence',
+    minutes: 8,
+    url: 'https://www.bankbazaar.com/credit-card-reward-points.html',
+  },
+  {
+    title: 'Secured credit cards in India',
+    summary: 'What an FD-backed card is, who it may help and the trade-offs to check before applying.',
+    source: 'BankBazaar',
+    sourceType: 'Explainer',
+    topic: 'Choosing a card',
+    level: 'Go deeper',
+    minutes: 7,
+    url: 'https://www.bankbazaar.com/credit-card/secured-credit-card.html',
+  },
+  {
+    title: 'Lifetime-free credit cards in India',
+    summary: 'A useful comparison starting point, with a reminder to verify the issuer’s current terms.',
+    source: 'BankBazaar',
+    sourceType: 'Explainer',
+    topic: 'Fees',
+    level: 'Go deeper',
+    minutes: 8,
+    url: 'https://www.bankbazaar.com/credit-card/credit-cards-without-annual-fee-charges-in-india.html',
+  },
+  {
+    title: 'Top entry-level cards in India',
+    summary: 'A market overview for when you understand fees and repayment and are ready to compare products.',
+    source: 'Paisabazaar',
+    sourceType: 'Explainer',
+    topic: 'Choosing a card',
+    level: 'Go deeper',
+    minutes: 10,
+    url: 'https://www.paisabazaar.com/credit-card/best-entry-level-credit-cards-india/',
+  },
+]
