@@ -3,9 +3,8 @@ import { notFound } from 'next/navigation'
 import { createPublicServerClient } from '@/lib/supabase/public-server'
 import { ArticleLink } from '@/components/education/article-link'
 import { ArticleViewTracker } from '@/components/education/article-view-tracker'
-import { Badge } from '@/components/ui/badge'
 import { EducationFAQ } from '@/components/education/education-faq'
-import { BookOpen, Clock, ArrowLeft, CreditCard, TrendingUp, Lightbulb, Receipt, Shield, GraduationCap } from 'lucide-react'
+import { ArrowLeft, BookOpen, CalendarDays, Clock, CreditCard, GraduationCap, Lightbulb, Receipt, Shield, TrendingUp } from 'lucide-react'
 
 export const revalidate = 300
 
@@ -35,13 +34,13 @@ interface Section {
   body: string
 }
 
-const CATEGORY_META: Record<string, { icon: typeof BookOpen; label: string; color: string; bgColor: string }> = {
-  basics: { icon: CreditCard, label: 'Basics', color: 'text-blue-700', bgColor: 'bg-blue-50' },
-  CIBIL: { icon: TrendingUp, label: 'CIBIL', color: 'text-emerald-700', bgColor: 'bg-emerald-50' },
-  rewards: { icon: Lightbulb, label: 'Rewards', color: 'text-amber-700', bgColor: 'bg-amber-50' },
-  fees: { icon: Receipt, label: 'Fees', color: 'text-rose-700', bgColor: 'bg-rose-50' },
-  security: { icon: Shield, label: 'Security', color: 'text-violet-700', bgColor: 'bg-violet-50' },
-  tips: { icon: GraduationCap, label: 'Tips', color: 'text-cyan-700', bgColor: 'bg-cyan-50' },
+const CATEGORY_META: Record<string, { icon: typeof BookOpen; label: string }> = {
+  basics: { icon: CreditCard, label: 'Credit basics' },
+  CIBIL: { icon: TrendingUp, label: 'CIBIL score' },
+  rewards: { icon: Lightbulb, label: 'Rewards' },
+  fees: { icon: Receipt, label: 'Fees' },
+  security: { icon: Shield, label: 'Safety' },
+  tips: { icon: GraduationCap, label: 'Smart habits' },
 }
 
 function parseMarkdownSections(content: string): { intro: string; sections: Section[] } {
@@ -55,9 +54,7 @@ function parseMarkdownSections(content: string): { intro: string; sections: Sect
     const h2Match = line.match(/^## (.+)$/)
 
     if (h2Match) {
-      if (currentHeading) {
-        sections.push({ heading: currentHeading, body: currentBody.join('\n').trim() })
-      }
+      if (currentHeading) sections.push({ heading: currentHeading, body: currentBody.join('\n').trim() })
       currentHeading = h2Match[1]
       currentBody = []
     } else if (!currentHeading) {
@@ -67,10 +64,7 @@ function parseMarkdownSections(content: string): { intro: string; sections: Sect
     }
   }
 
-  if (currentHeading) {
-    sections.push({ heading: currentHeading, body: currentBody.join('\n').trim() })
-  }
-
+  if (currentHeading) sections.push({ heading: currentHeading, body: currentBody.join('\n').trim() })
   return { intro: intro.trim(), sections }
 }
 
@@ -85,9 +79,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     .eq('is_published', true)
     .single() as { data: ArticleRecord | null }
 
-  if (!article) {
-    notFound()
-  }
+  if (!article) notFound()
 
   const { data: relatedArticles } = await supabase
     .from('education_articles')
@@ -97,165 +89,76 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     .neq('id', article.id)
     .limit(3) as { data: RelatedArticle[] | null }
 
-  const getDifficultyStyle = (difficulty: string) => {
-    const styles: Record<string, string> = {
-      beginner: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-      beginner_to_intermediate: 'bg-teal-100 text-teal-700 border-teal-200',
-      intermediate: 'bg-amber-100 text-amber-700 border-amber-200',
-      intermediate_to_advanced: 'bg-orange-100 text-orange-700 border-orange-200',
-      advanced: 'bg-rose-100 text-rose-700 border-rose-200',
-    }
-    return styles[difficulty] || 'bg-gray-100 text-gray-700 border-gray-200'
-  }
-
   const catMeta = CATEGORY_META[article.category]
   const CatIcon = catMeta?.icon || BookOpen
   const { intro, sections } = parseMarkdownSections(article.content)
 
   return (
-    <div className="space-y-8">
+    <article className="education-article space-y-10 sm:space-y-14">
       <ArticleViewTracker slug={slug} />
 
-      {/* Back link */}
-      <Link
-        href="/education"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#b8860b] transition-colors"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Articles
+      <Link href="/education" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-[#8d6500]">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to education
       </Link>
 
-      {/* Article Header */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#d4a017]/20 bg-gradient-to-br from-[#fdf3d7]/80 via-white to-[#fdf3d7]/40 p-8 sm:p-10">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-[#d4a017]/8 blur-[80px]" />
-          <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-[#e8c04a]/6 blur-[60px]" />
-        </div>
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 flex-wrap mb-4">
-            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${catMeta?.bgColor || 'bg-muted'}`}>
-              <CatIcon className={`h-4 w-4 ${catMeta?.color || 'text-muted-foreground'}`} />
-            </div>
-            <Badge variant="outline" className="capitalize text-xs">
-              {catMeta?.label || article.category}
-            </Badge>
-            <Badge className={`text-[0.6rem] font-medium border ${getDifficultyStyle(article.difficulty)}`}>
-              {article.difficulty.replace(/_/g, ' ')}
-            </Badge>
+      <header className="border-y border-[#d4a017]/35 py-8 sm:py-11">
+        <div className="max-w-4xl">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#a87500]">
+            <span className="inline-flex items-center gap-2"><CatIcon className="h-4 w-4" strokeWidth={1.7} /> {catMeta?.label || article.category}</span>
+            <span className="text-border" aria-hidden="true">·</span>
+            <span>{article.difficulty.replace(/_/g, ' ')}</span>
           </div>
-
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-tight">
-            {article.title}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {article.summary}
-          </p>
-
-          <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-[#b8860b]" />
-              {article.read_time_minutes} min read
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CalendarSVG />
-              {new Date(article.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </span>
+          <h1 className="mt-5 max-w-4xl text-3xl font-semibold leading-[1.08] tracking-[-0.045em] text-foreground sm:text-5xl">{article.title}</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">{article.summary}</p>
+          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#b8860b]" /> {article.read_time_minutes} min read</span>
+            <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-[#b8860b]" /> {new Date(article.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
           </div>
-
           {article.tags && article.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-4">
-              {article.tags.map((tag: string, idx: number) => (
-                <span key={idx} className="text-[0.6rem] px-2 py-0.5 rounded-full bg-[#fdf3d7]/80 text-[#7a5500] font-medium">
-                  {tag}
-                </span>
-              ))}
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+              {article.tags.map((tag) => <span key={tag}>#{tag}</span>)}
             </div>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-16">
+        <main className="min-w-0">
           {intro && (
-            <div className="rounded-2xl border border-border/60 bg-card p-6">
-              <p className="text-sm leading-relaxed text-foreground/90">{intro}</p>
+            <div className="mb-8 border-l-2 border-[#d4a017] pl-5 sm:pl-6">
+              <p className="text-base leading-8 text-foreground/90 sm:text-lg">{intro}</p>
             </div>
           )}
-
           <EducationFAQ sections={sections} />
-        </div>
+        </main>
 
-        {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-4">
+        <aside className="space-y-10 lg:sticky lg:top-6 lg:self-start">
           {sections.length > 0 && (
-            <div className="rounded-2xl border border-border/60 bg-card p-5">
-              <h3 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-[#b8860b]/70">
-                In this article
-              </h3>
-              <nav className="space-y-1">
-                {sections.map((s, i) => (
-                  <div
-                    key={i}
-                    className="text-sm text-foreground/70 hover:text-foreground transition-colors py-1.5 border-l-2 border-transparent hover:border-[#d4a017] pl-3 cursor-default"
-                  >
-                    {s.heading}
-                  </div>
-                ))}
-              </nav>
-            </div>
+            <nav aria-label="In this article">
+              <p className="mb-4 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#a87500]">In this article</p>
+              <ol className="space-y-3 border-l border-border pl-4">
+                {sections.map((section, i) => <li key={section.heading}><a href={`#section-${i + 1}`} className="text-sm leading-5 text-muted-foreground transition-colors hover:text-[#8d6500]">{section.heading}</a></li>)}
+              </ol>
+            </nav>
           )}
 
-          <div className="rounded-2xl border border-border/60 bg-card p-5 sticky top-4">
-            <h3 className="font-semibold mb-4 text-sm text-foreground">Related Articles</h3>
+          <div>
+            <p className="mb-4 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#a87500]">Read next</p>
             {relatedArticles && relatedArticles.length > 0 ? (
-              <div className="space-y-2">
-                {relatedArticles.map((related) => {
-                  const relCatMeta = CATEGORY_META[related.category]
-                  const RelCatIcon = relCatMeta?.icon || BookOpen
-                  return (
-                    <ArticleLink
-                      key={related.id}
-                      href={`/education/${related.slug}`}
-                      className="block p-3 rounded-xl hover:bg-[#fdf3d7]/40 transition-colors group"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 ${relCatMeta?.bgColor || 'bg-muted'}`}>
-                          <RelCatIcon className={`h-3.5 w-3.5 ${relCatMeta?.color || 'text-muted-foreground'}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-medium text-sm mb-1 text-foreground group-hover:text-[#b8860b] transition-colors leading-snug">
-                            {related.title}
-                          </h4>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="capitalize">{relCatMeta?.label || related.category}</span>
-                            <span className="text-border">|</span>
-                            <span>{related.read_time_minutes} min</span>
-                          </div>
-                        </div>
-                      </div>
-                    </ArticleLink>
-                  )
-                })}
+              <div className="border-t border-border">
+                {relatedArticles.map((related) => (
+                  <ArticleLink key={related.id} href={`/education/${related.slug}`} className="group block border-b border-border py-4">
+                    <h2 className="text-sm font-semibold leading-5 text-foreground transition-colors group-hover:text-[#8d6500]">{related.title}</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">{related.read_time_minutes} min · {CATEGORY_META[related.category]?.label || related.category}</p>
+                  </ArticleLink>
+                ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No related articles found</p>
+              <p className="text-sm text-muted-foreground">No related articles yet.</p>
             )}
           </div>
-        </div>
+        </aside>
       </div>
-    </div>
-  )
-}
-
-function CalendarSVG() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]">
-      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M2 7h12" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M5.5 1.5v3M10.5 1.5v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
+    </article>
   )
 }

@@ -12,11 +12,9 @@ import {
   Lightbulb,
   Search,
   ShieldCheck,
-  Sparkles,
   Target,
   X,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { EDUCATION_RESOURCES } from './education-resources'
 
 export interface EducationLibraryArticle {
@@ -61,22 +59,13 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   advanced: 'Go deeper',
 }
 
-const DIFFICULTY_STYLES: Record<string, string> = {
-  beginner: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  beginner_to_intermediate: 'border-sky-200 bg-sky-50 text-sky-700',
-  intermediate: 'border-amber-200 bg-amber-50 text-amber-700',
-  intermediate_to_advanced: 'border-orange-200 bg-orange-50 text-orange-700',
-  advanced: 'border-rose-200 bg-rose-50 text-rose-700',
-}
-
 const LEARNING_PATHS = [
   {
     number: '01',
     eyebrow: 'Start here',
     title: 'Understand the card',
-    description: 'Credit, debit, limits, statements and the one payment habit that prevents expensive surprises.',
+    description: 'Credit, debit, limits, statements and the payment habit that prevents expensive surprises.',
     icon: BookOpen,
-    tone: 'bg-sky-50 text-sky-700',
     match: (article: EducationLibraryArticle) => article.title === 'What is a Credit Card?',
   },
   {
@@ -85,7 +74,6 @@ const LEARNING_PATHS = [
     title: 'Build your score',
     description: 'Learn what CIBIL measures, how reports work and which actions help over time.',
     icon: Target,
-    tone: 'bg-emerald-50 text-emerald-700',
     match: (article: EducationLibraryArticle) => article.title === 'Understanding CIBIL Score',
   },
   {
@@ -94,16 +82,14 @@ const LEARNING_PATHS = [
     title: 'Make the maths work',
     description: 'Compare rewards with fees, understand interest and avoid “good deal” traps.',
     icon: Lightbulb,
-    tone: 'bg-amber-50 text-amber-700',
     match: (article: EducationLibraryArticle) => article.title === 'Understanding Reward Programs',
   },
   {
     number: '04',
     eyebrow: 'Go deeper',
-    title: 'Use credit like a pro',
+    title: 'Use credit with intention',
     description: 'Turn the basics into a repeatable monthly system for cards, rewards and security.',
     icon: GraduationCap,
-    tone: 'bg-violet-50 text-violet-700',
     match: (article: EducationLibraryArticle) => article.title === 'Beginner to Pro: Credit Card Usage Playbook',
   },
 ]
@@ -122,6 +108,14 @@ export function EducationLibrary({ articles }: EducationLibraryProps) {
 
   const filteredArticles = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
+    const order = {
+      beginner: 0,
+      beginner_to_intermediate: 1,
+      intermediate: 2,
+      intermediate_to_advanced: 3,
+      advanced: 4,
+    }
+
     return articles
       .filter((article) => activeCategory === 'all' || article.category === activeCategory)
       .filter((article) => {
@@ -131,114 +125,107 @@ export function EducationLibrary({ articles }: EducationLibraryProps) {
           .toLowerCase()
           .includes(normalizedQuery)
       })
-      .sort((a, b) => {
-        const order = { beginner: 0, beginner_to_intermediate: 1, intermediate: 2, intermediate_to_advanced: 3, advanced: 4 }
-        return (order[a.difficulty as keyof typeof order] ?? 5) - (order[b.difficulty as keyof typeof order] ?? 5)
-      })
+      .sort((a, b) => (order[a.difficulty as keyof typeof order] ?? 5) - (order[b.difficulty as keyof typeof order] ?? 5))
   }, [activeCategory, articles, query])
 
-  const clearSearch = () => setQuery('')
-
   return (
-    <div className="space-y-10">
-      <section className="education-hero relative overflow-hidden border border-emerald-950/20 px-6 py-8 text-white shadow-[0_24px_70px_-36px_rgba(25,74,63,0.7)] sm:px-10 sm:py-11">
-        <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full border border-amber-200/15 bg-amber-200/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-emerald-300/10 blur-3xl" />
-        <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+    <div className="education-library space-y-14 sm:space-y-20">
+      <section className="education-hero !border !border-[#f0c85a]/25 !bg-[linear-gradient(135deg,#463510_0%,#2f2716_58%,#211d14_100%)] !rounded-xl px-5 py-8 text-white before:hidden sm:px-10 sm:py-12">
+        <div className="relative grid gap-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-amber-100/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-amber-100">
-              <Sparkles className="h-3.5 w-3.5" /> Learn by doing
-            </div>
-            <h1 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl sm:leading-[1.05]">
-              Your credit card field guide.
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-emerald-50/80 sm:text-base">
-              Start with the words you do not know. Build the habits that keep interest at zero. Then learn the maths behind rewards and fees.
+            <p className="mb-5 flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#f8e5a8]">
+              <span className="h-px w-7 bg-[#f0c85a]" /> CardSense education
             </p>
-            <div className="mt-6 flex flex-wrap gap-3 text-xs text-emerald-50/80">
-              <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-amber-200" /> {articles.length} CardSense lessons</span>
-              <span className="inline-flex items-center gap-2"><GraduationCap className="h-4 w-4 text-amber-200" /> 4-step path</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-amber-200" /> Trusted reading shelf</span>
+            <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] sm:text-5xl sm:leading-[1.05]">
+              Learn the card before the card teaches you.
+            </h1>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-[#fff8e5]/75 sm:text-base">
+              Short, practical lessons on credit, CIBIL, rewards and fees. Start with what is useful today and build from there.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[#fff8e5]/70">
+              <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#f0c85a]" /> {articles.length} lessons</span>
+              <span className="inline-flex items-center gap-2"><GraduationCap className="h-4 w-4 text-[#f0c85a]" /> 4-step path</span>
+              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#f0c85a]" /> Official reading included</span>
             </div>
           </div>
-          <div className="rounded-2xl border border-white/15 bg-black/10 p-5 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">The one rule</p>
-            <p className="mt-3 text-lg font-medium leading-7 text-white">A reward is never worth paying interest to earn it.</p>
-            <p className="mt-2 text-xs leading-5 text-emerald-50/65">If you only remember one thing today, remember this. The rest gets easier from here.</p>
-          </div>
+          <blockquote className="border-l border-[#f0c85a]/70 pl-5 lg:mb-1">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#f8e5a8]/75">Keep this close</p>
+            <p className="mt-3 text-xl font-medium leading-8 text-white">A reward is never worth paying interest to earn it.</p>
+          </blockquote>
         </div>
       </section>
 
-      <section aria-labelledby="learning-path-heading" className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b8860b]">No random browsing</p>
-            <h2 id="learning-path-heading" className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Follow the path from first swipe to confident user</h2>
-          </div>
-          <p className="max-w-sm text-sm leading-6 text-muted-foreground">Each step answers the question you need before the next one. Skip ahead whenever you are ready.</p>
+      <section aria-labelledby="learning-path-heading">
+        <div className="mb-7 max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a87500]">A useful order</p>
+          <h2 id="learning-path-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
+            Follow the path, or choose your own door in.
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">Each step covers the question that tends to come next. Nothing is locked.</p>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <ol className="grid gap-x-8 md:grid-cols-2 xl:grid-cols-4">
           {LEARNING_PATHS.map((path) => {
             const PathIcon = path.icon
             const lesson = articles.find(path.match)
             return (
-              <div key={path.number} className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-[#d4a017]/50 hover:shadow-lg hover:shadow-amber-900/5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${path.tone}`}><PathIcon className="h-5 w-5" /></div>
-                  <span className="font-mono text-xs text-muted-foreground/50">{path.number}</span>
+              <li key={path.number} className="border-t border-[#d4a017]/35 py-5 sm:py-6">
+                <div className="flex items-center justify-between text-[#a87500]">
+                  <PathIcon className="h-5 w-5" strokeWidth={1.7} />
+                  <span className="font-mono text-xs tracking-[0.16em] text-muted-foreground/60">{path.number}</span>
                 </div>
-                <p className="mt-5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{path.eyebrow}</p>
-                <h3 className="mt-1.5 text-lg font-semibold text-foreground">{path.title}</h3>
-                <p className="mt-2 min-h-[4.5rem] text-sm leading-6 text-muted-foreground">{path.description}</p>
+                <p className="mt-7 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{path.eyebrow}</p>
+                <h3 className="mt-2 text-lg font-semibold text-foreground">{path.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{path.description}</p>
                 {lesson ? (
-                  <Link href={`/education/${lesson.slug}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#9a7100] transition-colors hover:text-[#6f5100]">
-                    Read the lesson <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  <Link href={`/education/${lesson.slug}`} className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#966d00] transition-colors hover:text-[#6f5100]">
+                    Read the lesson <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 ) : (
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground">Coming in the library</span>
+                  <span className="mt-5 inline-flex text-xs text-muted-foreground">Coming in the library</span>
                 )}
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ol>
       </section>
 
-      <section className="rounded-2xl border border-[#d4a017]/25 bg-[#fffaf0] p-5 sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <aside className="border-y border-[#d4a017]/35 py-6 sm:py-7">
+        <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f3dfaa] text-[#8c6500]"><CheckCircle2 className="h-5 w-5" /></div>
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#b8860b]" strokeWidth={1.7} />
             <div>
-              <h2 className="font-semibold text-foreground">If you are brand new, start with these three rules</h2>
-              <p className="mt-1 text-sm text-muted-foreground">They will keep you safe while you learn the rest.</p>
+              <h2 className="font-semibold text-foreground">Three rules while you learn</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Keep these boring rules close. They do a lot of work.</p>
             </div>
           </div>
-          <div className="grid gap-3 text-sm text-foreground sm:grid-cols-3 lg:max-w-3xl">
-            <span className="rounded-xl bg-white/70 px-3 py-2.5"><strong>1.</strong> Pay the full statement balance.</span>
-            <span className="rounded-xl bg-white/70 px-3 py-2.5"><strong>2.</strong> Never share your OTP or CVV.</span>
-            <span className="rounded-xl bg-white/70 px-3 py-2.5"><strong>3.</strong> Check fees before chasing rewards.</span>
-          </div>
+          <ol className="grid gap-3 text-sm text-foreground sm:grid-cols-3">
+            <li><span className="mr-2 font-mono text-xs text-[#a87500]">01</span>Pay the full statement balance.</li>
+            <li><span className="mr-2 font-mono text-xs text-[#a87500]">02</span>Never share your OTP or CVV.</li>
+            <li><span className="mr-2 font-mono text-xs text-[#a87500]">03</span>Check fees before chasing rewards.</li>
+          </ol>
         </div>
-      </section>
+      </aside>
 
-      <section aria-labelledby="lesson-library-heading" className="space-y-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section aria-labelledby="lesson-library-heading">
+        <div className="flex flex-col gap-5 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b8860b]">CardSense lessons</p>
-            <h2 id="lesson-library-heading" className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Find the answer, not just another article</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a87500]">The lesson shelf</p>
+            <h2 id="lesson-library-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">Find the answer, not another feed.</h2>
           </div>
           <div className="relative w-full lg:max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a87500]" />
             <input
               aria-label="Search education lessons"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search “interest”, “CIBIL”, “rewards”…"
-              className="h-11 w-full rounded-xl border border-border bg-card pl-9 pr-9 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-[#b8860b] focus:ring-2 focus:ring-[#d4a017]/15"
+              placeholder="Search interest, CIBIL, rewards…"
+              className="h-11 w-full border-b border-border bg-transparent pl-7 pr-8 text-sm outline-none transition-colors placeholder:text-muted-foreground/65 focus:border-[#b8860b]"
             />
-            {query && <button type="button" aria-label="Clear search" onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+            {query && <button type="button" aria-label="Clear search" onClick={() => setQuery('')} className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Education topics">
+
+        <div className="mt-5 flex gap-5 overflow-x-auto pb-1" role="tablist" aria-label="Education topics">
           {CATEGORIES.map((category) => (
             <button
               key={category.value}
@@ -246,78 +233,76 @@ export function EducationLibrary({ articles }: EducationLibraryProps) {
               role="tab"
               aria-selected={activeCategory === category.value}
               onClick={() => setActiveCategory(category.value)}
-              className={`whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors ${activeCategory === category.value ? 'border-[#b8860b] bg-[#b8860b] text-white' : 'border-border bg-card text-muted-foreground hover:border-[#d4a017]/60 hover:text-foreground'}`}
+              className={`whitespace-nowrap border-b-2 pb-2 text-xs font-semibold transition-colors ${activeCategory === category.value ? 'border-[#b8860b] text-[#8d6500]' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             >
               {category.label}
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <span className="mr-1 self-center text-xs font-semibold text-muted-foreground">Try a question:</span>
+
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">Start with a question:</span>
           {QUESTION_PROMPTS.map((prompt) => (
-            <button key={prompt.label} type="button" onClick={() => { setQuery(prompt.query); setActiveCategory('all') }} className="rounded-full border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-[#b8860b]/60 hover:text-foreground">{prompt.label}</button>
+            <button key={prompt.label} type="button" onClick={() => { setQuery(prompt.query); setActiveCategory('all') }} className="text-left underline decoration-[#d4a017]/50 underline-offset-4 transition-colors hover:text-[#8d6500]">
+              {prompt.label}
+            </button>
           ))}
         </div>
-        <div className="flex items-center justify-between border-b border-border pb-3 text-xs text-muted-foreground">
+
+        <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground">
           <span>{filteredArticles.length} {filteredArticles.length === 1 ? 'lesson' : 'lessons'} {query ? `matching “${query}”` : 'to explore'}</span>
-          {query && <button type="button" onClick={clearSearch} className="font-semibold text-[#9a7100] hover:text-[#6f5100]">Show all lessons</button>}
+          {query && <button type="button" onClick={() => setQuery('')} className="font-semibold text-[#966d00] hover:text-[#6f5100]">Show all lessons</button>}
         </div>
+
         {filteredArticles.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-2 grid md:grid-cols-2 md:gap-x-10">
             {filteredArticles.map((article) => (
-              <Link key={article.id} href={`/education/${article.slug}`} className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-[#d4a017]/50 hover:shadow-lg hover:shadow-amber-900/5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold text-muted-foreground">{CATEGORY_LABELS[article.category] || article.category}</span>
-                  <Badge className={`border text-[0.62rem] font-semibold ${DIFFICULTY_STYLES[article.difficulty] || 'border-border bg-muted text-muted-foreground'}`}>{DIFFICULTY_LABELS[article.difficulty] || 'Lesson'}</Badge>
+              <Link key={article.id} href={`/education/${article.slug}`} className="group flex min-h-[9.5rem] flex-col border-t border-border py-5 transition-colors hover:border-[#d4a017]">
+                <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>{CATEGORY_LABELS[article.category] || article.category}</span>
+                  <span className="text-[#966d00]">{DIFFICULTY_LABELS[article.difficulty] || 'Lesson'}</span>
                 </div>
-                <h3 className="mt-4 text-base font-semibold leading-snug text-foreground group-hover:text-[#9a7100]">{article.title}</h3>
-                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{article.summary}</p>
-                <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" /> {article.read_time_minutes} min read</span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-[#9a7100]">Open lesson <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></span>
-                </div>
+                <h3 className="mt-3 text-base font-semibold leading-snug text-foreground group-hover:text-[#8d6500]">{article.title}</h3>
+                <p className="mt-1.5 flex-1 text-sm leading-6 text-muted-foreground">{article.summary}</p>
+                <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5 text-[#b8860b]" /> {article.read_time_minutes} min read <ArrowRight className="ml-auto h-3.5 w-3.5 text-[#b8860b] transition-transform group-hover:translate-x-1" /></div>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
-            <Search className="mx-auto h-7 w-7 text-muted-foreground/50" />
+          <div className="border-t border-border py-12 text-center">
+            <Search className="mx-auto h-7 w-7 text-[#b8860b]/60" />
             <p className="mt-3 text-sm font-semibold text-foreground">No lesson matches that search yet.</p>
             <p className="mt-1 text-sm text-muted-foreground">Try a simpler word like “fee”, “score” or “payment”.</p>
           </div>
         )}
       </section>
 
-      <section aria-labelledby="trusted-reading-heading" className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <section aria-labelledby="trusted-reading-heading">
+        <div className="flex flex-col gap-3 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b8860b]">Beyond CardSense</p>
-            <h2 id="trusted-reading-heading" className="mt-1 text-2xl font-semibold tracking-tight text-foreground">A shelf of useful outside reading</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a87500]">Beyond CardSense</p>
+            <h2 id="trusted-reading-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">A short shelf of useful outside reading.</h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-muted-foreground">Official guidance first. Explainers second. Open a guide when you want another angle, not because you need to read everything.</p>
+          <p className="max-w-md text-sm leading-6 text-muted-foreground">Official guidance first. Open a guide when you want another angle, not because you need to read everything.</p>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="mt-2 grid md:grid-cols-2 md:gap-x-10">
           {(showAllResources ? EDUCATION_RESOURCES : EDUCATION_RESOURCES.slice(0, 6)).map((resource) => (
-            <a key={resource.url} href={resource.url} target="_blank" rel="noreferrer" className="group flex gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-[#d4a017]/50 hover:shadow-lg hover:shadow-amber-900/5">
-              <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${resource.sourceType === 'Official' ? 'bg-emerald-50 text-emerald-700' : 'bg-sky-50 text-sky-700'}`}>
-                {resource.sourceType === 'Official' ? <ShieldCheck className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
-              </div>
+            <a key={resource.url} href={resource.url} target="_blank" rel="noreferrer" className="group flex gap-4 border-t border-border py-5 transition-colors hover:border-[#d4a017]">
+              <div className="mt-0.5 shrink-0 text-[#b8860b]">{resource.sourceType === 'Official' ? <ShieldCheck className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}</div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 text-[0.63rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  <span>{resource.source}</span><span className="text-border">•</span><span>{resource.topic}</span>
-                </div>
-                <h3 className="mt-1.5 text-sm font-semibold leading-snug text-foreground group-hover:text-[#9a7100]">{resource.title}</h3>
+                <div className="flex flex-wrap items-center gap-2 text-[0.63rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground"><span>{resource.source}</span><span aria-hidden="true">·</span><span>{resource.topic}</span></div>
+                <h3 className="mt-1.5 text-sm font-semibold leading-snug text-foreground group-hover:text-[#8d6500]">{resource.title}</h3>
                 <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{resource.summary}</p>
-                <div className="mt-3 flex items-center gap-3 text-[0.68rem] text-muted-foreground"><span>{resource.level}</span><span>•</span><span>{resource.minutes} min</span><ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground/60 transition-colors group-hover:text-[#b8860b]" /></div>
+                <div className="mt-3 flex items-center gap-3 text-[0.68rem] text-muted-foreground"><span>{resource.level}</span><span aria-hidden="true">·</span><span>{resource.minutes} min</span><ExternalLink className="ml-auto h-3.5 w-3.5 text-[#b8860b]" /></div>
               </div>
             </a>
           ))}
         </div>
-        <div className="flex flex-col items-center gap-3 pt-1 text-center">
-          <button type="button" onClick={() => setShowAllResources((current) => !current)} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:border-[#b8860b] hover:text-[#9a7100]">
-            {showAllResources ? 'Show a shorter shelf' : `Show ${EDUCATION_RESOURCES.length - 6} more trusted reads`}<ArrowRight className={`h-3.5 w-3.5 transition-transform ${showAllResources ? '-rotate-90' : 'rotate-90'}`} />
+        <div className="flex flex-col items-center gap-3 pt-6 text-center">
+          <button type="button" onClick={() => setShowAllResources((current) => !current)} className="inline-flex items-center gap-2 text-xs font-semibold text-[#966d00] underline decoration-[#d4a017]/50 underline-offset-4 hover:text-[#6f5100]">
+            {showAllResources ? 'Show a shorter shelf' : `Show ${Math.max(0, EDUCATION_RESOURCES.length - 6)} more trusted reads`}<ArrowRight className={`h-3.5 w-3.5 transition-transform ${showAllResources ? '-rotate-90' : 'rotate-90'}`} />
           </button>
-          <p className="max-w-2xl text-[0.68rem] leading-5 text-muted-foreground">External pages can change their fees, offers or advice. Always confirm current terms with your card issuer and the latest RBI/CIBIL guidance.</p>
+          <p className="max-w-2xl text-[0.68rem] leading-5 text-muted-foreground">External pages can change their fees, offers or advice. Confirm current terms with your card issuer and the latest RBI/CIBIL guidance.</p>
         </div>
       </section>
     </div>
