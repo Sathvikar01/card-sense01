@@ -102,7 +102,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                   <Badge variant="outline">{formatCardType(cardData.card_type)}</Badge>
                   <Badge variant="secondary">{cardData.card_network.toUpperCase()}</Badge>
                   {cardData.popularity_score >= 90 && (
-                    <Badge className="bg-blue-600">Popular</Badge>
+                    <Badge className="bg-blue-600">Highly Rated</Badge>
                   )}
                 </div>
               </div>
@@ -154,8 +154,10 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
               )}
               <Separator />
               <div className="flex justify-between items-start">
-                <span className="text-sm text-muted-foreground">Base Rewards</span>
-                <span className="font-semibold">{cardData.reward_rate_default}%</span>
+                <span className="text-sm text-muted-foreground">Estimated Base Return</span>
+                <span className="font-semibold">
+                  {cardData.reward_rate_default > 0 ? `${cardData.reward_rate_default}%` : 'See earning rules'}
+                </span>
               </div>
               {cardData.min_income_salaried && (
                 <>
@@ -268,8 +270,10 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                  <span className="font-medium">Base Reward Rate</span>
-                  <span className="text-lg font-bold">{cardData.reward_rate_default}%</span>
+                  <span className="font-medium">Estimated Base Return</span>
+                  <span className="text-lg font-bold">
+                    {cardData.reward_rate_default > 0 ? `${cardData.reward_rate_default}%` : 'Not published'}
+                  </span>
                 </div>
 
                 {cardData.reward_rate_categories && Object.keys(cardData.reward_rate_categories).length > 0 && (
@@ -379,9 +383,12 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Type</span>
-                <span className="font-semibold capitalize">{cardData.lounge_access}</span>
+                <span className="font-semibold capitalize">{cardData.lounge_access.replace(/_/g, ' ')}</span>
               </div>
-              {cardData.lounge_visits_per_quarter > 0 && (
+              {cardData.lounge_access_details && (
+                <p className="text-sm text-muted-foreground">{cardData.lounge_access_details}</p>
+              )}
+              {(cardData.lounge_visits_per_quarter ?? 0) > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Visits per Quarter</span>
                   <span className="font-semibold">{cardData.lounge_visits_per_quarter}</span>
@@ -545,7 +552,9 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
                 )}
                 <div>
                   <span className="text-sm text-muted-foreground">Min CIBIL Score</span>
-                  <p className="font-semibold">{cardData.min_cibil_score}</p>
+                  <p className="font-semibold">
+                    {cardData.min_cibil_score > 0 ? cardData.min_cibil_score : 'Not published'}
+                  </p>
                 </div>
                 <div>
                   <span className="text-sm text-muted-foreground">Age Requirement</span>

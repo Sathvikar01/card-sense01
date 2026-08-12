@@ -1018,6 +1018,7 @@ const saveRecommendation = async (params: {
     rulesEvaluated: card.rulesEvaluated,
     ruleScores: card.ruleScores,
     finalDecisionReason: card.finalDecisionReason,
+    whyThisCard: card.whyThisCard,
     rank: index + 1,
   }))
 
@@ -1200,8 +1201,6 @@ export async function POST(request: NextRequest) {
       page: '/advisor',
       entityType: 'recommendation',
       metadata: {
-        annualIncome: input.annualIncome,
-        cibilScore: input.cibilScore,
         goalCount: input.creditGoals.length,
       },
     })

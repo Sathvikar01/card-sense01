@@ -107,6 +107,12 @@ export function CreditCardVisual({
     if (enableFlip) setIsFlipped((prev) => !prev)
   }, [enableFlip])
 
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!enableFlip || (event.key !== 'Enter' && event.key !== ' ')) return
+    event.preventDefault()
+    setIsFlipped((prev) => !prev)
+  }, [enableFlip])
+
   const textColor = design.textColor === 'white' ? 'text-white' : 'text-gray-900'
   const textMuted = design.textColor === 'white' ? 'text-white/60' : 'text-gray-500'
   const textSubtle = design.textColor === 'white' ? 'text-white/40' : 'text-gray-400'
@@ -340,7 +346,15 @@ export function CreditCardVisual({
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
+      {...(enableFlip
+        ? {
+            onClick: handleClick,
+            onKeyDown: handleKeyDown,
+            role: 'button',
+            tabIndex: 0,
+            'aria-label': `${isFlipped ? 'Show front of' : 'Show back of'} ${cardName || design.cardLabel}`,
+          }
+        : {})}
       style={{
         perspective: 800,
         transformStyle: 'preserve-3d',

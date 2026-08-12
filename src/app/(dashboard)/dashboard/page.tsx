@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import type { Recommendation } from '@/types/recommendation'
+import { formatCurrency } from '@/lib/utils/format-currency'
+import { getCibilScoreRating } from '@/lib/credit-score'
 
 interface DashboardProfile {
   id: string
@@ -165,9 +167,7 @@ export default async function DashboardPage() {
   const cibilScore = profile?.credit_score || null
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
 
-  const greetingHour = new Date().getHours()
-  const greeting =
-    greetingHour < 12 ? 'Good morning' : greetingHour < 17 ? 'Good afternoon' : 'Good evening'
+  const greeting = 'Welcome back'
 
   return (
     <div className="space-y-8">
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="/advisor"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#b8860b]/25 transition-all hover:shadow-[#b8860b]/35 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#b8860b]/25 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] hover:shadow-[#b8860b]/35 hover:-translate-y-0.5"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v6m0 0v6m0-6h6m-6 0H2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
               New Recommendation
@@ -217,12 +217,12 @@ export default async function DashboardPage() {
               <p className="text-3xl font-bold text-foreground">{cibilScore}</p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-500 transition-all duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-500 transition-[width] duration-700"
                   style={{ width: `${Math.min(((cibilScore - 300) / 600) * 100, 100)}%` }}
                 />
               </div>
               <p className="mt-1.5 text-[0.65rem] text-muted-foreground">
-                {cibilScore >= 750 ? 'Excellent' : cibilScore >= 650 ? 'Good' : 'Needs improvement'}
+                {getCibilScoreRating(cibilScore)}
               </p>
             </div>
           ) : (
@@ -244,9 +244,9 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-3">
             <p className="text-3xl font-bold text-foreground">
-              <span className="text-lg font-medium text-muted-foreground">Rs.</span> {currentMonthTotal.toLocaleString('en-IN')}
+              {formatCurrency(currentMonthTotal)}
             </p>
-            <p className="mt-1 text-[0.65rem] text-muted-foreground">Current billing cycle</p>
+            <p className="mt-1 text-[0.65rem] text-muted-foreground">Current calendar month</p>
           </div>
         </div>
 

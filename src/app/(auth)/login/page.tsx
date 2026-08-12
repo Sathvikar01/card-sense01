@@ -84,7 +84,6 @@ function LoginForm() {
       })
       const next = searchParams.get('next')
       router.push(next || '/dashboard')
-      router.refresh()
     } catch (error) {
       toast.error('An unexpected error occurred')
       console.error(error)

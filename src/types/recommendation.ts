@@ -12,6 +12,10 @@ export interface CardRecommendation {
   annualValue?: number // Net annual value (rewards - fees)
   scoreBreakdown?: RecommendationScoreBreakdown
   comparisonMetrics?: RecommendationComparisonMetrics
+  rulesEvaluated?: RecommendationRuleEvaluation[]
+  ruleScores?: RecommendationRuleScores
+  finalDecisionReason?: string
+  whyThisCard?: WhyThisCardExplanation
   rank: number
 }
 
@@ -33,6 +37,42 @@ export interface RecommendationComparisonMetrics {
   loungeAccess: boolean
   fuelSurchargeWaiver: boolean
   forexMarkup: number | null
+}
+
+export interface RecommendationRuleEvaluation {
+  ruleId: string
+  label: string
+  weight: number
+  score: number
+  contribution: number
+  matched: boolean
+  detail?: string
+}
+
+export interface RecommendationRuleScores {
+  eligibilityFit: number
+  spendFit: number
+  goalFit: number
+  feeFit: number
+  diversificationFit: number
+  weightsUsed?: {
+    eligibilityFit: number
+    spendFit: number
+    goalFit: number
+    feeFit: number
+    diversificationFit: number
+    primaryGoalBoost?: number
+    answerInfluence?: Record<string, number>
+  }
+  weightedRaw?: number
+  finalScore?: number
+}
+
+export interface WhyThisCardExplanation {
+  headline?: string
+  summary?: string
+  finalDecisionReason?: string
+  endpoint?: string | null
 }
 
 export interface RewardBreakdown {

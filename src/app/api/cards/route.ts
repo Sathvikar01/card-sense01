@@ -5,6 +5,7 @@ import {
   isMissingCreditCardsTableError,
   toCreditCardListItem,
 } from '@/lib/cards/local-catalog'
+import { normalizeRewardRate } from '@/lib/cards/reward-rate'
 
 export const runtime = 'nodejs'
 
@@ -15,6 +16,7 @@ const SUMMARY_FIELDS = [
   'card_type',
   'annual_fee',
   'reward_rate_default',
+  'description',
   'lounge_access',
   'best_for',
   'popularity_score',
@@ -23,6 +25,17 @@ const SUMMARY_FIELDS = [
 const PERFORMANCE_LOGS_ENABLED = process.env.PERF_LOGS === '1'
 const DEFAULT_LIMIT = 60
 const MAX_LIMIT = 200
+const TRANSIENT_CATALOG_ERROR_MARKERS = [
+  'fetch failed',
+  'network',
+  'timeout',
+  'econnreset',
+  'econnrefused',
+  'ssl',
+  'handshake',
+  'cloudflare',
+  '525',
+]
 
 const normalizeFilter = (value: string | null) => {
   if (!value) return ''
@@ -44,6 +57,12 @@ const parsePositiveInteger = (value: string | null) => {
   }
 
   return parsed
+}
+
+const isTransientCatalogError = (message: string | undefined) => {
+  if (!message) return false
+  const normalized = message.toLowerCase()
+  return TRANSIENT_CATALOG_ERROR_MARKERS.some((marker) => normalized.includes(marker))
 }
 
 const getFallbackCardsResponse = (params: {
@@ -117,7 +136,9 @@ const getFallbackCardsResponse = (params: {
   const paginated = cards.slice(offset, offset + limit)
 
   return NextResponse.json({
-    cards: fields === 'full' ? paginated : paginated.map(toCreditCardListItem),
+    cards: fields === 'full'
+      ? paginated.map(normalizeRewardRate)
+      : paginated.map(normalizeRewardRate).map(toCreditCardListItem),
     meta: {
       total,
       limit,
@@ -151,7 +172,7 @@ export async function GET(request: NextRequest) {
     .eq('is_active', true)
 
   if (search) {
-    const cleanSearch = search.replace(/[,%]/g, '').trim()
+    const cleanSearch = search.replace(/[^\p{L}\p{N}\s&.'-]/gu, '').trim().slice(0, 80)
     if (cleanSearch) {
       cardsQuery = cardsQuery.or(
         `card_name.ilike.%${cleanSearch}%,bank_name.ilike.%${cleanSearch}%,description.ilike.%${cleanSearch}%`
@@ -202,7 +223,10 @@ export async function GET(request: NextRequest) {
 
   const { data: cards, error } = await cardsQuery
   if (error) {
-    if (isMissingCreditCardsTableError(error.message)) {
+    if (
+      isMissingCreditCardsTableError(error.message) ||
+      isTransientCatalogError(error.message)
+    ) {
       return getFallbackCardsResponse({
         search,
         bank,
@@ -216,7 +240,7 @@ export async function GET(request: NextRequest) {
         offset,
       })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Unable to load the card catalog' }, { status: 500 })
   }
 
   if (!cards || cards.length === 0) {
@@ -227,7 +251,8 @@ export async function GET(request: NextRequest) {
 
     if (
       (typeof activeCatalogCount === 'number' && activeCatalogCount === 0) ||
-      isMissingCreditCardsTableError(activeCatalogCountError?.message)
+      isMissingCreditCardsTableError(activeCatalogCountError?.message) ||
+      isTransientCatalogError(activeCatalogCountError?.message)
     ) {
       return getFallbackCardsResponse({
         search,
@@ -252,7 +277,7 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
 
     if (search) {
-      const cleanSearch = search.replace(/[,%]/g, '').trim()
+      const cleanSearch = search.replace(/[^\p{L}\p{N}\s&.'-]/gu, '').trim().slice(0, 80)
       if (cleanSearch) {
         countQuery = countQuery.or(
           `card_name.ilike.%${cleanSearch}%,bank_name.ilike.%${cleanSearch}%,description.ilike.%${cleanSearch}%`
@@ -286,8 +311,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const normalizedCards = (cards || []).map((card) => normalizeRewardRate(card))
   const responsePayload = {
-    cards: cards || [],
+    cards: fields === 'full' ? normalizedCards : normalizedCards.map(toCreditCardListItem),
     meta: {
       total,
       limit,

@@ -88,7 +88,7 @@ export function GoalsStep() {
               <div
                 key={goal.id}
                 className={`
-                  rounded-lg border-2 p-4 transition-all cursor-pointer
+                  rounded-lg border-2 p-4 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] cursor-pointer
                   ${
                     selected
                       ? 'border-blue-500 bg-blue-50'

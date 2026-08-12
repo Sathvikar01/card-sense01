@@ -38,7 +38,7 @@ export default function RecommendationsPage() {
                 bank: (card.bank || '') as string,
                 score: (card.score || 0) as number,
                 reason: ((card.reason || card.reasoning) || '') as string,
-                annualFee: ((card.annualFee || card.annualValue) || 0) as number,
+                annualFee: (card.annualFee ?? 0) as number,
                 rewardRate: (card.rewardRate || 0) as number,
                 estimatedAnnualValue: (card.estimatedAnnualValue || 0) as number,
                 pros: ((card.pros || card.keyPerks || []) as string[]),
@@ -46,6 +46,16 @@ export default function RecommendationsPage() {
                 bestCategories: (card.bestCategories || []) as string[],
                 eligibilityMatch: ((card.eligibilityMatch || 'moderate') as string) as 'high' | 'moderate' | 'uncertain',
                 usageStrategy: (card.usageStrategy || '') as string,
+                finalDecisionReason: card.finalDecisionReason ? String(card.finalDecisionReason) : undefined,
+                rulesEvaluated: Array.isArray(card.rulesEvaluated)
+                  ? (card.rulesEvaluated as AdvisorResult['cards'][number]['rulesEvaluated'])
+                  : undefined,
+                ruleScores: card.ruleScores && typeof card.ruleScores === 'object'
+                  ? (card.ruleScores as AdvisorResult['cards'][number]['ruleScores'])
+                  : undefined,
+                whyThisCard: card.whyThisCard && typeof card.whyThisCard === 'object'
+                  ? (card.whyThisCard as AdvisorResult['cards'][number]['whyThisCard'])
+                  : undefined,
               })),
             }
             store.setSavedResult(mapped)

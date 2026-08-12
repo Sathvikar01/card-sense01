@@ -57,7 +57,7 @@ export function AdvisorLoading() {
             <div
               key={idx}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-500',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-500',
                 active && 'bg-[#fdf3d7]/60',
                 done && 'opacity-60'
               )}

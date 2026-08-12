@@ -12,6 +12,9 @@ import { useAnalysisStore } from '@/store/use-analysis-store'
 import { motion } from 'framer-motion'
 import type { SavedAdvisorCard, SavedAdvisorResult, ProfileSummaryData } from '@/lib/store/advisor-store'
 import { trackInteraction } from '@/lib/interactions/client'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Progress } from '@/components/ui/progress'
+import { RecommendationExplanationDialog } from '@/components/advisor/recommendation-explanation-dialog'
 
 /* ------------------------------------------------------------------ */
 /*  Re-export types under the names used by the advisor page          */
@@ -55,7 +58,7 @@ function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
-          className={cn(color, 'transition-all duration-700 ease-out')}
+          className={cn(color, 'transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-700 ease-out')}
         />
       </svg>
       <span className="absolute text-sm font-bold tabular-nums text-foreground">
@@ -89,8 +92,29 @@ function EligibilityBadge({ level }: { level: AdvisorCardResult['eligibilityMatc
 /* ------------------------------------------------------------------ */
 
 function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
+  const primaryRules = [...(card.rulesEvaluated || [])]
+    .sort((a, b) => {
+      const aContribution = Number.isFinite(Number(a.contribution)) ? Number(a.contribution) : 0
+      const bContribution = Number.isFinite(Number(b.contribution)) ? Number(b.contribution) : 0
+      return bContribution - aContribution
+    })
+    .slice(0, 3)
+  const hasExplanation = Boolean(
+    card.finalDecisionReason || card.whyThisCard?.summary || (card.rulesEvaluated && card.rulesEvaluated.length > 0)
+  )
+  const ruleScores = card.ruleScores
+  const scoreRows = ruleScores
+    ? [
+        { id: 'eligibilityFit', label: 'Eligibility', value: Number(ruleScores.eligibilityFit) },
+        { id: 'spendFit', label: 'Spend match', value: Number(ruleScores.spendFit) },
+        { id: 'goalFit', label: 'Goal match', value: Number(ruleScores.goalFit) },
+        { id: 'feeFit', label: 'Fee comfort', value: Number(ruleScores.feeFit) },
+        { id: 'diversificationFit', label: 'Portfolio balance', value: Number(ruleScores.diversificationFit) },
+      ].filter((row) => Number.isFinite(row.value))
+    : []
+
   return (
-    <div className="group relative rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-[0_8px_32px_-8px_oklch(0.30_0.04_270/0.14)]">
+    <div className="group relative rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm overflow-hidden transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-300 hover:border-primary/30 hover:shadow-[0_8px_32px_-8px_oklch(0.30_0.04_270/0.14)]">
       {/* Rank stripe */}
       <div className={cn(
         'absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl',
@@ -117,7 +141,7 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
           <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Annual Fee</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">
-              {card.annualFee === 0 ? 'Free' : `INR ${card.annualFee.toLocaleString('en-IN')}`}
+              {card.annualFee === 0 ? 'Free' : `₹${card.annualFee.toLocaleString('en-IN')}`}
             </p>
           </div>
           <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
@@ -127,7 +151,7 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
           <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Est. Value/yr</p>
             <p className="text-sm font-semibold text-primary mt-0.5">
-              {card.estimatedAnnualValue > 0 ? `INR ${card.estimatedAnnualValue.toLocaleString('en-IN')}` : '--'}
+              {card.estimatedAnnualValue > 0 ? `₹${card.estimatedAnnualValue.toLocaleString('en-IN')}` : '—'}
             </p>
           </div>
         </div>
@@ -186,6 +210,95 @@ function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
             <p className="text-xs text-foreground/70 leading-relaxed">{card.usageStrategy}</p>
           </div>
         )}
+
+        {/* Explanation */}
+        {hasExplanation && (
+          <div className="rounded-xl border border-border/60 bg-background/70">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="explain">
+                <AccordionTrigger className="px-4 py-3 text-sm">
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why this card</span>
+                    <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-[10px] text-primary">
+                      Transparent scoring
+                    </Badge>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  {card.whyThisCard?.summary && (
+                    <p className="text-sm text-foreground/80 leading-relaxed">
+                      {card.whyThisCard.summary}
+                    </p>
+                  )}
+                  {card.finalDecisionReason && (
+                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                      {card.finalDecisionReason}
+                    </p>
+                  )}
+
+                  {scoreRows.length > 0 && (
+                    <div className="mt-4 space-y-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Score breakdown</p>
+                      {scoreRows.map((row) => {
+                        const clampedValue = Math.max(0, Math.min(100, row.value))
+                        return (
+                          <div key={row.id} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>{row.label}</span>
+                              <span className="tabular-nums text-foreground/80">{Math.round(clampedValue)}</span>
+                            </div>
+                            <Progress value={clampedValue} className="h-1.5" />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {primaryRules.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top signals</p>
+                      <div className="mt-2 space-y-2">
+                        {primaryRules.map((rule) => {
+                          const weightValue = Number.isFinite(Number(rule.weight)) ? Number(rule.weight) : 0
+                          const weightPct = Math.round(weightValue * 100)
+                          const contribution = Number.isFinite(Number(rule.contribution)) ? Number(rule.contribution) : 0
+                          const scoreValue = Number.isFinite(Number(rule.score)) ? Number(rule.score) : 0
+
+                          return (
+                            <div key={rule.ruleId} className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-semibold text-foreground">{rule.label}</p>
+                                <span className="text-[10px] text-muted-foreground">Weight {weightPct}%</span>
+                              </div>
+                              {rule.detail && (
+                                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{rule.detail}</p>
+                              )}
+                              <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span>Score {Math.round(scoreValue)}</span>
+                                <span>Contribution {contribution.toFixed(1)}</span>
+                                <span className={rule.matched ? 'text-emerald-600' : 'text-amber-600'}>
+                                  {rule.matched ? 'Matched' : 'Partial'}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <RecommendationExplanationDialog
+                      card={card}
+                      rank={rank}
+                      triggerClassName="w-full sm:w-auto"
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -203,6 +316,7 @@ const RANK_GRADIENTS = [
 
 function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank: number }) {
   const rankLabel = rank === 1 ? '#1 Match' : rank === 2 ? '#2 Match' : '#3 Match'
+  const explanationSnippet = card.whyThisCard?.summary || card.finalDecisionReason || card.reason
 
   return (
     <motion.div
@@ -257,7 +371,7 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Annual Fee</span>
                 <span className="font-semibold text-foreground">
-                  {card.annualFee === 0 ? 'Free' : `Rs. ${card.annualFee.toLocaleString('en-IN')}`}
+                  {card.annualFee === 0 ? 'Free' : `₹${card.annualFee.toLocaleString('en-IN')}`}
                 </span>
               </div>
 
@@ -276,7 +390,7 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
                     <Award className="h-3 w-3 text-amber-600" />
                   </div>
                   <span className="text-muted-foreground">
-                    Est. Rs. {card.estimatedAnnualValue.toLocaleString('en-IN')} / yr value
+                    Est. ₹{card.estimatedAnnualValue.toLocaleString('en-IN')} annual value
                   </span>
                 </div>
               )}
@@ -295,9 +409,22 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
                     >
                       {tag.replace(/_/g, ' ')}
                     </Badge>
-                  ))}
+                ))}
               </div>
             )}
+
+            {explanationSnippet && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {explanationSnippet}
+              </p>
+            )}
+
+            <RecommendationExplanationDialog
+              card={card}
+              rank={rank}
+              triggerLabel="See full scoring"
+              triggerClassName="w-full"
+            />
 
             {/* CTA — same as CardTile */}
             <div className="flex items-center justify-between border-t border-border/30 pt-3">
@@ -552,7 +679,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
           <button
             onClick={() => setViewMode('detailed')}
             className={cn(
-              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
               viewMode === 'detailed'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -564,7 +691,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
           <button
             onClick={() => setViewMode('grid')}
             className={cn(
-              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
               viewMode === 'grid'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -600,13 +727,29 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         )
       )}
 
-      {/* Analysis */}
-      {result.analysis && (
-        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5">
-          <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Analysis</p>
-          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{result.analysis}</p>
-        </div>
-      )}
+        {/* Analysis */}
+        {result.analysis && (
+          <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5">
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Analysis</p>
+            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{result.analysis}</p>
+          </div>
+        )}
+
+        {/* Transparency callout */}
+        {result.cards.some((card) =>
+          (card.rulesEvaluated && card.rulesEvaluated.length > 0) ||
+          card.ruleScores ||
+          card.finalDecisionReason ||
+          card.whyThisCard?.summary
+        ) && (
+          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 sm:p-5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Transparency</p>
+            <p className="mt-2 text-sm text-foreground/80 leading-relaxed">
+              Your match score is built from five signals: eligibility, spend alignment, goal fit, fee comfort, and portfolio balance.
+              Expand any card to see the scoring weights and the exact rules we evaluated.
+            </p>
+          </div>
+        )}
 
       {/* Card list / grid */}
       {viewMode === 'detailed' ? (

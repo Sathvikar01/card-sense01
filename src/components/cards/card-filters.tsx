@@ -32,19 +32,19 @@ const NETWORK_OPTIONS = [
 
 const MAX_FEE_OPTIONS = [
   { value: '0', label: 'Free' },
-  { value: '500', label: 'Up to Rs. 500' },
-  { value: '1000', label: 'Up to Rs. 1,000' },
-  { value: '2500', label: 'Up to Rs. 2,500' },
-  { value: '5000', label: 'Up to Rs. 5,000' },
-  { value: '10000', label: 'Up to Rs. 10,000' },
+  { value: '500', label: 'Up to ₹500' },
+  { value: '1000', label: 'Up to ₹1,000' },
+  { value: '2500', label: 'Up to ₹2,500' },
+  { value: '5000', label: 'Up to ₹5,000' },
+  { value: '10000', label: 'Up to ₹10,000' },
   { value: '999999', label: 'Any' },
 ]
 
 const SORT_OPTIONS = [
-  { value: 'popularity', label: 'Most Popular' },
+  { value: 'popularity', label: 'Highest Rated' },
   { value: 'fee_low', label: 'Fee: Low to High' },
   { value: 'fee_high', label: 'Fee: High to Low' },
-  { value: 'reward_high', label: 'Rewards: High to Low' },
+  { value: 'reward_high', label: 'Estimated Return: High to Low' },
   { value: 'name', label: 'Name: A to Z' },
 ]
 
@@ -112,7 +112,7 @@ export function CardFilters({
                 key={type.value}
                 onClick={() => onCardTypeChange(isActive ? 'all' : type.value)}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150',
+                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-150',
                   isActive
                     ? 'bg-foreground text-background border-foreground shadow-sm'
                     : 'bg-background text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground'
@@ -139,7 +139,7 @@ export function CardFilters({
                 key={option.value}
                 onClick={() => onNetworkChange(isActive ? 'all' : option.value)}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150',
+                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-150',
                   isActive
                     ? 'bg-foreground text-background border-foreground shadow-sm'
                     : 'bg-background text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground'
@@ -183,7 +183,7 @@ export function CardFilters({
         </label>
         <Select value={sortBy || 'popularity'} onValueChange={onSortByChange}>
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="Most Popular" />
+            <SelectValue placeholder="Highest Rated" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

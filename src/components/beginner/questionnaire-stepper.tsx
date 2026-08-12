@@ -102,7 +102,7 @@ export function QuestionnaireStepper({ onComplete }: QuestionnaireStepperProps) 
                   onClick={() => isClickable && handleStepClick(index)}
                   disabled={!isClickable && index !== currentStep}
                   className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all',
+                    'w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
                     isActive && 'bg-blue-600 text-white ring-4 ring-blue-100',
                     isCompleted && 'bg-green-600 text-white',
                     !isActive && !isCompleted && 'bg-gray-200 text-gray-500',
@@ -129,7 +129,7 @@ export function QuestionnaireStepper({ onComplete }: QuestionnaireStepperProps) 
               {index < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    'flex-1 h-1 mx-2 rounded-full transition-all',
+                    'flex-1 h-1 mx-2 rounded-full transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
                     isCompleted ? 'bg-green-600' : 'bg-gray-200'
                   )}
                 />
@@ -146,7 +146,7 @@ export function QuestionnaireStepper({ onComplete }: QuestionnaireStepperProps) 
             <div
               key={step.id}
               className={cn(
-                'h-2 rounded-full transition-all',
+                'h-2 rounded-full transition-[color,background-color,border-color,opacity,box-shadow,transform,width]',
                 index === currentStep && 'w-8 bg-blue-600',
                 index < currentStep && 'w-8 bg-green-600',
                 index > currentStep && 'w-2 bg-gray-300'

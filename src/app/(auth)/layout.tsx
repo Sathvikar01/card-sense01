@@ -20,9 +20,15 @@ export default function AuthLayout({
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
           <LockSVG />
-          <span>Your data is secure and never shared with third parties.</span>
+          <span>
+            We protect your data and use trusted providers as described in our{' '}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+              Privacy Policy
+            </Link>
+            .
+          </span>
         </div>
       </div>
     </div>
@@ -31,7 +37,7 @@ export default function AuthLayout({
 
 function LockSVG() {
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0 text-muted-foreground">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0 text-muted-foreground">
       <rect x="3" y="7" width="10" height="7" rx="2" stroke="currentColor" strokeWidth="1.3" />
       <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
       <circle cx="8" cy="10.5" r="1" fill="currentColor" opacity="0.6" />

@@ -114,7 +114,7 @@ export function SpendingStep() {
                 {percentage > 0 && (
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-300"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>

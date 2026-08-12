@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CIBIL_SCORE_RANGES } from '@/lib/credit-score'
 
 interface CibilHistoryEntry {
   id: string
@@ -45,12 +46,7 @@ function parseScoreDate(value: string) {
   return new Date(value)
 }
 
-const SCORE_RANGES = [
-  { min: 750, max: 900, label: 'Excellent', color: '#2563eb', bg: 'bg-[#2563eb]' },
-  { min: 700, max: 749, label: 'Good', color: '#3b82f6', bg: 'bg-[#3b82f6]' },
-  { min: 650, max: 699, label: 'Fair', color: '#f59e0b', bg: 'bg-[#f59e0b]' },
-  { min: 300, max: 649, label: 'Poor', color: '#dc2626', bg: 'bg-[#dc2626]' },
-]
+const SCORE_RANGES = CIBIL_SCORE_RANGES
 
 export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)

@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 
-const TURNSTILE_ENABLED = /^(1|true|yes|on)$/i.test(process.env.ENABLE_TURNSTILE || '')
+const TURNSTILE_ENABLED = /^(1|true|yes|on)$/i.test(
+  process.env.NEXT_PUBLIC_ENABLE_TURNSTILE || ''
+)
 
 type TurnstileSiteVerifyResponse = {
   success: boolean
@@ -80,7 +82,7 @@ export async function verifyTurnstileToken({
     }
   }
 
-  if (expectedAction && parsed.action && parsed.action !== expectedAction) {
+  if (expectedAction && parsed.action !== expectedAction) {
     return {
       success: false,
       reason: 'action_mismatch',

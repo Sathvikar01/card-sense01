@@ -149,7 +149,7 @@ export function RecentRecommendations({ recommendations: dbRecommendations }: Re
               transition={{ delay: idx * 0.1, duration: 0.3 }}
             >
               <Link href={href} className="group block">
-                <div className="recommendation-card p-4 transition-all duration-300">
+                <div className="recommendation-card p-4 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-300">
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <Badge className={`rounded-full border text-[0.6rem] ${getFlowTypeClass(recommendation.recommendation_type)}`} variant="secondary">
@@ -164,7 +164,7 @@ export function RecentRecommendations({ recommendations: dbRecommendations }: Re
                         })}
                       </div>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-[#b8860b]" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/40 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] group-hover:translate-x-0.5 group-hover:text-[#b8860b]" />
                   </div>
 
                   {topCard && (

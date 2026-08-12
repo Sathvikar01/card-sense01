@@ -12,10 +12,12 @@ const signupRequestSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/),
   fullName: z.string().trim().min(2).max(100).optional(),
   turnstileToken: z.string().min(1).optional(),
-  redirectToPath: z.string().startsWith('/').optional(),
+  redirectToPath: z
+    .string()
+    .startsWith('/')
+    .refine((value) => !value.startsWith('//'), 'Invalid redirect path')
+    .optional(),
 })
-
-const LOCALHOST_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1'])
 
 const parseOrigin = (value?: string | null) => {
   if (!value) return null
@@ -27,25 +29,14 @@ const parseOrigin = (value?: string | null) => {
   }
 }
 
-const isLocalOrigin = (origin: string) => {
-  try {
-    const { hostname } = new URL(origin)
-    return LOCALHOST_HOSTS.has(hostname.toLowerCase())
-  } catch {
-    return false
-  }
-}
-
 const resolveCallbackOrigin = (request: NextRequest) => {
   const requestOrigin = request.nextUrl.origin
   const envOrigin =
     parseOrigin(process.env.NEXT_PUBLIC_APP_URL) ??
     parseOrigin(process.env.NEXT_PUBLIC_SITE_URL)
 
-  if (!envOrigin) return requestOrigin
-
-  if (!isLocalOrigin(requestOrigin) && isLocalOrigin(envOrigin)) {
-    return requestOrigin
+  if (!envOrigin) {
+    return process.env.NODE_ENV === 'development' ? requestOrigin : null
   }
 
   return envOrigin
@@ -99,6 +90,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
     const callbackOrigin = resolveCallbackOrigin(request)
+    if (!callbackOrigin) {
+      return respond(
+        { error: 'Signup is temporarily unavailable' },
+        503,
+        { metadata: { reason: 'canonical_origin_missing' } }
+      )
+    }
 
     const emailRedirectTo = redirectToPath
       ? `${callbackOrigin}/auth/callback?next=${encodeURIComponent(redirectToPath)}`

@@ -166,7 +166,7 @@ function TravellerSection() {
     { value: 'occasionally', label: 'Occasionally', desc: '3 to 6 trips a year' },
     { value: 'frequently', label: 'Frequently', desc: 'Monthly or more' },
   ]
-  const AIRLINES = ['Air India', 'IndiGo', 'Vistara', 'SpiceJet', 'GoFirst', 'AirAsia', 'International carriers']
+  const AIRLINES = ['Air India', 'IndiGo', 'Akasa Air', 'SpiceJet', 'International carriers', 'Other']
 
   return (
     <div className="space-y-6">
@@ -179,7 +179,7 @@ function TravellerSection() {
               type="button"
               onClick={() => store.updateField('travelFrequency', opt.value)}
               className={cn(
-                'rounded-xl border p-3.5 text-left transition-all duration-200',
+                'rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                 store.travelFrequency === opt.value
                   ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
                   : 'border-border hover:border-border/80 hover:bg-muted/40'
@@ -208,7 +208,7 @@ function TravellerSection() {
                   )
                 }}
                 className={cn(
-                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200',
+                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-primary/50 bg-primary/[0.08] text-primary'
                     : 'border-border text-muted-foreground hover:bg-muted/40'
@@ -252,7 +252,7 @@ function OnlineShopperSection() {
                   )
                 }}
                 className={cn(
-                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200',
+                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-primary/50 bg-primary/[0.08] text-primary'
                     : 'border-border text-muted-foreground hover:bg-muted/40'
@@ -297,7 +297,7 @@ function SelfEmployedSection() {
                   )
                 }}
                 className={cn(
-                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200',
+                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-primary/50 bg-primary/[0.08] text-primary'
                     : 'border-border text-muted-foreground hover:bg-muted/40'
@@ -411,7 +411,7 @@ function RewardPreference() {
               type="button"
               onClick={() => store.updateField('preferredRewardType', opt.value)}
               className={cn(
-                'relative rounded-xl border p-3.5 text-left transition-all duration-200',
+                'relative rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                 selected
                   ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
                   : 'border-border hover:border-border/80 hover:bg-muted/40'

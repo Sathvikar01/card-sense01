@@ -119,7 +119,7 @@ export default async function EducationPage() {
 
                 return (
                   <ArticleLink key={article.id} href={`/education/${article.slug}`}>
-                    <div className="group h-full rounded-2xl border border-border/60 bg-card p-5 transition-all hover:border-[#d4a017]/40 hover:shadow-lg hover:shadow-[#d4a017]/5 hover:-translate-y-0.5">
+                    <div className="group h-full rounded-2xl border border-border/60 bg-card p-5 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] hover:border-[#d4a017]/40 hover:shadow-lg hover:shadow-[#d4a017]/5 hover:-translate-y-0.5">
                       {/* Category icon + difficulty */}
                       <div className="flex items-start justify-between mb-3">
                         <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${catMeta?.bgColor || 'bg-muted'}`}>

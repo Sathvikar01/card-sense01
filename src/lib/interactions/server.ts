@@ -2,7 +2,7 @@ import type { Json } from '@/types/database'
 import type { createClient as createServerClient } from '@/lib/supabase/server'
 import type { InteractionEventType } from '@/lib/interactions/events'
 
-const REDACTED_KEYS = /password|token|secret|key|email|phone|full_name|name|pan|aadhaar|address/i
+const REDACTED_KEYS = /password|token|secret|key|email|phone|full_name|name|pan|aadhaar|address|income|salary|cibil|credit.?score|fd.?amount|debt|spending/i
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)

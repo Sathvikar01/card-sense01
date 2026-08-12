@@ -7,6 +7,10 @@ import { AdvisorLoading } from '@/components/advisor/advisor-loading'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CompareBar } from '@/components/cards/compare-bar'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Progress } from '@/components/ui/progress'
+import { RecommendationExplanationDialog } from '@/components/advisor/recommendation-explanation-dialog'
 import { toast } from 'sonner'
 import type { CreditCardListItem } from '@/types/credit-card'
 import { trackInteraction } from '@/lib/interactions/client'
@@ -28,6 +32,40 @@ type AdvisorCardResult = {
   bestCategories: string[]
   eligibilityMatch: 'high' | 'moderate' | 'uncertain'
   usageStrategy: string
+  finalDecisionReason?: string
+  rulesEvaluated?: Array<{
+    ruleId: string
+    label: string
+    weight: number
+    score: number
+    contribution: number
+    matched: boolean
+    detail?: string
+  }>
+  ruleScores?: {
+    eligibilityFit: number
+    spendFit: number
+    goalFit: number
+    feeFit: number
+    diversificationFit: number
+    weightsUsed?: {
+      eligibilityFit: number
+      spendFit: number
+      goalFit: number
+      feeFit: number
+      diversificationFit: number
+      primaryGoalBoost?: number
+      answerInfluence?: Record<string, number>
+    }
+    weightedRaw?: number
+    finalScore?: number
+  }
+  whyThisCard?: {
+    headline?: string
+    summary?: string
+    finalDecisionReason?: string
+    endpoint?: string | null
+  }
 }
 
 type AdvisorResult = {
@@ -40,6 +78,21 @@ const TURNSTILE_ENABLED =
   Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+const FETCH_TIMEOUT_MS = 8000
+
+async function fetchWithTimeout(input: string, init?: RequestInit, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
 
 function mapCards(cards: Record<string, unknown>[] = []): AdvisorCardResult[] {
   return cards.map((card) => ({
@@ -56,6 +109,16 @@ function mapCards(cards: Record<string, unknown>[] = []): AdvisorCardResult[] {
     bestCategories: ((card.bestCategories || card.bestFor || []) as string[]),
     eligibilityMatch: ((card.eligibilityMatch || 'moderate') as 'high' | 'moderate' | 'uncertain'),
     usageStrategy: String(card.usageStrategy || ''),
+    finalDecisionReason: card.finalDecisionReason ? String(card.finalDecisionReason) : undefined,
+    rulesEvaluated: Array.isArray(card.rulesEvaluated)
+      ? (card.rulesEvaluated as AdvisorCardResult['rulesEvaluated'])
+      : undefined,
+    ruleScores: card.ruleScores && typeof card.ruleScores === 'object'
+      ? (card.ruleScores as AdvisorCardResult['ruleScores'])
+      : undefined,
+    whyThisCard: card.whyThisCard && typeof card.whyThisCard === 'object'
+      ? (card.whyThisCard as AdvisorCardResult['whyThisCard'])
+      : undefined,
   }))
 }
 
@@ -94,7 +157,6 @@ export default function AdvisorPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [checkedSaved, setCheckedSaved] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
   const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
 
@@ -129,10 +191,10 @@ export default function AdvisorPage() {
     const loadProfile = async () => {
       try {
         const [profileRes, cibilRes, cardsRes, spendingRes] = await Promise.all([
-          fetch('/api/profile'),
-          fetch('/api/profile/cibil'),
-          fetch('/api/cards/user'),
-          fetch('/api/spending'),
+          fetchWithTimeout('/api/profile'),
+          fetchWithTimeout('/api/profile/cibil'),
+          fetchWithTimeout('/api/cards/user'),
+          fetchWithTimeout('/api/spending'),
         ])
 
         if (profileRes.ok) {
@@ -189,7 +251,7 @@ export default function AdvisorPage() {
 
     const hydrateSaved = async () => {
       try {
-        const res = await fetch('/api/recommendations/latest')
+        const res = await fetchWithTimeout('/api/recommendations/latest')
         if (!res.ok) {
           return
         }
@@ -209,10 +271,6 @@ export default function AdvisorPage() {
         persistResult(mapped)
       } catch {
         // ignore
-      } finally {
-        if (!cancelled) {
-          setCheckedSaved(true)
-        }
       }
     }
 
@@ -364,16 +422,11 @@ export default function AdvisorPage() {
 
   const browseCards = useMemo(() => toBrowseCards(result?.cards || []), [result])
 
-  if (!checkedSaved && !result) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <svg className="animate-spin h-7 w-7 text-[#b8860b]" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" className="opacity-20" />
-          <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
-      </div>
+  const explainabilityEnabled = Boolean(
+    result?.cards?.some((card) =>
+      card.finalDecisionReason || card.whyThisCard?.summary || (card.rulesEvaluated && card.rulesEvaluated.length > 0)
     )
-  }
+  )
 
   return (
     <div className="space-y-6">
@@ -431,6 +484,132 @@ export default function AdvisorPage() {
           {result.analysis && (
             <div className="rounded-xl border border-border/60 bg-white p-4 text-sm leading-relaxed text-foreground/90">
               {result.analysis}
+            </div>
+          )}
+
+          {explainabilityEnabled && (
+            <div className="rounded-2xl border border-border/60 bg-white p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why these picks</p>
+                  <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
+                    Your match score blends five signals: eligibility, spend alignment, goal fit, fee comfort, and portfolio balance.
+                    Expand a card to see how each signal contributed.
+                  </p>
+                </div>
+                <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-[10px] text-primary">
+                  Transparent scoring
+                </Badge>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-border/60 bg-background/70 px-3">
+                <Accordion type="single" collapsible>
+                  {result.cards.map((card, index) => {
+                    const summary = card.whyThisCard?.summary || card.finalDecisionReason || card.reason
+                    const scoreRows = card.ruleScores
+                      ? [
+                          { id: 'eligibilityFit', label: 'Eligibility', value: Number(card.ruleScores.eligibilityFit) },
+                          { id: 'spendFit', label: 'Spend match', value: Number(card.ruleScores.spendFit) },
+                          { id: 'goalFit', label: 'Goal match', value: Number(card.ruleScores.goalFit) },
+                          { id: 'feeFit', label: 'Fee comfort', value: Number(card.ruleScores.feeFit) },
+                          { id: 'diversificationFit', label: 'Portfolio balance', value: Number(card.ruleScores.diversificationFit) },
+                        ].filter((row) => Number.isFinite(row.value))
+                      : []
+                    const topRules = [...(card.rulesEvaluated || [])]
+                      .sort((a, b) => {
+                        const aContribution = Number.isFinite(Number(a.contribution)) ? Number(a.contribution) : 0
+                        const bContribution = Number.isFinite(Number(b.contribution)) ? Number(b.contribution) : 0
+                        return bContribution - aContribution
+                      })
+                      .slice(0, 2)
+
+                    return (
+                      <AccordionItem key={card.id || `${index}`} value={`card-${card.id || index}`} className="border-border/40">
+                        <AccordionTrigger className="py-3">
+                          <div className="flex flex-1 items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">
+                                #{index + 1} {card.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">{card.bank}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold text-primary tabular-nums">{Math.round(card.score)}</p>
+                              <p className="text-[10px] text-muted-foreground">Match</p>
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-4">
+                          {summary && (
+                            <p className="text-sm text-foreground/80 leading-relaxed">
+                              {summary}
+                            </p>
+                          )}
+
+                          {scoreRows.length > 0 && (
+                            <div className="mt-4 space-y-2.5">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Score breakdown</p>
+                              {scoreRows.map((row) => {
+                                const clampedValue = Math.max(0, Math.min(100, row.value))
+                                return (
+                                  <div key={row.id} className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                      <span>{row.label}</span>
+                                      <span className="tabular-nums text-foreground/80">{Math.round(clampedValue)}</span>
+                                    </div>
+                                    <Progress value={clampedValue} className="h-1.5" />
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+
+                          {topRules.length > 0 && (
+                            <div className="mt-4">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top signals</p>
+                              <div className="mt-2 space-y-2">
+                                {topRules.map((rule) => {
+                                  const contribution = Number.isFinite(rule.contribution) ? rule.contribution : 0
+                                  const scoreValue = Number.isFinite(rule.score) ? rule.score : 0
+                                  const weightPct = Number.isFinite(rule.weight)
+                                    ? Math.round(rule.weight * 100)
+                                    : 0
+                                  return (
+                                    <div key={rule.ruleId} className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-xs font-semibold text-foreground">{rule.label}</p>
+                                        <span className="text-[10px] text-muted-foreground">Weight {weightPct}%</span>
+                                      </div>
+                                      {rule.detail && (
+                                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{rule.detail}</p>
+                                      )}
+                                      <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                                        <span>Score {Math.round(scoreValue)}</span>
+                                        <span>Contribution {contribution.toFixed(1)}</span>
+                                        <span className={rule.matched ? 'text-emerald-600' : 'text-amber-600'}>
+                                          {rule.matched ? 'Matched' : 'Partial'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mt-4">
+                            <RecommendationExplanationDialog
+                              card={card}
+                              rank={index + 1}
+                              triggerClassName="w-full sm:w-auto"
+                            />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )
+                  })}
+                </Accordion>
+              </div>
             </div>
           )}
 

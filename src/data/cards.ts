@@ -544,7 +544,7 @@ export const cards: CreditCard[] = [
       "6 complimentary domestic lounge visits per year",
       "2 complimentary international lounge visits per year",
       "10x reward points on dining, movies, and international spends",
-      "Club Vistara membership",
+      "Travel milestone benefit; verify the current partner with the issuer",
       "Annual welcome gift worth INR 5,000",
     ],
     loungeAccess: "6 domestic + 2 international per year",
@@ -614,7 +614,7 @@ export const cards: CreditCard[] = [
     joiningFee: 499,
     rewardRate: 5,
     rewardDescription:
-      "5% NeuCoins on Tata brands (BigBasket, Tata CLiQ, Air Asia). 1.5% on all other spends.",
+      "5% NeuCoins on eligible Tata brands. 1.5% on other eligible spends.",
     benefits: [
       "5% NeuCoins on all Tata brand purchases",
       "1.5% NeuCoins on all other spends",
@@ -689,7 +689,7 @@ export const cards: CreditCard[] = [
       "10 reward points per INR 100 on dining, groceries, and movies. 2x on other spends.",
     benefits: [
       "10x reward points on dining, groceries, and departmental stores",
-      "Club Vistara Silver membership",
+      "Travel membership benefit; verify the current partner with the issuer",
       "Complimentary domestic lounge access (8 per year)",
       "Annual fee reversal on INR 3L spend",
       "Welcome gift vouchers worth INR 3,000",
@@ -807,9 +807,9 @@ export const cards: CreditCard[] = [
     joiningFee: 3500,
     rewardRate: 4,
     rewardDescription:
-      "1 Membership Rewards point per INR 50. Bonus points on Indigo and Vistara.",
+      "1 Membership Rewards point per INR 50. Airline partner offers can change.",
     benefits: [
-      "Complimentary IndiGo and Vistara award miles",
+      "Airline partner benefits; verify current partners before applying",
       "8 domestic airport lounge visits per year",
       "Travel insurance cover up to INR 3 crore",
       "Annual fee reduced to INR 3,500 on renewal",

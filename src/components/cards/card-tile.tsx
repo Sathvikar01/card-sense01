@@ -27,7 +27,11 @@ export function CardTile({ card }: CardTileProps) {
 
   const formatFee = (fee: number) => {
     if (fee === 0) return 'Free'
-    return `Rs. ${fee.toLocaleString('en-IN')}`
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(fee)
   }
 
   return (
@@ -53,7 +57,7 @@ export function CardTile({ card }: CardTileProps) {
             : 'Add to comparison'
         }
         className={cn(
-          'absolute right-3 top-3 z-10 h-7 gap-1 rounded-full px-2 text-[0.6rem] font-semibold shadow-md transition-all',
+          'absolute right-3 top-3 z-10 h-7 gap-1 rounded-full px-2 text-[0.6rem] font-semibold shadow-md transition-[background-color,color,border-color,opacity]',
           isCompared
             ? 'bg-[#b8860b] text-white hover:bg-[#a07808] border-transparent'
             : maxReached
@@ -68,7 +72,7 @@ export function CardTile({ card }: CardTileProps) {
       <CardDetailLink cardId={card.id} className="group block">
         <div
           className={cn(
-            'stat-card-premium overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:shadow-violet-500/5',
+            'stat-card-premium overflow-hidden transition-[box-shadow] duration-300 group-hover:shadow-xl group-hover:shadow-violet-500/5',
             isCompared && 'ring-2 ring-[#b8860b]/40 ring-offset-1'
           )}
         >
@@ -86,7 +90,7 @@ export function CardTile({ card }: CardTileProps) {
               </div>
               {card.popularity_score >= 90 && (
                 <Badge className="rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-2.5 py-0.5 text-[0.55rem] uppercase tracking-wide text-white border-0 shadow-sm">
-                  Popular
+                  Highly Rated
                 </Badge>
               )}
             </div>
@@ -104,7 +108,11 @@ export function CardTile({ card }: CardTileProps) {
 
               <div className="flex items-center gap-2 text-sm">
                 <TrendingUp className="h-3 w-3 text-[#b8860b]" />
-                <span className="text-muted-foreground">{card.reward_rate_default}% base rewards</span>
+                <span className="text-muted-foreground">
+                  {card.reward_rate_default > 0
+                    ? `${card.reward_rate_default}% estimated base return`
+                    : 'See issuer earning rules'}
+                </span>
               </div>
 
               {card.lounge_access && card.lounge_access !== 'none' && (

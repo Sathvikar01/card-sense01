@@ -4,7 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 interface EducationArticleRow {
   id: string
-  view_count: number | null
+}
+
+interface EducationViewRpcClient {
+  rpc: (
+    name: 'increment_article_views',
+    args: { article_id: string }
+  ) => Promise<{ error: { message: string } | null }>
 }
 
 const trackViewSchema = z.object({
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     const { data: article } = (await supabase
       .from('education_articles')
-      .select('id, view_count')
+      .select('id')
       .eq('slug', slug)
       .eq('is_published', true)
       .single()) as { data: EducationArticleRow | null }
@@ -38,12 +44,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Article not found' }, { status: 404 })
     }
 
-    const nextCount = Number(article.view_count || 0) + 1
-
-    const { error } = await supabase
-      .from('education_articles')
-      .update({ view_count: nextCount } as never)
-      .eq('id', article.id)
+    const { error } = await (supabase as unknown as EducationViewRpcClient).rpc(
+      'increment_article_views',
+      { article_id: article.id }
+    )
 
     if (error) {
       return NextResponse.json({ message: 'Failed to update view count' }, { status: 500 })

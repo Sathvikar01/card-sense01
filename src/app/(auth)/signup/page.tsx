@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -22,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { trackInteraction } from '@/lib/interactions/client'
+import { useRouter } from 'next/navigation'
 
 const signupSchema = z.object({
   fullName: z
@@ -60,33 +60,36 @@ export default function SignupPage() {
   })
 
   async function onSubmit(data: SignupFormValues) {
-    const supabase = createClient()
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName,
+          redirectToPath: '/dashboard',
+        }),
       })
 
-      if (error) {
-        toast.error(error.message)
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        toast.error(
+          typeof payload.error === 'string'
+            ? payload.error
+            : 'Could not create your account right now. Please try again.'
+        )
         return
       }
 
-      toast.success('Account created! Please check your email to verify your account.')
+      toast.success('Account created. Check your email to verify and continue.')
       await trackInteraction('auth_signup_success', {
         page: '/signup',
         entityType: 'auth',
       })
-      router.push('/dashboard')
-      router.refresh()
+      router.push('/login')
     } catch (error) {
       toast.error('An unexpected error occurred')
       console.error(error)

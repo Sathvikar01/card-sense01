@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { motion } from 'framer-motion'
+import { clearPrivateClientData, readPrivateClientData } from '@/lib/privacy/client-data'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +33,6 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
-  FileText,
 } from 'lucide-react'
 
 interface SettingsClientProps {
@@ -42,8 +42,6 @@ interface SettingsClientProps {
   provider: string
   createdAt: string
 }
-
-const PREF_KEY = 'cardsense-preferences'
 
 /* ─────────────────── Section wrapper ─────────────────── */
 function Section({
@@ -104,6 +102,7 @@ export function SettingsClient({
 
   /* Deleting */
   const [deleting, setDeleting] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const isOAuthUser = provider !== 'email'
 
@@ -146,58 +145,37 @@ export function SettingsClient({
   }
 
   /* ── Export data as CSV ── */
-  const handleExportCSV = () => {
-    const rows = [
-      ['Field', 'Value'],
-      ['User ID', userId],
-      ['Email', email],
-      ['Display Name', name],
-      ['Exported At', new Date().toISOString()],
-      ['Advisor Preferences', localStorage.getItem('cardsense-advisor-storage') || ''],
-      ['Beginner Flow', localStorage.getItem('beginner-flow-storage') || ''],
-      ['App Preferences', localStorage.getItem(PREF_KEY) || ''],
-    ]
-    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `cardsense-data-export-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Data exported as CSV')
-  }
+  const handleExportData = async () => {
+    setExporting(true)
+    try {
+      const response = await fetch('/api/account/export', { cache: 'no-store' })
+      const serverData = await response.json()
+      if (!response.ok) {
+        throw new Error(serverData.error || 'Unable to export your data')
+      }
 
-  /* ── Export data as PDF ── */
-  const handleExportPDF = () => {
-    const rows = [
-      ['User ID', userId],
-      ['Email', email],
-      ['Display Name', name],
-      ['Exported At', new Date().toLocaleString('en-IN')],
-    ]
-    const html = `<!DOCTYPE html><html><head><title>CardSense Data Export</title>
-<style>body{font-family:system-ui,sans-serif;padding:2rem;color:#222}h1{font-size:1.4rem;margin-bottom:.5rem}
-p.sub{font-size:.85rem;color:#666;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;margin-top:.5rem}
-td,th{border:1px solid #ddd;padding:10px 12px;text-align:left;font-size:.85rem}th{background:#f8f4e8;font-weight:600}
-tr:nth-child(even){background:#fafafa}</style></head>
-<body><h1>CardSense India &mdash; Data Export</h1>
-<p class="sub">Generated on ${new Date().toLocaleString('en-IN')}</p>
-<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
-${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
-</tbody></table></body></html>`
-    const w = window.open('', '_blank')
-    if (w) {
-      w.document.write(html)
-      w.document.close()
-      w.print()
+      const exportData = { ...serverData, browserData: readPrivateClientData() }
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `cardsense-data-export-${new Date().toISOString().slice(0, 10)}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('Your complete data export is ready')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to export your data')
+    } finally {
+      setExporting(false)
     }
-    toast.success('Print dialog opened for PDF export')
   }
 
   /* ── Sign out ── */
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    clearPrivateClientData()
     toast.success('Signed out')
     router.push('/')
   }
@@ -207,8 +185,10 @@ ${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
     setDeleting(true)
     try {
       const res = await fetch('/api/account/delete', { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete account')
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || 'Failed to delete account')
       await supabase.auth.signOut()
+      clearPrivateClientData()
       toast.success('Account deleted')
       router.push('/')
     } catch (err: unknown) {
@@ -333,7 +313,9 @@ ${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
                   type={showPasswords ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Min. 8 characters"
+                  name="new-password"
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters…"
                 />
               </div>
               <div className="space-y-1.5">
@@ -343,7 +325,9 @@ ${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
                   type={showPasswords ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat password"
+                  name="confirm-password"
+                  autoComplete="new-password"
+                  placeholder="Repeat your password…"
                 />
               </div>
             </div>
@@ -384,24 +368,16 @@ ${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
               Download a copy of your CardSense data including preferences and analysis history
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="shrink-0">
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExportCSV}
+              onClick={handleExportData}
+              disabled={exporting}
               className="gap-1.5"
             >
               <Download className="h-3.5 w-3.5" />
-              CSV
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportPDF}
-              className="gap-1.5"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              PDF
+              {exporting ? 'Preparing…' : 'Download JSON'}
             </Button>
           </div>
         </div>

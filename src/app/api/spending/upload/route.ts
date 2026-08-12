@@ -4,6 +4,11 @@ import { parseCsvBankStatement } from '@/lib/parsers/csv-parser'
 import { PDFParse } from 'pdf-parse'
 import { ensurePdfParseWorkerConfigured } from '@/lib/pdf/worker'
 import { verifyTurnstileToken } from '@/lib/security/turnstile'
+import {
+  hasValidFileSignature,
+  sanitizeUploadFileName,
+  validateStatementUpload,
+} from '@/lib/security/upload'
 
 function categorizeTransaction(description: string): string {
   const desc = description.toLowerCase()
@@ -124,21 +129,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const file = formData.get('file') as File
+    const fileValue = formData.get('file')
 
-    if (!file) {
+    if (!(fileValue instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
+    const file = fileValue
 
-    const fileName = file.name.toLowerCase()
-    const isCsv = file.type === 'text/csv' || fileName.endsWith('.csv')
-    const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf')
+    const validation = validateStatementUpload(file)
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
+    }
 
-    if (!isCsv && !isPdf) {
-      return NextResponse.json(
-        { error: 'Only CSV and PDF files are supported' },
-        { status: 400 }
-      )
+    const buffer = Buffer.from(await file.arrayBuffer())
+    if (!hasValidFileSignature(buffer, validation.kind)) {
+      return NextResponse.json({ error: 'The uploaded file content is invalid.' }, { status: 400 })
     }
 
     let parsedTransactions: Array<{
@@ -149,8 +154,8 @@ export async function POST(request: NextRequest) {
       category: string
     }> = []
 
-    if (isCsv) {
-      const text = await file.text()
+    if (validation.kind === 'csv') {
+      const text = buffer.toString('utf8')
       const result = parseCsvBankStatement(text)
 
       if (result.errors.length > 0 && result.transactions.length === 0) {
@@ -162,7 +167,6 @@ export async function POST(request: NextRequest) {
 
       parsedTransactions = result.transactions
     } else {
-      const buffer = Buffer.from(await file.arrayBuffer())
       parsedTransactions = await parsePdfStatement(buffer)
     }
 
@@ -174,6 +178,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert transactions into spending_transactions
+    if (parsedTransactions.length > 5000) {
+      return NextResponse.json(
+        { error: 'This statement contains more than 5,000 transactions. Upload a shorter period.' },
+        { status: 400 }
+      )
+    }
+
+    const safeFileName = sanitizeUploadFileName(file.name)
     const rows = parsedTransactions.map((txn) => ({
       user_id: user.id,
       amount: txn.amount,
@@ -181,7 +193,7 @@ export async function POST(request: NextRequest) {
       merchant_name: txn.description.substring(0, 255) || null,
       transaction_date: txn.date,
       description: txn.description.substring(0, 500) || null,
-      source: 'bank_statement',
+      source: `bank_statement:${safeFileName}`,
     }))
 
     const { data, error } = await supabase

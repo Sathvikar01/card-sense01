@@ -6,6 +6,7 @@ export const INTERACTION_EVENTS = [
   'user_card_removed',
   'recommendation_requested',
   'recommendation_generated',
+  'recommendation_explanation_opened',
   'compare_started',
   'compare_completed',
   'advisor_started',

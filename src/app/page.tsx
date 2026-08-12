@@ -1,42 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ShieldCheck, TrendingUp, Cpu, CreditCard } from 'lucide-react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { ParticleField } from '@/components/shared/particle-field'
 import { CardSenseLogo, CardSenseIcon } from '@/components/shared/logo'
 import { AuthModal } from '@/components/shared/auth-modal'
 
 function AnimatedHero({ openAuth }: { openAuth: (path: string) => void }) {
-  const [phase, setPhase] = useState(0)
-
-  useEffect(() => {
-    // Phase 0: Particles assemble into card (0 -> 1.5s)
-    let t1 = setTimeout(() => setPhase(1), 1500)
-    // Phase 1: Content fades in on top of card (1.5s -> 3.5s)
-    let t2 = setTimeout(() => setPhase(2), 3500)
-    // Phase 2: Card bursts out, content stays
-    let t3 = setTimeout(() => setPhase(3), 4500)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [])
-
-  // Generate some particles
-  const particles = Array.from({ length: 60 }).map((_, i) => {
-    // scattered origins
-    const angle = Math.random() * Math.PI * 2
-    const dist = Math.random() * 800 + 400
-    const startX = Math.cos(angle) * dist
-    const startY = Math.sin(angle) * dist
-
-    // target position inside the 3D card layout (simulating a grid or random inside a rect)
-    const tx = (Math.random() - 0.5) * 280
-    const ty = (Math.random() - 0.5) * 160
-
-    return { id: i, startX, startY, tx, ty }
-  })
+  const phase: number = 3
+  const particles: Array<{ id: number; startX: number; startY: number; tx: number; ty: number }> = []
 
   return (
     <div className="relative w-full h-[600px] bg-[#0a1128] overflow-hidden flex items-center justify-center pt-16 rounded-b-[3rem] shadow-2xl">
@@ -70,14 +46,14 @@ function AnimatedHero({ openAuth }: { openAuth: (path: string) => void }) {
               initial={{ x: p.startX, y: p.startY, opacity: 0 }}
               animate={
                 phase === 0 ? { x: p.startX, y: p.startY, opacity: 0 } :
-                phase === 1 ? { x: p.tx + 170, y: p.ty + 100, opacity: 1, scale: Math.random() * 0.5 + 0.5 } :
+                phase === 1 ? { x: p.tx + 170, y: p.ty + 100, opacity: 1, scale: 0.5 + (p.id % 5) * 0.1 } :
                 phase === 2 ? { x: p.tx + 170, y: p.ty + 100, opacity: 0.8, scale: 0.5 } :
                 { x: p.startX * 1.5, y: p.startY * 1.5, opacity: 0, scale: 2 } // Burst out
               }
               transition={{
                 duration: phase === 3 ? 1 : 1.5,
                 ease: "circOut",
-                delay: phase === 1 ? Math.random() * 0.5 : 0
+                delay: phase === 1 ? (p.id % 10) * 0.05 : 0
               }}
             />
           ))}
@@ -97,17 +73,17 @@ function AnimatedHero({ openAuth }: { openAuth: (path: string) => void }) {
       >
         <motion.div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-white/5 px-4 py-1.5 backdrop-blur-md">
           <CreditCard className="h-4 w-4 text-[#d4a017]" />
-          <span className="text-sm font-medium text-white/90">50+ Indian Credit Cards</span>
+          <span className="text-sm font-medium text-white/90">Independent Card Comparison</span>
         </motion.div>
         
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-4">
-          Find the credit card that
+          Find a credit card that
           <span className="block text-gradient-gold">actually fits</span>
           your life
         </h1>
         
         <p className="mt-4 text-lg text-white/70 sm:text-xl max-w-xl mx-auto mb-8">
-          Compare 50+ cards. See real rewards. Pick smarter.
+          Compare fees, understand earning rules, and see estimates tailored to your spending.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -138,15 +114,15 @@ const navItems = [
 const valuePoints = [
   {
     title: 'Smart Matching',
-    description: 'Our scoring engine analyzes your spending patterns, income, and goals to find your perfect card match from 50+ options.',
+    description: 'Our scoring engine uses your spending patterns, income, and goals to rank suitable cards from the available catalog.',
     detail: 'Rule-based scoring',
     icon: Cpu,
     iconBg: 'from-[#b8860b] to-[#d4a017]',
     accentBorder: 'group-hover:border-[#d4a017]/30',
   },
   {
-    title: 'Real Reward Math',
-    description: 'See annual cashback value, fee impact, and category-wise reward breakdown before you apply. No more guesswork or misleading ads.',
+    title: 'Transparent Reward Estimates',
+    description: 'See estimated annual value, fee impact, and category rules before you apply. Issuer terms remain the final source of truth.',
     detail: 'Transparent calculations',
     icon: TrendingUp,
     iconBg: 'from-emerald-500 to-green-600',
@@ -154,15 +130,15 @@ const valuePoints = [
   },
   {
     title: 'Smart Eligibility Check',
-    description: 'Avoid rejections that hurt your CIBIL score. Get matched with cards you can realistically get approved for based on your credit profile.',
-    detail: 'Protects your credit score',
+    description: 'Focus on cards whose published requirements align with your profile. Approval always remains with the issuing bank.',
+    detail: 'Eligibility guidance',
     icon: ShieldCheck,
     iconBg: 'from-blue-500 to-cyan-600',
     accentBorder: 'group-hover:border-blue-200/80',
   },
 ]
 
-// All 20 available card IDs for the marquee
+// A curated visual sample from the wider catalog.
 const allCardIds = [
   'hdfc-regalia-gold',
   'sbi-cashback',
@@ -195,7 +171,7 @@ const steps = [
   {
     number: '02',
     title: 'Engine Analyzes Options',
-    description: 'Our engine compares 50+ Indian cards, calculating real reward value for your specific profile.',
+    description: 'Our engine compares available cards and estimates reward value for your profile.',
   },
   {
     number: '03',
@@ -208,18 +184,10 @@ export default function HomePage() {
   const router = useRouter()
   const row1 = allCardIds.slice(0, 10)
   const row2 = allCardIds.slice(10, 20)
-  const heroRef = useRef<HTMLElement>(null)
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
   const [authModal, setAuthModal] = useState<{ open: boolean; redirectTo: string }>({ open: false, redirectTo: '/dashboard' })
 
   const openAuth = (redirectTo: string) => setAuthModal({ open: true, redirectTo })
   const closeAuth = () => setAuthModal((prev) => ({ ...prev, open: false }))
-
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -228,19 +196,6 @@ export default function HomePage() {
 
     router.replace(`/auth/callback?${params.toString()}`)
   }, [router])
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!heroRef.current) return
-      const rect = heroRef.current.getBoundingClientRect()
-      setMousePos({
-        x: (e.clientX - rect.left) / rect.width,
-        y: (e.clientY - rect.top) / rect.height,
-      })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
 
   return (
     <div className="min-h-screen overflow-hidden">
@@ -300,7 +255,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1} className="outline-none">
         {/* ====== Hero Section ====== */}
         <AnimatedHero openAuth={openAuth} />
 
@@ -340,9 +295,9 @@ export default function HomePage() {
             <div className="section-divider mx-auto mb-12 max-w-xl" />
             <div className="mx-auto grid max-w-4xl gap-8 sm:grid-cols-3">
             {[
-              { value: '50+', label: 'Indian Cards', svg: <CardIconSVG /> },
-              { value: '10K+', label: 'Users Matched', svg: <UsersIconSVG /> },
-              { value: '2 min', label: 'To Recommendations', svg: <SpeedIconSVG /> },
+              { value: 'Fees', label: 'Compared after waivers', svg: <CardIconSVG /> },
+              { value: 'Profile', label: 'Used for matching', svg: <UsersIconSVG /> },
+              { value: 'Rewards', label: 'Shown as estimates', svg: <SpeedIconSVG /> },
             ].map((stat, idx) => (
               <motion.div
                 key={stat.label}
@@ -378,7 +333,7 @@ export default function HomePage() {
                 Built for the Indian credit card ecosystem
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Most card comparison sites show you generic lists. We run real calculations on your spending data to show exactly how much each card is worth to you.
+                Generic lists hide the trade-offs. CardSense combines your spending inputs with fee and reward rules to produce explainable estimates.
               </p>
             </motion.div>
 

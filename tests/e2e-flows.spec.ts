@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { clickByRole, expectVisible, fillByPlaceholder } from './helpers/ui'
+import { clickByRole, expectVisible } from './helpers/ui'
 
 const makeDetailedCard = (id: string, name: string, bank: string) => ({
   id,
@@ -61,9 +61,12 @@ test('User signup flow', async ({ page }) => {
   const email = `playwright+${Date.now()}@example.com`
   const password = 'Playwright123'
 
-  await fillByPlaceholder(page, 'John Doe', 'Playwright QA User', 'Signup full name input')
-  await fillByPlaceholder(page, 'you@example.com', email, 'Signup email input')
-  await fillByPlaceholder(page, 'Create a password', password, 'Signup password input')
+  await expectVisible(page.getByLabel('Full Name'), 'Signup full name input')
+  await page.getByLabel('Full Name').fill('Playwright QA User')
+  await expectVisible(page.getByLabel('Email'), 'Signup email input')
+  await page.getByLabel('Email').fill(email)
+  await expectVisible(page.getByLabel('Password'), 'Signup password input')
+  await page.getByLabel('Password').fill(password)
 
   const termsCheckbox = page.getByRole('checkbox').first()
   await expectVisible(termsCheckbox, 'Signup terms checkbox')
@@ -80,7 +83,9 @@ test('User signup flow', async ({ page }) => {
   expect(capturedEmail).toBe(email)
   expect(capturedPassword).toBe(password)
 
-  await expect(page, 'Expected successful signup flow to navigate to /dashboard').toHaveURL(/\/dashboard/)
+  await expect(page, 'Expected successful signup flow to navigate to /login').toHaveURL(/\/login/, {
+    timeout: 30_000,
+  })
 })
 
 test('Recommendation generation flow', async ({ page }) => {
@@ -155,18 +160,18 @@ test('Recommendation generation flow', async ({ page }) => {
   await page.goto('/advisor?new=1')
 
   await expectVisible(page.getByRole('heading', { name: /Advisor/i }), 'Advisor page heading')
-  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 1)')
-  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 2)')
+  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 1)')
+  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 2)')
 
   await expectVisible(
     page.getByText(/Select your top spending categories/i),
     'Advisor spending category prompt'
   )
-  await clickByRole(page, 'button', /^Groceries$/, 'Advisor groceries category button')
-  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 3)')
+  await clickByRole(page, 'button', /Groceries/i, 'Advisor groceries category button')
+  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 3)')
 
   await clickByRole(page, 'button', /Rewards and cashback/i, 'Advisor primary goal button')
-  await clickByRole(page, 'button', /^Get Recommendations$/, 'Advisor get recommendations button')
+  await clickByRole(page, 'button', /Get recommendations/i, 'Advisor get recommendations button')
 
   await expect
     .poll(() => recommendCalled, {
@@ -416,8 +421,8 @@ test('Advisor spending step is prefilled from spending tracker data', async ({ p
 
   await page.goto('/advisor?new=1')
 
-  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 1)')
-  await clickByRole(page, 'button', /^Continue$/, 'Advisor continue button (step 2)')
+  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 1)')
+  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 2)')
 
   await expectVisible(page.getByText(/Select your top spending categories/i), 'Spending step title')
   await expectVisible(

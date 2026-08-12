@@ -157,12 +157,6 @@
     -moz-appearance: textfield;
   }
 
-  :is(button, a, div, span)[class*="size-"][class*="rounded-"][class*="bg-"]:has(> svg):not(:has(> span, > p, > input, > textarea, > img, > div, > strong, > em)) {
-    background: transparent !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-  }
-
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
@@ -477,7 +471,7 @@
     border-radius: 1rem;
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
-    transition: all 240ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: border-color 240ms cubic-bezier(0.23, 1, 0.32, 1), background-color 240ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 240ms cubic-bezier(0.23, 1, 0.32, 1), transform 240ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .txn-row:hover {
@@ -578,7 +572,7 @@
     -webkit-backdrop-filter: blur(20px);
     border-radius: 1.25rem;
     box-shadow: 0 2px 12px -3px oklch(0.30 0.04 270 / 0.08);
-    transition: all 280ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: border-color 280ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 280ms cubic-bezier(0.23, 1, 0.32, 1), transform 280ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .dash-card:hover {
@@ -597,7 +591,7 @@
     -webkit-backdrop-filter: blur(20px);
     border-radius: 1.25rem;
     box-shadow: 0 2px 12px -3px oklch(0.30 0.04 270 / 0.08);
-    transition: all 280ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: border-color 280ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 280ms cubic-bezier(0.23, 1, 0.32, 1), transform 280ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .stat-card-premium:hover {
@@ -615,7 +609,7 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 1.25rem;
-    transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: border-color 300ms cubic-bezier(0.23, 1, 0.32, 1), background-color 300ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1), transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .quick-action-card::before {
@@ -642,7 +636,7 @@
     background: linear-gradient(135deg, oklch(1 0 0 / 0.6), oklch(0.98 0.003 270 / 0.4));
     backdrop-filter: blur(12px);
     border-radius: 1.25rem;
-    transition: all 280ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: border-color 280ms cubic-bezier(0.23, 1, 0.32, 1), background-color 280ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 280ms cubic-bezier(0.23, 1, 0.32, 1), transform 280ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .recommendation-card:hover {
@@ -705,5 +699,28 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter: drop-shadow(0 1px 2px rgba(184, 134, 11, 0.3)) drop-shadow(0 0px 4px rgba(212, 160, 23, 0.15));
+  }
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

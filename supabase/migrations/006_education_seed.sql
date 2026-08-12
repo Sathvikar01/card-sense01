@@ -162,9 +162,6 @@ Want a better CIBIL score? Follow these actionable strategies.
 Be patient and consistent. Credit building is a marathon, not a sprint!', 
 'CIBIL', 'intermediate', ARRAY['CIBIL', 'improve-score', 'tips'], 8, true);
 
--- Add more articles (truncated for brevity - you can add the remaining 12-15 articles following the same pattern)
-
--- Update view counts for popular articles
-UPDATE education_articles SET view_count = 150 WHERE slug = 'what-is-credit-card';
-UPDATE education_articles SET view_count = 200 WHERE slug = 'understanding-cibil-score';
-UPDATE education_articles SET view_count = 175 WHERE slug = 'improve-cibil-score';
+-- This migration contains bootstrap articles only. Run `npm run seed:education`
+-- after migrations to load the complete versioned dataset. View counts start at 0
+-- and are incremented only by real article-view events.

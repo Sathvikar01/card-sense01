@@ -1,6 +1,7 @@
 import { cards as legacyCards } from '@/data/cards'
 import type { CreditCard as LegacyCreditCard } from '@/types'
 import type { CreditCard, CreditCardListItem } from '@/types/credit-card'
+import { estimateBaseRewardRate } from '@/lib/cards/reward-rate'
 
 const BANK_NAME_MAP: Record<string, string> = {
   HDFC: 'HDFC Bank',
@@ -86,7 +87,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     golf_access: true,
     concierge_service: false,
     dining_benefits: '15% discount at select partner restaurants',
-    welcome_benefits: { description: 'Welcome vouchers worth Rs. 2,500 on spending Rs. 15,000 within 90 days', points: 2500 },
+    welcome_benefits: { description: 'Welcome vouchers worth ₹2,500 on spending ₹15,000 within 90 days', points: 2500 },
     milestone_benefits: { 'annual_spend': { spend_threshold: 500000, benefit: 'Annual fee waiver + flight vouchers', value: 5000 } },
     reward_rate_categories: {
       travel: { rate: 8, unit: 'points_per_100' },
@@ -99,7 +100,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     min_cibil_score: 700,
     annual_fee_waiver_spend: 200000,
     forex_markup: 3.5,
-    cons: ['No lounge access', 'Cashback capped at Rs. 5,000/month for offline', 'Annual fee not waived easily'],
+    cons: ['No lounge access', 'Cashback capped at ₹5,000/month for offline', 'Annual fee not waived easily'],
     reward_rate_categories: {
       online: { rate: 5, unit: 'percent_cashback' },
       offline: { rate: 1, unit: 'percent_cashback' },
@@ -115,14 +116,14 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       bills_and_dining: { rate: 2, unit: 'percent_cashback' },
       other: { rate: 1, unit: 'percent_cashback' },
     },
-    welcome_benefits: { description: 'Rs. 500 Amazon Pay cashback on first transaction' },
+    welcome_benefits: { description: '₹500 Amazon Pay cashback on first transaction' },
   },
   'axis-ace': {
     card_variant: 'classic',
     min_cibil_score: 700,
     annual_fee_waiver_spend: 200000,
     forex_markup: 3.5,
-    cons: ['Google Pay required for maximum cashback', 'No lounge access', 'Annual fee waiver requires Rs. 2L spend'],
+    cons: ['Google Pay required for maximum cashback', 'No lounge access', 'Annual fee waiver requires ₹2L spend'],
     reward_rate_categories: {
       google_pay_bills: { rate: 5, unit: 'percent_cashback' },
       swiggy_zomato_uber: { rate: 4, unit: 'percent_cashback' },
@@ -134,13 +135,13 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     min_cibil_score: 720,
     annual_fee_waiver_spend: 100000,
     forex_markup: 3.5,
-    cons: ['Cashback capped at Rs. 1,000/month', 'Lower offline reward rate', 'Annual fee of Rs. 1,000'],
+    cons: ['Cashback capped at ₹1,000/month', 'Lower offline reward rate', 'Annual fee of ₹1,000'],
     reward_rate_categories: {
       amazon_flipkart_myntra: { rate: 5, unit: 'percent_cashback' },
       online: { rate: 2.5, unit: 'percent_cashback' },
       offline: { rate: 1, unit: 'percent_cashback' },
     },
-    welcome_benefits: { description: 'Rs. 1,000 cashback on spending Rs. 1,000 in first 30 days', cashback: 1000 },
+    welcome_benefits: { description: '₹1,000 cashback on spending ₹1,000 in first 30 days', cashback: 1000 },
   },
   'sbi-simply-click': {
     card_variant: 'classic',
@@ -153,7 +154,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       online: { rate: 5, unit: 'points_per_100' },
       offline: { rate: 1, unit: 'points_per_100' },
     },
-    welcome_benefits: { description: 'Amazon voucher worth Rs. 500 on card activation' },
+    welcome_benefits: { description: 'Amazon voucher worth ₹500 on card activation' },
   },
   'idfc-first-classic': {
     card_variant: 'classic',
@@ -192,9 +193,9 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     card_variant: 'classic',
     min_cibil_score: 700,
     forex_markup: 3.5,
-    movie_benefits: 'Buy 1 Get 1 on movie tickets via Paytm (up to Rs. 250 discount)',
+    movie_benefits: 'Buy 1 Get 1 on movie tickets via Paytm (up to ₹250 discount)',
     dining_benefits: 'Discounts on Swiggy, Zomato orders',
-    cons: ['Low overall reward rate', 'No lounge access', 'Movie benefit capped at Rs. 250/month'],
+    cons: ['Low overall reward rate', 'No lounge access', 'Movie benefit capped at ₹250/month'],
   },
   'hdfc-diners-club-black': {
     card_variant: 'infinite',
@@ -207,7 +208,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     concierge_service: true,
     dining_benefits: 'Access to exclusive dining experiences and chef table events',
     movie_benefits: 'Complimentary BookMyShow tickets (Buy 1 Get 1)',
-    welcome_benefits: { description: 'Welcome vouchers worth Rs. 5,000', points: 5000 },
+    welcome_benefits: { description: 'Welcome vouchers worth ₹5,000', points: 5000 },
     milestone_benefits: {
       'spend_8l': { spend_threshold: 800000, benefit: 'Annual memberships (Amazon Prime, Zomato Gold, etc.)', value: 10000 },
       'spend_5l': { spend_threshold: 500000, benefit: 'Annual fee waiver + bonus vouchers', value: 5000 },
@@ -217,7 +218,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       dining: { rate: 10, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['Very high income requirement (Rs. 18L+)', 'Diners Club acceptance is limited in India', 'High annual fee of Rs. 10,000'],
+    cons: ['Very high income requirement (₹18L+)', 'Diners Club acceptance is limited in India', 'High annual fee of ₹10,000'],
   },
   'icici-sapphiro': {
     card_variant: 'signature',
@@ -226,7 +227,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     forex_markup: 2,
     travel_insurance_cover: 5000000,
     golf_access: true,
-    cons: ['High income requirement', 'Annual fee waiver needs Rs. 6L spend', 'Points value varies by redemption type'],
+    cons: ['High income requirement', 'Annual fee waiver needs ₹6L spend', 'Points value varies by redemption type'],
     reward_rate_categories: {
       dining_travel: { rate: 8, unit: 'points_per_100' },
       other: { rate: 4, unit: 'points_per_100' },
@@ -249,7 +250,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     forex_markup: 2.5,
     travel_insurance_cover: 3000000,
     concierge_service: true,
-    cons: ['Weekend-dependent bonus rewards', 'Priority Pass visits are limited', 'Annual fee of Rs. 2,999'],
+    cons: ['Weekend-dependent bonus rewards', 'Priority Pass visits are limited', 'Annual fee of ₹2,999'],
     reward_rate_categories: {
       weekend: { rate: 5, unit: 'points_per_100' },
       weekday: { rate: 3, unit: 'points_per_100' },
@@ -261,7 +262,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     annual_fee_waiver_spend: 250000,
     forex_markup: 3.5,
     movie_benefits: 'Buy 1 Get 1 on movie tickets every month',
-    cons: ['Limited lounge visits', 'Annual fee of Rs. 1,999', 'Cashback caps on dining category'],
+    cons: ['Limited lounge visits', 'Annual fee of ₹1,999', 'Cashback caps on dining category'],
     reward_rate_categories: {
       movies_ott_gaming: { rate: 5, unit: 'percent_cashback' },
       dining_delivery: { rate: 2, unit: 'percent_cashback' },
@@ -287,7 +288,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     forex_markup: 3.5,
     movie_benefits: 'Buy 1 Get 1 on BookMyShow (up to 4 times per month)',
     dining_benefits: '15% discount at select partner restaurants',
-    cons: ['Low base reward rate', 'Limited lounge visits (1/quarter)', 'Annual fee of Rs. 500'],
+    cons: ['Low base reward rate', 'Limited lounge visits (1/quarter)', 'Annual fee of ₹500'],
     reward_rate_categories: {
       all: { rate: 2, unit: 'points_per_100' },
     },
@@ -298,7 +299,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     annual_fee_waiver_spend: 250000,
     forex_markup: 3.5,
     movie_benefits: 'BookMyShow offers on select days',
-    cons: ['Yes Bank acceptance concerns in past', 'Limited international lounge access', 'Annual fee waiver needs Rs. 2.5L spend'],
+    cons: ['Yes Bank acceptance concerns in past', 'Limited international lounge access', 'Annual fee waiver needs ₹2.5L spend'],
     reward_rate_categories: {
       travel_dining: { rate: 6, unit: 'points_per_100' },
       other: { rate: 3, unit: 'points_per_100' },
@@ -327,17 +328,17 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     golf_access: true,
     concierge_service: true,
     dining_benefits: 'Access to the fine dining program with complimentary meals at 5-star restaurants',
-    welcome_benefits: { description: 'Welcome voucher worth Rs. 10,000 on first transaction', points: 10000 },
+    welcome_benefits: { description: 'Welcome voucher worth ₹10,000 on first transaction', points: 10000 },
     milestone_benefits: {
       'annual_10l': { spend_threshold: 1000000, benefit: 'Annual fee waiver + Club Marriott membership', value: 15000 },
-      'annual_8l': { spend_threshold: 800000, benefit: 'Bonus reward points worth Rs. 7,500', value: 7500 },
+      'annual_8l': { spend_threshold: 800000, benefit: 'Bonus reward points worth ₹7,500', value: 7500 },
     },
     reward_rate_categories: {
       smartbuy_travel: { rate: 33, unit: 'points_per_100' },
       dining: { rate: 10, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['By-invitation-only for most applicants', 'Very high income requirement (Rs. 30L+)', 'High annual fee of Rs. 12,500'],
+    cons: ['By-invitation-only for most applicants', 'Very high income requirement (₹30L+)', 'High annual fee of ₹12,500'],
   },
   'axis-reserve': {
     card_variant: 'infinite',
@@ -348,7 +349,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     golf_access: true,
     concierge_service: true,
     dining_benefits: 'Exclusive curated dining experiences at Michelin-starred and premium restaurants',
-    welcome_benefits: { description: 'Welcome gift pack valued at Rs. 25,000 on first spend', points: 25000 },
+    welcome_benefits: { description: 'Welcome gift pack valued at ₹25,000 on first spend', points: 25000 },
     milestone_benefits: {
       'annual_35l': { spend_threshold: 3500000, benefit: 'Annual fee reversal + exclusive luxury experiences', value: 50000 },
     },
@@ -357,7 +358,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       dining_intl: { rate: 10, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['Extremely high annual fee of Rs. 50,000', 'Income requirement of Rs. 60L+', 'Overkill for moderate spenders'],
+    cons: ['Extremely high annual fee of ₹50,000', 'Income requirement of ₹60L+', 'Overkill for moderate spenders'],
   },
   'sbi-elite': {
     card_variant: 'platinum',
@@ -367,13 +368,13 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     travel_insurance_cover: 10000000,
     golf_access: true,
     concierge_service: false,
-    welcome_benefits: { description: 'Welcome gift of Rs. 5,000 as e-vouchers on first spend of Rs. 5,000', points: 5000 },
+    welcome_benefits: { description: 'Welcome gift of ₹5,000 as e-vouchers on first spend of ₹5,000', points: 5000 },
     reward_rate_categories: {
       dining_intl: { rate: 10, unit: 'points_per_100' },
       movies: { rate: 10, unit: 'points_per_100' },
       other: { rate: 2, unit: 'points_per_100' },
     },
-    cons: ['High annual fee of Rs. 4,999', 'Limited international lounge visits (only 2)', 'Fee waiver needs Rs. 10L annual spend'],
+    cons: ['High annual fee of ₹4,999', 'Limited international lounge visits (only 2)', 'Fee waiver needs ₹10L annual spend'],
   },
   'icici-emeralde': {
     card_variant: 'world',
@@ -385,13 +386,13 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     golf_access: true,
     concierge_service: true,
     dining_benefits: 'Zomato Pro Plus and exclusive chef-curated dining events',
-    welcome_benefits: { description: 'Welcome Kit with premium memberships worth Rs. 12,000', points: 12000 },
+    welcome_benefits: { description: 'Welcome Kit with premium memberships worth ₹12,000', points: 12000 },
     reward_rate_categories: {
       international: { rate: 12, unit: 'points_per_100' },
       domestic_travel: { rate: 6, unit: 'points_per_100' },
       other: { rate: 6, unit: 'points_per_100' },
     },
-    cons: ['Very high income requirement (Rs. 24L+)', 'Annual fee of Rs. 12,000', 'Not easily available without ICICI relationship'],
+    cons: ['Very high income requirement (₹24L+)', 'Annual fee of ₹12,000', 'Not easily available without ICICI relationship'],
   },
   'axis-atlas': {
     card_variant: 'world',
@@ -406,14 +407,14 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       dining: { rate: 6, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['Annual fee of Rs. 5,000', 'Miles transferability limited to select programs', 'Best value only through travel bookings'],
+    cons: ['Annual fee of ₹5,000', 'Miles transferability limited to select programs', 'Best value only through travel bookings'],
   },
   'hdfc-tata-neu-plus': {
     card_variant: 'classic',
     min_cibil_score: 700,
     annual_fee_waiver_spend: 100000,
     forex_markup: 3.5,
-    welcome_benefits: { description: 'NeuCoins worth Rs. 500 on first spend of Rs. 500', cashback: 500 },
+    welcome_benefits: { description: 'NeuCoins worth ₹500 on first spend of ₹500', cashback: 500 },
     reward_rate_categories: {
       tata_brands: { rate: 5, unit: 'percent_cashback' },
       other: { rate: 1.5, unit: 'percent_cashback' },
@@ -425,13 +426,13 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     min_cibil_score: 730,
     annual_fee_waiver_spend: 300000,
     forex_markup: 3.5,
-    welcome_benefits: { description: 'NeuCoins worth Rs. 1,500 on first spend of Rs. 3,000', cashback: 1500 },
+    welcome_benefits: { description: 'NeuCoins worth ₹1,500 on first spend of ₹3,000', cashback: 1500 },
     reward_rate_categories: {
       tata_brands: { rate: 10, unit: 'percent_cashback' },
       emi_spends: { rate: 5, unit: 'percent_cashback' },
       other: { rate: 1.5, unit: 'percent_cashback' },
     },
-    cons: ['RuPay network limits international usage', 'Annual fee of Rs. 1,499', 'Premium benefits lag behind Visa/MC cards at same price'],
+    cons: ['RuPay network limits international usage', 'Annual fee of ₹1,499', 'Premium benefits lag behind Visa/MC cards at same price'],
   },
   'icici-instant-platinum': {
     card_variant: 'platinum',
@@ -446,7 +447,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     forex_markup: 2.5,
     travel_insurance_cover: 5000000,
     dining_benefits: 'Complimentary access to Zomato dining program with 20% off at select restaurants',
-    welcome_benefits: { description: 'Welcome vouchers worth Rs. 3,000 on spending Rs. 5,000 in 60 days', points: 3000 },
+    welcome_benefits: { description: 'Welcome vouchers worth ₹3,000 on spending ₹5,000 in 60 days', points: 3000 },
     milestone_benefits: {
       'spend_3l': { spend_threshold: 300000, benefit: 'Annual fee reversal', value: 2999 },
     },
@@ -455,7 +456,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       movies: { rate: 10, unit: 'points_per_100' },
       other: { rate: 2, unit: 'points_per_100' },
     },
-    cons: ['Annual fee of Rs. 2,999', 'International lounge access not included', 'Club Vistara Silver has limited perks'],
+    cons: ['Annual fee of INR 2,999', 'International lounge access not included', 'Travel partner benefits may change'],
   },
   'kotak-white': {
     card_variant: 'signature',
@@ -463,7 +464,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     annual_fee_waiver_spend: 400000,
     forex_markup: 2.5,
     travel_insurance_cover: 5000000,
-    cons: ['Annual fee of Rs. 3,000', 'Limited international lounge access', 'Reward points value is moderate'],
+    cons: ['Annual fee of ₹3,000', 'Limited international lounge access', 'Reward points value is moderate'],
     reward_rate_categories: {
       travel_dining_entertainment: { rate: 8, unit: 'points_per_100' },
       other: { rate: 4, unit: 'points_per_100' },
@@ -474,7 +475,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     min_cibil_score: 720,
     annual_fee_waiver_spend: 200000,
     forex_markup: 3.5,
-    cons: ['Annual fee of Rs. 1,499', 'Limited domestic lounge visits', 'No international lounge access'],
+    cons: ['Annual fee of ₹1,499', 'Limited domestic lounge visits', 'No international lounge access'],
     reward_rate_categories: {
       dining_travel_intl: { rate: 8, unit: 'points_per_100' },
       other: { rate: 4, unit: 'points_per_100' },
@@ -485,20 +486,20 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     min_cibil_score: 700,
     annual_fee_waiver_spend: 200000,
     forex_markup: 3.5,
-    welcome_benefits: { description: 'Flipkart voucher worth Rs. 500 on approval', cashback: 500 },
+    welcome_benefits: { description: 'Flipkart voucher worth ₹500 on approval', cashback: 500 },
     reward_rate_categories: {
       flipkart_cleartrip: { rate: 5, unit: 'percent_cashback' },
       preferred_merchants: { rate: 4, unit: 'percent_cashback' },
       other: { rate: 1.5, unit: 'percent_cashback' },
     },
-    cons: ['Best rewards limited to Flipkart ecosystem', 'Annual fee of Rs. 500', 'Cashback is credited as statement credit'],
+    cons: ['Best rewards limited to Flipkart ecosystem', 'Annual fee of ₹500', 'Cashback is credited as statement credit'],
   },
   'hdfc-biz-moneyback': {
     card_variant: 'classic',
     min_cibil_score: 700,
     annual_fee_waiver_spend: 50000,
     forex_markup: 3.5,
-    welcome_benefits: { description: 'Rs. 500 CashPoints on first spend of Rs. 500', cashback: 500 },
+    welcome_benefits: { description: '₹500 CashPoints on first spend of ₹500', cashback: 500 },
     reward_rate_categories: {
       amazon_bigbasket_flipkart: { rate: 5, unit: 'points_per_100' },
       other: { rate: 2, unit: 'points_per_100' },
@@ -511,12 +512,12 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     annual_fee_waiver_spend: null,
     forex_markup: 3.5,
     travel_insurance_cover: 30000000,
-    welcome_benefits: { description: 'Taj voucher or Marriott e-gift card worth Rs. 4,000 on first spend', points: 4000 },
+    welcome_benefits: { description: 'Taj voucher or Marriott e-gift card worth ₹4,000 on first spend', points: 4000 },
     reward_rate_categories: {
       all: { rate: 4, unit: 'points_per_100' },
-      indigo_vistara: { rate: 8, unit: 'points_per_100' },
+      airline_partners: { rate: 8, unit: 'points_per_100' },
     },
-    cons: ['Limited merchant acceptance for Amex in India', 'No fuel surcharge waiver', 'Annual fee of Rs. 5,000 not easily waived'],
+    cons: ['Limited merchant acceptance for Amex in India', 'No fuel surcharge waiver', 'Annual fee of ₹5,000 not easily waived'],
   },
   'amex-gold-charge': {
     card_variant: 'gold',
@@ -527,7 +528,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     reward_rate_categories: {
       all: { rate: 5, unit: 'points_per_100' },
     },
-    milestone_benefits: { 'monthly_bonus': { spend_threshold: 6000, benefit: '1,000 bonus MR points on 4 transactions of Rs. 1,500+ per month', value: 1000 } },
+    milestone_benefits: { 'monthly_bonus': { spend_threshold: 6000, benefit: '1,000 bonus MR points on 4 transactions of ₹1,500+ per month', value: 1000 } },
     cons: ['Limited merchant acceptance in India', 'No fuel surcharge waiver', 'Points never expire but Amex acceptance is limited'],
   },
   'indusind-pinnacle': {
@@ -539,14 +540,14 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     golf_access: true,
     concierge_service: true,
     dining_benefits: 'Bespoke dining at Michelin-starred restaurants and private chef arrangements',
-    welcome_benefits: { description: 'Welcome kit valued at Rs. 50,000 with luxury brand vouchers', points: 50000 },
+    welcome_benefits: { description: 'Welcome kit valued at ₹50,000 with luxury brand vouchers', points: 50000 },
     milestone_benefits: {
       'annual_50l': { spend_threshold: 5000000, benefit: 'Private jet charter credits + luxury hotel stays', value: 100000 },
     },
     reward_rate_categories: {
       all: { rate: 20, unit: 'points_per_100' },
     },
-    cons: ['Extremely high annual fee of Rs. 50,000', 'Income requirement of Rs. 50L+', 'Overkill for most consumers'],
+    cons: ['Extremely high annual fee of ₹50,000', 'Income requirement of ₹50L+', 'Overkill for most consumers'],
   },
   'rbl-world-safari': {
     card_variant: 'world',
@@ -558,7 +559,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       travel: { rate: 6, unit: 'points_per_100' },
       other: { rate: 2, unit: 'points_per_100' },
     },
-    cons: ['Annual fee of Rs. 3,000', 'RBL has smaller branch network', 'Non-travel rewards are low'],
+    cons: ['Annual fee of ₹3,000', 'RBL has smaller branch network', 'Non-travel rewards are low'],
   },
   'idfc-first-wealth': {
     card_variant: 'signature',
@@ -585,7 +586,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       dining_travel: { rate: 10, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['High annual fee of Rs. 7,500', 'Federal Bank has limited branch network', 'Less brand recognition than top-tier cards'],
+    cons: ['High annual fee of ₹7,500', 'Federal Bank has limited branch network', 'Less brand recognition than top-tier cards'],
   },
   'yes-marquee': {
     card_variant: 'world',
@@ -595,12 +596,12 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     travel_insurance_cover: 15000000,
     golf_access: true,
     concierge_service: true,
-    welcome_benefits: { description: 'Annual membership benefits package worth Rs. 15,000', points: 15000 },
+    welcome_benefits: { description: 'Annual membership benefits package worth ₹15,000', points: 15000 },
     reward_rate_categories: {
       travel_dining: { rate: 24, unit: 'points_per_100' },
       other: { rate: 12, unit: 'points_per_100' },
     },
-    cons: ['Very high annual fee of Rs. 9,999', 'Yes Bank had stability concerns', 'Fee waiver needs Rs. 10L spend'],
+    cons: ['Very high annual fee of ₹9,999', 'Yes Bank had stability concerns', 'Fee waiver needs ₹10L spend'],
   },
   'au-altura': {
     card_variant: 'classic',
@@ -615,12 +616,12 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     forex_markup: 1.5,
     travel_insurance_cover: 30000000,
     concierge_service: true,
-    welcome_benefits: { description: 'Welcome vouchers worth Rs. 10,000 on first spend of Rs. 10,000', points: 10000 },
+    welcome_benefits: { description: 'Welcome vouchers worth ₹10,000 on first spend of ₹10,000', points: 10000 },
     reward_rate_categories: {
       dining_travel_intl: { rate: 20, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['High annual fee of Rs. 7,999', 'AU Small Finance has limited network', 'Fee waiver requires Rs. 8L spend'],
+    cons: ['High annual fee of ₹7,999', 'AU Small Finance has limited network', 'Fee waiver requires ₹8L spend'],
   },
   'hdfc-rupay-biz': {
     card_variant: 'classic',
@@ -637,12 +638,12 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     min_cibil_score: 700,
     annual_fee_waiver_spend: 100000,
     forex_markup: 3.5,
-    welcome_benefits: { description: 'Bonus 2,000 activation points on first Rs. 2,000 spend', points: 2000 },
+    welcome_benefits: { description: 'Bonus 2,000 activation points on first ₹2,000 spend', points: 2000 },
     reward_rate_categories: {
       dining_grocery_movies: { rate: 10, unit: 'points_per_100' },
       other: { rate: 1, unit: 'points_per_100' },
     },
-    cons: ['Low non-category reward rate', 'No lounge access', 'Annual fee of Rs. 499'],
+    cons: ['Low non-category reward rate', 'No lounge access', 'Annual fee of ₹499'],
   },
   'icici-rubyx': {
     card_variant: 'signature',
@@ -652,12 +653,12 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     travel_insurance_cover: 3000000,
     movie_benefits: 'Buy 1 Get 1 on BookMyShow every month',
     dining_benefits: '5x rewards on weekday dining across all restaurants',
-    welcome_benefits: { description: 'Vouchers worth Rs. 5,000 on spending Rs. 50,000 in 60 days', points: 5000 },
+    welcome_benefits: { description: 'Vouchers worth ₹5,000 on spending ₹50,000 in 60 days', points: 5000 },
     reward_rate_categories: {
       weekday_dining: { rate: 5, unit: 'points_per_100' },
       other: { rate: 3, unit: 'points_per_100' },
     },
-    cons: ['Annual fee of Rs. 3,000', 'Dining rewards only on weekdays', 'Fee waiver needs Rs. 5L spend'],
+    cons: ['Annual fee of ₹3,000', 'Dining rewards only on weekdays', 'Fee waiver needs ₹5L spend'],
   },
   'axis-magnus': {
     card_variant: 'signature',
@@ -675,7 +676,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       travel_portals: { rate: 25, unit: 'points_per_100' },
       other: { rate: 12, unit: 'points_per_100' },
     },
-    cons: ['Very high annual fee of Rs. 12,500', 'Income requirement of Rs. 20L+', 'Max value is unlocked only via transfer partners'],
+    cons: ['Very high annual fee of ₹12,500', 'Income requirement of ₹20L+', 'Max value is unlocked only via transfer partners'],
   },
   'hdfc-swiggy': {
     card_variant: 'classic',
@@ -720,12 +721,12 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     golf_access: false,
     concierge_service: false,
     dining_benefits: 'Dine out privileges at select partner restaurants with up to 15% off',
-    welcome_benefits: { description: 'Welcome vouchers worth Rs. 2,000 on first spend', points: 2000 },
+    welcome_benefits: { description: 'Welcome vouchers worth ₹2,000 on first spend', points: 2000 },
     reward_rate_categories: {
       dining_travel: { rate: 8, unit: 'points_per_100' },
       other: { rate: 4, unit: 'points_per_100' },
     },
-    cons: ['Annual fee of Rs. 2,500', 'Being phased out in favor of Regalia Gold', 'Limited Priority Pass visits (2 international)'],
+    cons: ['Annual fee of ₹2,500', 'Being phased out in favor of Regalia Gold', 'Limited Priority Pass visits (2 international)'],
   },
   'idfc-first-select': {
     card_variant: 'signature',
@@ -765,7 +766,7 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
       vistara: { rate: 10, unit: 'points_per_100' },
       other: { rate: 6, unit: 'points_per_100' },
     },
-    cons: ['Very high annual fee of Rs. 10,000', 'Vistara merged with Air India (program transition)', 'Club Vistara Gold perks may change'],
+    cons: ['Very high annual fee of ₹10,000', 'Vistara merged with Air India (program transition)', 'Club Vistara Gold perks may change'],
   },
   'sbi-miles-elite': {
     card_variant: 'world',
@@ -773,20 +774,29 @@ const CARD_ENRICHMENTS: Record<string, CardEnrichment> = {
     annual_fee_waiver_spend: 500000,
     forex_markup: 1.99,
     travel_insurance_cover: 10000000,
-    welcome_benefits: { description: 'Welcome miles worth Rs. 5,000 on first transaction', points: 5000 },
+    welcome_benefits: { description: 'Welcome miles worth ₹5,000 on first transaction', points: 5000 },
     reward_rate_categories: {
       international_travel: { rate: 20, unit: 'points_per_100' },
       other: { rate: 5, unit: 'points_per_100' },
     },
-    cons: ['Annual fee of Rs. 4,999', 'Miles have limited transfer partners in India', 'Non-travel redemptions offer poor value'],
+    cons: ['Annual fee of ₹4,999', 'Miles have limited transfer partners in India', 'Non-travel redemptions offer poor value'],
   },
 }
 
-const now = new Date().toISOString()
+const CATALOG_IMPORT_DATE = '2026-02-19T00:00:00.000Z'
+
+const getLoungeAccessType = (details: string | null) => {
+  if (!details) return 'none'
+  const normalized = details.toLowerCase()
+  const domestic = normalized.includes('domestic')
+  const international = normalized.includes('international')
+  if (domestic && international) return 'domestic_and_international'
+  if (international) return 'international_only'
+  return 'domestic_only'
+}
 
 const mapLegacyCardToCreditCard = (card: LegacyCreditCard): CreditCard => {
   const minIncome = card.minIncomeRequired > 0 ? card.minIncomeRequired : null
-  const hasLoungeAccess = Boolean(card.loungeAccess)
   const ageRule = CARD_AGE_RULES[card.id] ?? { minAge: 21, maxAge: 65 }
   const enrichment = CARD_ENRICHMENTS[card.id]
 
@@ -803,18 +813,19 @@ const mapLegacyCardToCreditCard = (card: LegacyCreditCard): CreditCard => {
     annual_fee_waiver_spend: enrichment?.annual_fee_waiver_spend ?? null,
     renewal_fee: card.annualFee,
     min_income_salaried: minIncome,
-    min_income_self_employed: minIncome,
-    min_cibil_score: enrichment?.min_cibil_score ?? 700,
+    min_income_self_employed: null,
+    min_cibil_score: enrichment?.min_cibil_score ?? 0,
     min_age: ageRule.minAge,
     max_age: ageRule.maxAge,
-    requires_itr: false,
-    requires_existing_relationship: false,
-    reward_rate_default: card.rewardRate,
+    requires_itr: null,
+    requires_existing_relationship: null,
+    reward_rate_default: estimateBaseRewardRate(card.rewardDescription),
     reward_rate_categories: enrichment?.reward_rate_categories ?? {},
     welcome_benefits: enrichment?.welcome_benefits ?? null,
     milestone_benefits: enrichment?.milestone_benefits ?? null,
-    lounge_access: hasLoungeAccess ? 'domestic_only' : 'none',
-    lounge_visits_per_quarter: hasLoungeAccess ? 1 : 0,
+    lounge_access: getLoungeAccessType(card.loungeAccess),
+    lounge_access_details: card.loungeAccess,
+    lounge_visits_per_quarter: null,
     fuel_surcharge_waiver: card.fuelSurchargeWaiver,
     fuel_surcharge_waiver_cap: null,
     movie_benefits: enrichment?.movie_benefits ?? null,
@@ -824,16 +835,16 @@ const mapLegacyCardToCreditCard = (card: LegacyCreditCard): CreditCard => {
     golf_access: enrichment?.golf_access ?? false,
     concierge_service: enrichment?.concierge_service ?? false,
     forex_markup: enrichment?.forex_markup ?? null,
-    emi_conversion_available: true,
+    emi_conversion_available: null,
     description: card.rewardDescription,
     pros: card.benefits.slice(0, 4),
     cons: enrichment?.cons ?? [],
     best_for: card.bestFor.map((value) => String(value)),
-    apply_url: card.applyUrl,
-    is_active: true,
+    apply_url: card.id === 'axis-vistara-infinite' ? null : card.applyUrl,
+    is_active: card.id !== 'axis-vistara-infinite',
     popularity_score: toPopularityScore(card.rating),
-    created_at: now,
-    updated_at: now,
+    created_at: CATALOG_IMPORT_DATE,
+    updated_at: CATALOG_IMPORT_DATE,
   }
 }
 

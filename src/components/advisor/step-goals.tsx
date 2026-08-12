@@ -99,7 +99,7 @@ function BooleanPair({
               type="button"
               onClick={() => onChange(opt.val)}
               className={cn(
-                'relative rounded-xl border py-2.5 px-4 text-sm font-medium transition-all duration-200',
+                'relative rounded-xl border py-2.5 px-4 text-sm font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                 selected
                   ? 'border-[#d4a017] bg-[#fdf3d7]/70 text-[#b8860b] shadow-[0_0_0_1px_#d4a017]'
                   : 'border-border bg-white text-muted-foreground hover:border-[#d4a017]/30 hover:bg-[#fdf3d7]/10'
@@ -138,7 +138,7 @@ function ChipGroup({
               type="button"
               onClick={() => onToggle(opt)}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200',
+                'rounded-full border px-3 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                 isSelected
                   ? 'border-[#d4a017] bg-[#fdf3d7] text-[#b8860b]'
                   : 'border-border bg-white text-muted-foreground hover:border-[#d4a017]/30'
@@ -244,7 +244,7 @@ function TravellerPersonaSection() {
     { value: 'occasionally', label: 'Occasionally', desc: '3 to 6 trips a year' },
     { value: 'frequently', label: 'Frequently', desc: 'Monthly or more' },
   ]
-  const AIRLINES = ['Air India', 'IndiGo', 'Vistara', 'SpiceJet', 'GoFirst', 'AirAsia', 'International']
+  const AIRLINES = ['Air India', 'IndiGo', 'Akasa Air', 'SpiceJet', 'International', 'Other']
 
   return (
     <div className="space-y-4">
@@ -259,7 +259,7 @@ function TravellerPersonaSection() {
                 type="button"
                 onClick={() => store.updateField('travelFrequency', opt.value)}
                 className={cn(
-                  'relative rounded-xl border p-3 text-left transition-all duration-200',
+                  'relative rounded-xl border p-3 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
                     : 'border-border bg-white hover:border-[#d4a017]/30'
@@ -421,7 +421,7 @@ function RewardPreferenceSection() {
               type="button"
               onClick={() => store.updateField('preferredRewardType', opt.value)}
               className={cn(
-                'relative rounded-xl border p-3 text-left transition-all duration-200',
+                'relative rounded-xl border p-3 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                 selected
                   ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
                   : 'border-border bg-white hover:border-[#d4a017]/30'
@@ -460,7 +460,7 @@ export function GoalsStep() {
                 type="button"
                 onClick={() => store.updateField('primaryGoal', goal.value)}
                 className={cn(
-                  'relative rounded-xl border p-3 text-left transition-all duration-200',
+                  'relative rounded-xl border p-3 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
                     : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'
@@ -490,7 +490,7 @@ export function GoalsStep() {
                 type="button"
                 onClick={() => store.toggleSecondaryGoal(goal)}
                 className={cn(
-                  'rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200',
+                  'rounded-full border px-3 py-1.5 text-xs font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-[#d4a017] bg-[#fdf3d7] text-[#b8860b]'
                     : 'border-border bg-white text-muted-foreground hover:border-[#d4a017]/30 hover:bg-[#fdf3d7]/20'
@@ -515,7 +515,7 @@ export function GoalsStep() {
                 type="button"
                 onClick={() => store.updateField('cardComplexity', opt.value)}
                 className={cn(
-                  'relative rounded-xl border p-3.5 text-left transition-all duration-200',
+                  'relative rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
                     : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'

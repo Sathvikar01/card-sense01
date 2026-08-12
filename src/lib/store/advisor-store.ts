@@ -249,6 +249,40 @@ export interface SavedAdvisorCard {
   bestCategories: string[]
   eligibilityMatch: 'high' | 'moderate' | 'uncertain'
   usageStrategy: string
+  finalDecisionReason?: string
+  rulesEvaluated?: Array<{
+    ruleId: string
+    label: string
+    weight: number
+    score: number
+    contribution: number
+    matched: boolean
+    detail?: string
+  }>
+  ruleScores?: {
+    eligibilityFit: number
+    spendFit: number
+    goalFit: number
+    feeFit: number
+    diversificationFit: number
+    weightsUsed?: {
+      eligibilityFit: number
+      spendFit: number
+      goalFit: number
+      feeFit: number
+      diversificationFit: number
+      primaryGoalBoost?: number
+      answerInfluence?: Record<string, number>
+    }
+    weightedRaw?: number
+    finalScore?: number
+  }
+  whyThisCard?: {
+    headline?: string
+    summary?: string
+    finalDecisionReason?: string
+    endpoint?: string | null
+  }
 }
 
 export interface ProfileSummaryData {

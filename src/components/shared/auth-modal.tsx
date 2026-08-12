@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -55,6 +55,8 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [turnstileWidgetNonce, setTurnstileWidgetNonce] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const supabase = createClient()
 
   const form = useForm<LoginFormValues>({
@@ -62,7 +64,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
     defaultValues: { email: '', password: '' },
   })
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose()
     setTimeout(() => {
       setStep('form')
@@ -72,7 +74,48 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
       setTurnstileWidgetNonce(0)
       form.reset()
     }, 300)
-  }
+  }, [form, onClose])
+
+  useEffect(() => {
+    if (!open) return
+
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        handleClose()
+        return
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+      previouslyFocused?.focus()
+    }
+  }, [handleClose, open])
 
   const switchTab = (t: 'login' | 'signup') => {
     setTab(t)
@@ -233,18 +276,25 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[70] flex items-center justify-center p-4"
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleClose}
           >
             <div
-              className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl shadow-black/20 dark:bg-gray-950 overflow-hidden"
-              style={{ height: '580px' }}
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="auth-dialog-title"
+              className="relative h-[580px] max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden overscroll-contain rounded-3xl bg-white shadow-2xl shadow-black/20 dark:bg-gray-950"
+              onClick={(event) => event.stopPropagation()}
             >
               {/* Close button */}
               <button
+                ref={closeButtonRef}
+                type="button"
+                aria-label="Close authentication dialog"
                 onClick={handleClose}
-                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-violet-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
               >
-                <X className="h-4 w-4" />
+                <X aria-hidden="true" className="h-4 w-4" />
               </button>
 
               <AnimatePresence mode="wait">
@@ -256,14 +306,14 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -24 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute inset-0 flex flex-col"
+                    className="absolute inset-0 flex flex-col overflow-y-auto overscroll-contain pb-8"
                   >
                     {/* Header */}
                     <div className="px-8 pb-0 pt-8 text-center">
                       <div className="mx-auto mb-3 flex justify-center">
                         <CardSenseIcon size={48} />
                       </div>
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                      <h2 id="auth-dialog-title" className="text-xl font-bold text-gray-900 dark:text-white">
                         {tab === 'login' ? 'Welcome back' : 'Create your account'}
                       </h2>
                       <p className="mt-1 text-sm text-gray-500 leading-snug">
@@ -276,8 +326,9 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     {/* Tab switcher */}
                     <div className="mx-8 mt-5 flex rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
                       <button
+                        type="button"
                         onClick={() => switchTab('login')}
-                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
+                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-[background-color,color,box-shadow] ${
                           tab === 'login'
                             ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
                             : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -286,8 +337,9 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                         Sign In
                       </button>
                       <button
+                        type="button"
                         onClick={() => switchTab('signup')}
-                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
+                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-[background-color,color,box-shadow] ${
                           tab === 'signup'
                             ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
                             : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -310,7 +362,8 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                                 <FormControl>
                                   <Input
                                     type="email"
-                                    placeholder="you@example.com"
+                                    placeholder="you@example.com…"
+                                    spellCheck={false}
                                     autoComplete="email"
                                     disabled={isLoading || isGoogleLoading}
                                     {...field}
@@ -329,7 +382,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                                 <FormControl>
                                   <Input
                                     type="password"
-                                    placeholder={tab === 'login' ? 'Enter your password' : 'Create a password'}
+                                    placeholder={tab === 'login' ? 'Enter your password…' : 'Create a password…'}
                                     autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
                                     disabled={isLoading || isGoogleLoading}
                                     {...field}
@@ -371,7 +424,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                             disabled={isLoading || isGoogleLoading}
                           >
                             {isLoading
-                              ? (tab === 'login' ? 'Signing in...' : 'Creating account...')
+                              ? (tab === 'login' ? 'Signing in…' : 'Creating account…')
                               : (
                                 <span className="flex items-center gap-2">
                                   {tab === 'login' ? 'Sign in' : 'Create account'}
@@ -405,7 +458,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                         </svg>
-                        {isGoogleLoading ? 'Connecting...' : 'Continue with Google'}
+                        {isGoogleLoading ? 'Connecting…' : 'Continue with Google'}
                       </Button>
                     </div>
                   </motion.div>
@@ -419,14 +472,16 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 24 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute inset-0 flex flex-col items-center px-8 pt-8"
+                    className="absolute inset-0 flex flex-col items-center overflow-y-auto overscroll-contain px-8 pb-8 pt-8"
                   >
                     {/* Back button */}
                     <button
+                      type="button"
+                      aria-label="Back to account form"
                       onClick={() => setStep('form')}
                       className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-gray-500 transition-colors hover:text-gray-700"
                     >
-                      <ArrowLeft className="h-4 w-4" />
+                      <ArrowLeft aria-hidden="true" className="h-4 w-4" />
                     </button>
 
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 border border-violet-100">
@@ -446,12 +501,15 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           key={i}
                           ref={(el) => { otpRefs.current[i] = el }}
                           type="text"
+                          name={`verification-code-${i + 1}`}
+                          aria-label={`Verification code digit ${i + 1}`}
+                          autoComplete={i === 0 ? 'one-time-code' : 'off'}
                           inputMode="numeric"
                           maxLength={1}
                           value={digit}
                           onChange={(e) => handleOtpChange(i, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                          className="h-14 w-11 rounded-xl border-2 border-gray-200 bg-gray-50 text-center text-xl font-bold text-gray-900 focus:border-violet-500 focus:outline-none focus:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="h-14 w-11 rounded-xl border-2 border-gray-200 bg-gray-50 text-center text-xl font-bold text-gray-900 transition-[border-color,background-color] focus:border-violet-500 focus:bg-white focus-visible:ring-2 focus-visible:ring-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                         />
                       ))}
                     </div>
@@ -461,7 +519,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       onClick={handleVerifyOtp}
                       disabled={isVerifying || otp.join('').length < 6}
                     >
-                      {isVerifying ? 'Verifying...' : (
+                      {isVerifying ? 'Verifying…' : (
                         <span className="flex items-center gap-2">
                           Verify &amp; continue
                           <ArrowRight className="h-4 w-4" />
@@ -472,6 +530,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     <p className="mt-5 text-sm text-gray-500">
                       Didn&apos;t receive it?{' '}
                       <button
+                        type="button"
                         onClick={handleResendOtp}
                         className="font-medium text-violet-600 hover:text-violet-500"
                       >

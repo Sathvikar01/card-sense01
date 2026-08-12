@@ -15,14 +15,15 @@ export interface CreditCard {
   min_cibil_score: number
   min_age: number
   max_age: number
-  requires_itr: boolean
-  requires_existing_relationship: boolean
+  requires_itr: boolean | null
+  requires_existing_relationship: boolean | null
   reward_rate_default: number
   reward_rate_categories: Record<string, CategoryReward>
   welcome_benefits: WelcomeBenefits | null
   milestone_benefits: MilestoneBenefits | null
   lounge_access: string
-  lounge_visits_per_quarter: number
+  lounge_access_details?: string | null
+  lounge_visits_per_quarter: number | null
   fuel_surcharge_waiver: boolean
   fuel_surcharge_waiver_cap: number | null
   movie_benefits: string | null
@@ -32,7 +33,7 @@ export interface CreditCard {
   golf_access: boolean
   concierge_service: boolean
   forex_markup: number | null
-  emi_conversion_available: boolean
+  emi_conversion_available: boolean | null
   description: string | null
   pros: string[]
   cons: string[]

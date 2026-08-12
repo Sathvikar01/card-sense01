@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Award, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import { getCibilScoreHexColor, getCibilScoreRating } from '@/lib/credit-score'
 
 interface CibilScoreGaugeProps {
   score: number
@@ -18,24 +19,8 @@ export function CibilScoreGauge({ score, lastUpdated }: CibilScoreGaugeProps) {
   const percentage = ((clampedScore - 300) / 600) * 100
   const angle = (percentage / 100) * 180
 
-  // Determine color based on score
-  const getScoreColor = (score: number) => {
-    if (score < 650) return '#ef4444' // red-500
-    if (score < 750) return '#eab308' // yellow-500
-    return '#22c55e' // green-500
-  }
-
-  // Determine quality label
-  const getScoreQuality = (score: number) => {
-    if (score < 550) return 'Poor'
-    if (score < 650) return 'Fair'
-    if (score < 750) return 'Good'
-    if (score < 800) return 'Very Good'
-    return 'Excellent'
-  }
-
-  const color = getScoreColor(clampedScore)
-  const quality = getScoreQuality(clampedScore)
+  const color = getCibilScoreHexColor(clampedScore)
+  const quality = getCibilScoreRating(clampedScore)
 
   return (
     <Card>

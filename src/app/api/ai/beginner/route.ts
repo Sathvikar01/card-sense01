@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { BeginnerInput } from '@/types/financial-profile'
 import type { CreditCard } from '@/types/credit-card'
-import type { CreditCard as LegacyCard } from '@/types'
-import { cards as localCards } from '@/data/cards'
+import { LOCAL_CARD_CATALOG } from '@/lib/cards/local-catalog'
+import { estimateBaseRewardRate } from '@/lib/cards/reward-rate'
 
 const MIN_BEGINNER_RECOMMENDATIONS = 3
 
@@ -29,61 +29,6 @@ const toAppCardNetwork = (value: string): CreditCard['card_network'] => {
   if (normalized === 'amex') return 'amex'
   if (normalized === 'diners') return 'diners'
   return 'visa'
-}
-
-const CARD_AGE_RULES: Record<string, { minAge: number; maxAge: number }> = {
-  'idfc-first-wow': { minAge: 18, maxAge: 65 },
-}
-
-const mapLocalCardToDbShape = (card: LegacyCard): CreditCard => {
-  const now = new Date().toISOString()
-  const ageRule = CARD_AGE_RULES[card.id] ?? { minAge: 21, maxAge: 65 }
-
-  return {
-    id: card.id,
-    bank_name: card.issuer,
-    card_name: card.name,
-    card_network: toAppCardNetwork(card.network),
-    card_type: toAppCardType(card.type),
-    card_variant: 'classic',
-    image_url: null,
-    joining_fee: card.joiningFee,
-    annual_fee: card.annualFee,
-    annual_fee_waiver_spend: null,
-    renewal_fee: card.annualFee,
-    min_income_salaried: card.minIncomeRequired > 0 ? card.minIncomeRequired : null,
-    min_income_self_employed: card.minIncomeRequired > 0 ? card.minIncomeRequired : null,
-    min_cibil_score: 700,
-    min_age: ageRule.minAge,
-    max_age: ageRule.maxAge,
-    requires_itr: false,
-    requires_existing_relationship: false,
-    reward_rate_default: card.rewardRate,
-    reward_rate_categories: {},
-    welcome_benefits: null,
-    milestone_benefits: null,
-    lounge_access: card.loungeAccess ? 'domestic_only' : 'none',
-    lounge_visits_per_quarter: card.loungeAccess ? 1 : 0,
-    fuel_surcharge_waiver: card.fuelSurchargeWaiver,
-    fuel_surcharge_waiver_cap: null,
-    movie_benefits: null,
-    dining_benefits: null,
-    travel_insurance_cover: null,
-    purchase_protection_cover: null,
-    golf_access: false,
-    concierge_service: false,
-    forex_markup: null,
-    emi_conversion_available: true,
-    description: card.rewardDescription,
-    pros: card.benefits.slice(0, 4),
-    cons: [],
-    best_for: card.bestFor.map((value) => String(value)),
-    apply_url: card.applyUrl,
-    is_active: true,
-    popularity_score: Math.round(card.rating * 20),
-    created_at: now,
-    updated_at: now,
-  }
 }
 
 const asString = (value: unknown, fallback = '') => {
@@ -127,12 +72,12 @@ const normalizeDbCardRow = (row: Record<string, unknown>): CreditCard => {
     min_income_self_employed: row.min_income_self_employed
       ? asNumber(row.min_income_self_employed)
       : (row.min_income_required ? asNumber(row.min_income_required) : null),
-    min_cibil_score: asNumber(row.min_cibil_score, 700),
+    min_cibil_score: asNumber(row.min_cibil_score, 0),
     min_age: asNumber(row.min_age, 21),
     max_age: asNumber(row.max_age, 65),
     requires_itr: Boolean(row.requires_itr),
     requires_existing_relationship: Boolean(row.requires_existing_relationship),
-    reward_rate_default: asNumber(row.reward_rate_default, 1),
+    reward_rate_default: estimateBaseRewardRate(asString(row.description)),
     reward_rate_categories: typeof row.reward_rate_categories === 'object' && row.reward_rate_categories
       ? (row.reward_rate_categories as CreditCard['reward_rate_categories'])
       : {},
@@ -194,7 +139,7 @@ async function fetchBeginnerCards(supabase: Awaited<ReturnType<typeof createClie
     }
   }
 
-  const fallbackCards = localCards.slice(0, 20).map(mapLocalCardToDbShape)
+  const fallbackCards = LOCAL_CARD_CATALOG.filter((card) => card.is_active).slice(0, 20)
   return {
     cards: fallbackCards,
     usedFallback: true,
@@ -205,7 +150,7 @@ const ensureCatalogDepth = (cards: CreditCard[], minCount = MIN_BEGINNER_RECOMME
   if (cards.length >= minCount) return cards
 
   const merged = new Map(cards.map((card) => [card.id, card]))
-  const fallbackCards = localCards.map(mapLocalCardToDbShape)
+  const fallbackCards = LOCAL_CARD_CATALOG.filter((card) => card.is_active)
   for (const fallbackCard of fallbackCards) {
     if (!merged.has(fallbackCard.id)) {
       merged.set(fallbackCard.id, fallbackCard)
@@ -295,7 +240,7 @@ const isSecuredFriendlyCard = (card: CreditCard) => {
 }
 
 const estimateAnnualValue = (input: BeginnerInput, card: CreditCard) => {
-  const monthlyRewards = input.averageMonthlySpend * Math.max(0.005, card.reward_rate_default / 100)
+  const monthlyRewards = input.averageMonthlySpend * Math.max(0, card.reward_rate_default / 100)
   return Math.max(0, Math.round(monthlyRewards * 12 - card.annual_fee))
 }
 
@@ -393,7 +338,7 @@ const buildRecommendationDetails = (params: {
   const keyPerks = uniqueStrings([
     ...(card.pros || []),
     card.annual_fee === 0 ? 'Zero annual fee structure' : card.annual_fee <= 1000 ? `Low annual fee (INR ${card.annual_fee.toLocaleString('en-IN')})` : '',
-    card.reward_rate_default > 0 ? `${card.reward_rate_default}% base reward rate on eligible spends` : '',
+    card.reward_rate_default > 0 ? `${card.reward_rate_default}% estimated base return on eligible spends` : '',
     card.fuel_surcharge_waiver ? 'Fuel surcharge waiver on eligible transactions' : '',
     card.lounge_access !== 'none' ? `Lounge access support (${card.lounge_access.replace(/_/g, ' ')})` : '',
     card.emi_conversion_available ? 'EMI conversion available for large purchases' : '',

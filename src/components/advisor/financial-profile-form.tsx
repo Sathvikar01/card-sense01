@@ -225,14 +225,14 @@ export function FinancialProfileForm({ onSubmit, isLoading }: FinancialProfileFo
             <div className="flex items-center justify-between">
               <Label>Monthly Spending Breakdown</Label>
               <span className="text-sm font-medium text-purple-600">
-                Total: Rs. {totalMonthlySpend.toLocaleString('en-IN')}/mo
+                Total: ₹{totalMonthlySpend.toLocaleString('en-IN')}/month
               </span>
             </div>
             {SPENDING_CATEGORIES.map((cat) => (
               <div key={cat.key} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-700">{cat.label}</span>
-                  <span className="font-medium">Rs. {spending[cat.key]?.toLocaleString('en-IN')}</span>
+                  <span className="font-medium">₹{spending[cat.key]?.toLocaleString('en-IN')}</span>
                 </div>
                 <Input
                   type="number"

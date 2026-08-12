@@ -56,7 +56,7 @@ function TileGrid<T extends string>({
               type="button"
               onClick={() => onChange(opt.value)}
               className={cn(
-                'relative rounded-xl border p-3.5 text-left transition-all duration-200',
+                'relative rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                 selected
                   ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
                   : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'
@@ -218,7 +218,7 @@ export function FinancialHabitsStep() {
                 type="button"
                 onClick={() => store.updateField('interestedInIntroOffers', opt.value)}
                 className={cn(
-                  'relative rounded-xl border p-3.5 text-left transition-all duration-200',
+                  'relative rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                   selected
                     ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
                     : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'

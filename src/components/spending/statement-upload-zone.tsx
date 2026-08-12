@@ -110,7 +110,7 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 transition-all ${
+        className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 transition-[border-color,background-color] ${
           dragOver
             ? 'border-[#d4a017] bg-[#fdf3d7]/40'
             : 'border-border/60 hover:border-[#d4a017]/50 hover:bg-[#fdf3d7]/20'
@@ -119,12 +119,12 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 rounded-full border-2 border-[#d4a017] border-t-transparent animate-spin" />
-            <p className="text-sm font-medium text-foreground">Processing your statement...</p>
+            <p className="text-sm font-medium text-foreground">Processing your statement…</p>
           </div>
         ) : (
           <>
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#fdf3d7]">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
                   stroke="#b8860b"
@@ -143,10 +143,11 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
             <Button
               variant="outline"
               size="sm"
+              type="button"
               className="mt-4 gap-2 border-[#d4a017]/30 text-[#b8860b] hover:bg-[#fdf3d7]/50"
               onClick={() => fileInputRef.current?.click()}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
                   stroke="currentColor"
@@ -162,6 +163,9 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
 
         <input
           ref={fileInputRef}
+          id="statement-file"
+          name="statement-file"
+          aria-label="Choose a CSV or PDF bank statement"
           type="file"
           accept=".csv,.pdf,text/csv,application/pdf"
           onChange={handleInputChange}
@@ -183,9 +187,9 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
       )}
 
       {result && (
-        <div className="rounded-xl border border-[#d4a017]/25 bg-[#fdf3d7]/30 p-4">
+        <div aria-live="polite" className="rounded-xl border border-[#d4a017]/25 bg-[#fdf3d7]/30 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="7" fill="#fdf3d7" />
               <path
                 d="M5 8L7 10L11 6"
@@ -202,7 +206,11 @@ export function StatementUploadZone({ onUploadComplete }: StatementUploadZonePro
           <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
             <div>
               <p className="font-medium text-foreground">
-                ₹{result.summary.total.toLocaleString('en-IN')}
+                {new Intl.NumberFormat('en-IN', {
+                  style: 'currency',
+                  currency: 'INR',
+                  maximumFractionDigits: 0,
+                }).format(result.summary.total)}
               </p>
               <p>Total spending</p>
             </div>

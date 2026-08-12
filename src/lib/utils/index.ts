@@ -1,6 +1,7 @@
 // Utility functions for the application
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { getCibilScoreRating as getSharedCibilScoreRating } from '@/lib/credit-score'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -48,11 +49,7 @@ export function getCibilScoreColor(score: number): string {
 
 // Get CIBIL score rating
 export function getCibilScoreRating(score: number): string {
-  if (score >= 800) return 'Excellent'
-  if (score >= 750) return 'Very Good'
-  if (score >= 700) return 'Good'
-  if (score >= 650) return 'Fair'
-  return 'Poor'
+  return getSharedCibilScoreRating(score)
 }
 
 // Convert income range to minimum annual income

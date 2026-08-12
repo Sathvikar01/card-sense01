@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { OnboardingWizard, type OnboardingProfileSnapshot } from '@/components/onboarding/onboarding-wizard'
 import { trackInteraction } from '@/lib/interactions/client'
 
@@ -24,17 +25,13 @@ const isComplete = (profile: OnboardingProfileSnapshot | null) => {
 }
 
 export function OnboardingTrigger({ profile }: OnboardingTriggerProps) {
+  const pathname = usePathname()
   const initiallyComplete = useMemo(() => isComplete(profile), [profile])
-  const [complete, setComplete] = useState(initiallyComplete)
-  const [open, setOpen] = useState(!initiallyComplete)
-  const repromptTimerRef = useRef<number | null>(null)
-
-  const clearReprompt = () => {
-    if (repromptTimerRef.current) {
-      window.clearTimeout(repromptTimerRef.current)
-      repromptTimerRef.current = null
-    }
-  }
+  const [completedInSession, setCompletedInSession] = useState(false)
+  const [dismissedForSession, setDismissedForSession] = useState(false)
+  const complete = initiallyComplete || completedInSession
+  const shouldPromptOnThisPage = pathname === '/dashboard'
+  const open = !complete && !dismissedForSession && shouldPromptOnThisPage
 
   useEffect(() => {
     if (!open || complete) return
@@ -44,30 +41,19 @@ export function OnboardingTrigger({ profile }: OnboardingTriggerProps) {
     })
   }, [open, complete])
 
-  useEffect(() => {
-    return () => clearReprompt()
-  }, [])
-
-  if (complete) return null
-
   const handleClose = () => {
-    setOpen(false)
+    setDismissedForSession(true)
     void trackInteraction('onboarding_skipped', {
       page: '/dashboard',
       entityType: 'onboarding',
     })
-
-    clearReprompt()
-    repromptTimerRef.current = window.setTimeout(() => {
-      setOpen(true)
-    }, 15000)
   }
 
   const handleCompleted = () => {
-    clearReprompt()
-    setComplete(true)
-    setOpen(false)
+    setCompletedInSession(true)
   }
+
+  if (complete) return null
 
   return (
     <OnboardingWizard

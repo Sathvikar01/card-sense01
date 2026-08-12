@@ -21,7 +21,10 @@ import { formatCurrency } from '@/lib/utils/format-currency'
 import { cn } from '@/lib/utils'
 import { trackInteraction } from '@/lib/interactions/client'
 
-function BoolCell({ value }: { value: boolean }) {
+function BoolCell({ value }: { value: boolean | null }) {
+  if (value === null) {
+    return <span className="text-xs text-muted-foreground">Not published</span>
+  }
   return value ? (
     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
   ) : (
@@ -271,13 +274,15 @@ export default function CardComparePage() {
         </div>
         <div className="grid border-b border-border/20" style={gridTemplate}>
           <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Base Reward Rate
+            Estimated Base Return
           </div>
           {cards.map((card) => (
             <div key={withKey(card.id, 5)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
               <div className="flex items-center gap-1">
                 <TrendingUp className="h-3 w-3 text-[#b8860b]" />
-                <span className="font-semibold">{card.reward_rate_default}%</span>
+                <span className="font-semibold">
+                  {card.reward_rate_default > 0 ? `${card.reward_rate_default}%` : 'Not published'}
+                </span>
               </div>
             </div>
           ))}
@@ -289,7 +294,7 @@ export default function CardComparePage() {
           {cards.map((card) => (
             <div key={withKey(card.id, 6)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5 text-center">
               <span className={cn('font-medium capitalize', card.lounge_access === 'none' ? 'text-muted-foreground' : 'text-[#b8860b]')}>
-                {card.lounge_access === 'none' ? '-' : card.lounge_access}
+                {card.lounge_access === 'none' ? '—' : card.lounge_access.replace(/_/g, ' ')}
               </span>
             </div>
           ))}
@@ -329,7 +334,9 @@ export default function CardComparePage() {
           </div>
           {cards.map((card) => (
             <div key={withKey(card.id, 10)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <span className="font-semibold">{card.min_cibil_score}</span>
+              <span className="font-semibold">
+                {card.min_cibil_score > 0 ? card.min_cibil_score : 'Not published'}
+              </span>
             </div>
           ))}
         </div>

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { insertUserInteraction } from '@/lib/interactions/server'
 
 const DEFAULT_REDIRECT_PATH = '/dashboard'
-const MAX_EXCHANGE_RETRIES = 2
+const MAX_EXCHANGE_RETRIES = 4
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -52,7 +52,7 @@ async function exchangeCodeWithRetry(
       }
     }
 
-    await sleep(300 * (attempt + 1))
+    await sleep(450 * (attempt + 1))
   }
 
   return { success: false as const, transient: true as const }
@@ -62,6 +62,10 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = normalizeNextPath(searchParams.get('next'))
+  const buildLoginErrorRedirect = (error: 'auth-code-error' | 'auth-temporary-unavailable') => {
+    const params = new URLSearchParams({ error, next })
+    return `${origin}/login?${params.toString()}`
+  }
 
   if (code) {
     const supabase = await createClient()
@@ -94,16 +98,24 @@ export async function GET(request: Request) {
     }
 
     if (!exchangeResult.transient) {
-      return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
+      return NextResponse.redirect(buildLoginErrorRedirect('auth-code-error'))
     }
 
-    const params = new URLSearchParams({
-      error: 'auth-temporary-unavailable',
-      next,
-    })
-    return NextResponse.redirect(`${origin}/login?${params.toString()}`)
+    // In some transient outage cases the session cookie may still be available.
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+    } catch {
+      // fall through to login error redirect
+    }
+
+    return NextResponse.redirect(buildLoginErrorRedirect('auth-temporary-unavailable'))
   }
 
   // If no code or exchange failed, redirect to login with error
-  return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
+  return NextResponse.redirect(buildLoginErrorRedirect('auth-code-error'))
 }

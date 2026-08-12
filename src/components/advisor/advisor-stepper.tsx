@@ -182,7 +182,7 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
           onClick={handleBack}
           disabled={current === 0}
           className={cn(
-            'flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200',
+            'flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
             current === 0
               ? 'text-muted-foreground/30 cursor-default'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
@@ -199,7 +199,7 @@ export function AdvisorStepper({ onComplete, isLoading }: Props) {
           onClick={handleNext}
           disabled={!canAdvanceNow || isLoading}
           className={cn(
-            'flex items-center gap-2 rounded-xl border px-6 py-2.5 text-sm font-semibold transition-all duration-200 min-w-[160px] justify-center',
+            'flex items-center gap-2 rounded-xl border px-6 py-2.5 text-sm font-semibold transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200 min-w-[160px] justify-center',
             canAdvanceNow && !isLoading
               ? 'border-transparent bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-md shadow-[#b8860b]/25 hover:shadow-[#b8860b]/40'
               : 'border-border/80 bg-slate-100 text-slate-600 cursor-default'

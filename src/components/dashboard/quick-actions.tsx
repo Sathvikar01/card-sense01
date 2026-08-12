@@ -81,7 +81,7 @@ export function QuickActions() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center text-xs font-medium text-[#b8860b] opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1">
+                <div className="mt-3 flex items-center text-xs font-medium text-[#b8860b] opacity-0 transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200 group-hover:opacity-100 group-hover:translate-x-1">
                   Open
                   <ArrowRightQaSVG />
                 </div>

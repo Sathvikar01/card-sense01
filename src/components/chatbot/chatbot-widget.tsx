@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { MessageCircle, X, Send, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import ReactMarkdown from 'react-markdown'
@@ -8,6 +9,7 @@ import ReactMarkdown from 'react-markdown'
 const INITIAL_MESSAGE = { role: 'assistant' as const, text: 'Hi! I\'m your CardSense AI assistant. Ask me anything about credit cards, rewards, or your finances.' }
 
 export function ChatbotWidget() {
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
@@ -15,12 +17,33 @@ export function ChatbotWidget() {
   ])
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (open) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, open])
+
+  useEffect(() => {
+    if (pathname === '/chat') {
+      setOpen(true)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    if (!open) return
+    inputRef.current?.focus()
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      toggleRef.current?.focus()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [open])
 
   const handleClearChat = () => {
     setMessages([INITIAL_MESSAGE])
@@ -47,6 +70,7 @@ export function ChatbotWidget() {
         body: JSON.stringify({ message: trimmed, history: historyForApi }),
       })
       const data = await res.json()
+      if (!res.ok) throw new Error('Chat request failed')
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', text: data.reply ?? 'Sorry, I couldn\'t process that.' },
@@ -65,7 +89,11 @@ export function ChatbotWidget() {
     <>
       {/* Chat window */}
       {open && (
-        <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-2xl border bg-background shadow-xl flex flex-col overflow-hidden">
+        <div
+          role="dialog"
+          aria-label="CardSense Assistant"
+          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 flex max-h-[70dvh] flex-col overflow-hidden overscroll-contain rounded-2xl border bg-background shadow-xl sm:left-auto sm:right-4 sm:w-96"
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white">
             <span className="font-semibold text-sm">CardSense Assistant</span>
@@ -87,7 +115,7 @@ export function ChatbotWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-72 text-sm">
+          <div role="log" aria-live="polite" aria-relevant="additions" className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-2 max-h-72 text-sm">
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -113,7 +141,7 @@ export function ChatbotWidget() {
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-muted rounded-xl px-3 py-2 text-muted-foreground animate-pulse">
-                  Thinking...
+                  Thinking…
                 </div>
               </div>
             )}
@@ -123,15 +151,19 @@ export function ChatbotWidget() {
           {/* Input */}
           <div className="flex items-center gap-2 border-t px-3 py-2">
             <input
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              placeholder="Ask something..."
+              ref={inputRef}
+              name="chat-message"
+              aria-label="Message CardSense Assistant"
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#d4a017]"
+              placeholder="Ask about cards or rewards…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               disabled={loading}
             />
-            <Button size="icon" variant="ghost" onClick={handleSend} disabled={loading || !input.trim()} className="text-[#b8860b] hover:text-[#d4a017] hover:bg-[#fdf3d7]/50">
-              <Send className="h-4 w-4" />
+            <Button aria-label="Send message" size="icon" variant="ghost" onClick={handleSend} disabled={loading || !input.trim()} className="text-[#b8860b] hover:text-[#d4a017] hover:bg-[#fdf3d7]/50">
+              <Send aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -139,11 +171,13 @@ export function ChatbotWidget() {
 
       {/* FAB toggle */}
       <button
+        ref={toggleRef}
         onClick={() => setOpen((v) => !v)}
-        aria-label="Toggle chat"
-        className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6 flex h-12 w-12 items-center justify-center rounded-md bg-transparent text-[#b8860b] transition-colors hover:text-[#d4a017]"
+        aria-label={open ? 'Close CardSense Assistant' : 'Open CardSense Assistant'}
+        aria-expanded={open}
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-[#d4a017]/30 bg-background text-[#b8860b] shadow-lg transition-[background-color,color,transform] hover:-translate-y-0.5 hover:bg-[#fdf3d7] hover:text-[#a07808] focus-visible:ring-2 focus-visible:ring-[#d4a017] md:bottom-6 md:right-6"
       >
-        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+        {open ? <X aria-hidden="true" className="h-5 w-5" /> : <MessageCircle aria-hidden="true" className="h-5 w-5" />}
       </button>
     </>
   )

@@ -115,7 +115,7 @@ export function ProfileBasicsStep() {
                   type="button"
                   onClick={() => store.updateField('creditScore', range.value)}
                   className={cn(
-                    'relative flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all duration-200',
+                    'relative flex items-center gap-3 rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                     selected
                       ? 'border-primary/60 bg-primary/[0.06] shadow-[0_0_0_1px_var(--primary)]'
                       : 'border-border hover:border-border/80 hover:bg-muted/40'
@@ -153,7 +153,7 @@ export function ProfileBasicsStep() {
                   type="button"
                   onClick={() => store.updateField('employmentType', option.value)}
                   className={cn(
-                    'rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200',
+                    'rounded-xl border px-4 py-3 text-sm font-medium transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
                     selected
                       ? 'border-primary/60 bg-primary/[0.06] text-foreground shadow-[0_0_0_1px_var(--primary)]'
                       : 'border-border text-muted-foreground hover:border-border/80 hover:bg-muted/40'

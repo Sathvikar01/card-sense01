@@ -33,12 +33,10 @@ const serializeError = (error: unknown) => {
   if (error instanceof Error) {
     return {
       name: error.name,
-      message: error.message,
-      stack: error.stack,
+      ...(process.env.NODE_ENV === 'development' ? { message: error.message } : {}),
     }
   }
-  if (typeof error === 'object') return error
-  return { message: String(error) }
+  return { name: 'UnknownError' }
 }
 
 const emit = (level: LogLevel, event: string, payload: Record<string, unknown>) => {

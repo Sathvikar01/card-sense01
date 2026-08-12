@@ -71,7 +71,7 @@ GOOGLE_GENAI_API_KEY=your_google_genai_api_key
    - Paste it in the SQL Editor
    - Click **Run**
 
-### 5. Populate Education Articles (Optional)
+### 5. Populate Education Articles
 
 To populate the database with educational content:
 
@@ -94,13 +94,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to see the a
 
 ## 📚 Education Content
 
-The platform includes comprehensive articles across 6 categories:
+The source dataset contains 17 articles across 6 categories:
 
-- **Basics** - Credit Card Fundamentals (4 articles)
-- **CIBIL** - Understanding CIBIL & Credit Scores (2 articles)  
-- **Rewards** - Maximizing Credit Card Rewards (2 articles)
-- **Fees** - Understanding Fees & Charges (1 article)
-- **Advanced** - Advanced Credit Topics (Coming soon)
+- **Basics** — Credit Card Fundamentals (5 articles)
+- **CIBIL** — Understanding CIBIL & Credit Scores (3 articles)
+- **Rewards** — Maximizing Credit Card Rewards (3 articles)
+- **Fees** — Understanding Fees & Charges (2 articles)
+- **Security** — Fraud Prevention & Safe Card Use (2 articles)
+- **Tips** — Practical Card Management (2 articles)
 
 ## 📁 Project Structure
 
