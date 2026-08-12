@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { clearPrivateClientData } from '@/lib/privacy/client-data'
 
 /* ===== Navigation data ===== */
@@ -162,7 +161,6 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
 
           {/* Right section */}
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            <ThemeToggle />
             {/* User avatar dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -1,20 +1,11 @@
-import type { Metadata, Viewport } from 'next'
+import type { Metadata } from 'next'
 import { Toaster } from '@/components/ui/sonner'
-import { ThemeProvider } from '@/components/shared/theme-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'CardSense India — Smart Credit Card Advisor',
   description:
     'Compare Indian credit cards, understand fees and rewards, and get profile-based recommendations.',
-}
-
-export const viewport: Viewport = {
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fffdf8' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b1020' },
-  ],
 }
 
 export default function RootLayout({
@@ -25,16 +16,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="cardsense-theme antialiased">
-        <ThemeProvider>
-          <a
-            href="#main-content"
-            className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background shadow-lg transition-transform focus:translate-y-0"
-          >
-            Skip to Main Content
-          </a>
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <a
+          href="#main-content"
+          className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background shadow-lg transition-transform focus:translate-y-0"
+        >
+          Skip to Main Content
+        </a>
+        {children}
+        <Toaster />
       </body>
     </html>
   )

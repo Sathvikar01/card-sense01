@@ -11,8 +11,32 @@ import { CardSenseLogo, CardSenseIcon } from '@/components/shared/logo'
 import { AuthModal } from '@/components/shared/auth-modal'
 
 function AnimatedHero({ openAuth }: { openAuth: (path: string) => void }) {
-  const phase: number = 3
-  const particles: Array<{ id: number; startX: number; startY: number; tx: number; ty: number }> = []
+  const [phase, setPhase] = useState(0)
+
+  useEffect(() => {
+    // Phase 0: Particles assemble into card (0 -> 1.5s)
+    const t1 = setTimeout(() => setPhase(1), 1500)
+    // Phase 1: Content fades in on top of card (1.5s -> 3.5s)
+    const t2 = setTimeout(() => setPhase(2), 3500)
+    // Phase 2: Card bursts out, content stays
+    const t3 = setTimeout(() => setPhase(3), 4500)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [])
+
+  // Generate some particles
+  const particles = Array.from({ length: 60 }).map((_, i) => {
+    // scattered origins
+    const angle = ((i * 137.5) % 360) * Math.PI / 180
+    const dist = 400 + ((i * 83) % 800)
+    const startX = Math.cos(angle) * dist
+    const startY = Math.sin(angle) * dist
+
+    // target position inside the 3D card layout (simulating a grid or random inside a rect)
+    const tx = (((i * 47) % 100) / 100 - 0.5) * 280
+    const ty = (((i * 71) % 100) / 100 - 0.5) * 160
+
+    return { id: i, startX, startY, tx, ty }
+  })
 
   return (
     <div className="relative w-full h-[600px] bg-[#0a1128] overflow-hidden flex items-center justify-center pt-16 rounded-b-[3rem] shadow-2xl">
@@ -77,7 +101,7 @@ function AnimatedHero({ openAuth }: { openAuth: (path: string) => void }) {
         </motion.div>
         
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-4">
-          Find a credit card that
+          Find the credit card that
           <span className="block text-gradient-gold">actually fits</span>
           your life
         </h1>
