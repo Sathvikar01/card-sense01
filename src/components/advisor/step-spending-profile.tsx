@@ -28,6 +28,7 @@ const SPENDING_CATEGORIES = [
 
 export function SpendingProfileStep() {
   const store = useAdvisorStore()
+  const upiUsage = store.upiUsage || 'not_needed'
   const selectedCount = store.topSpendingCategories.length
   const maxReached = selectedCount >= 5
 
@@ -83,6 +84,37 @@ export function SpendingProfileStep() {
                 </div>
                 <p className="text-xs font-semibold text-foreground leading-tight">{cat.label}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{cat.sublabel}</p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* UPI usage */}
+      <div className="space-y-2.5">
+        <p className="text-sm font-semibold text-foreground">How important is paying through UPI for you?</p>
+        <p className="text-xs text-muted-foreground -mt-1">This helps us decide whether RuPay / UPI-on-credit rewards should influence the match.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {([
+            { value: 'not_needed', label: 'Not important', desc: 'I mostly use cards directly.' },
+            { value: 'occasional', label: 'Nice to have', desc: 'I use UPI sometimes.' },
+            { value: 'critical', label: 'Very important', desc: 'UPI is a major part of my spending.' },
+          ] as const).map((option) => {
+            const selected = upiUsage === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => store.updateField('upiUsage', option.value)}
+                className={cn(
+                  'relative rounded-xl border p-3.5 text-left transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-200',
+                  selected
+                    ? 'border-[#d4a017] bg-[#fdf3d7]/70 shadow-[0_0_0_1px_#d4a017]'
+                    : 'border-border bg-white hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/20'
+                )}
+              >
+                <p className="text-sm font-medium text-foreground pr-5">{option.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{option.desc}</p>
               </button>
             )
           })}

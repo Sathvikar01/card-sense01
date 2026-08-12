@@ -34,6 +34,8 @@ export type CardComplexity = 'one_simple' | 'few_optimized' | 'dont_mind_complex
 
 export type DisciplineLevel = 'very_disciplined' | 'mostly_on_time' | 'sometimes_late' | 'need_help'
 
+export type UpiUsage = 'not_needed' | 'occasional' | 'critical'
+
 export type UserPersona =
   | 'student_firsttime'
   | 'salaried_everyday'
@@ -81,6 +83,7 @@ export interface AdvisorFormState {
   topSpendingCategories: string[]
   spendingAmounts: Record<string, number>
   usesCardAbroad: boolean
+  upiUsage: UpiUsage
   monthlySpendEstimate: number
   desiredCreditLimit: number
 
@@ -131,6 +134,7 @@ const initialState: AdvisorFormState = {
   topSpendingCategories: [],
   spendingAmounts: {},
   usesCardAbroad: false,
+  upiUsage: 'not_needed',
   monthlySpendEstimate: 30000,
   desiredCreditLimit: 100000,
 
@@ -534,6 +538,7 @@ export const useAdvisorStore = create<AdvisorStore>()(
           spendingBreakdown: s.spendingAmounts,
           monthlySpending: s.getTotalMonthlySpend(),
           usesCardAbroad: s.usesCardAbroad,
+          upiUsage: s.upiUsage || 'not_needed',
           desiredCreditLimit: s.desiredCreditLimit,
           primaryGoal: s.primaryGoal,
           secondaryGoals: s.secondaryGoals,

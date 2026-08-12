@@ -606,6 +606,9 @@ const ruleBasedRecommendations = (
   )
   const needsUpi = getFollowUpAnswer(answers, ['upi_usage'], 'not_needed') === 'critical'
     || valuePriority === 'upi_qr_rewards'
+  const paymentBehavior = getFollowUpAnswer(answers, ['payment_behavior'], 'full_always')
+  const disciplineLevel = getFollowUpAnswer(answers, ['discipline_level'], 'very_disciplined')
+  const internationalSpend = getFollowUpAnswer(answers, ['international_spend'], 'no') === 'yes'
 
   const weightConfig = getRecommendationWeightConfig()
   const answerInfluenceMultiplier = Object.entries(weightConfig.answerInfluence).reduce(
@@ -723,20 +726,34 @@ const ruleBasedRecommendations = (
     if (rewardPreference === 'cashback' && hasCashbackSignals) goalFit += 8
     if (needsUpi && hasUpiSignals) goalFit += 8
     if (travelFrequency === 'frequent' && hasTravelSignals) goalFit += 8
+    if (internationalSpend && /forex|zero forex|international|travel/.test(cardText)) goalFit += 6
     const normalizedGoalFit = Math.max(0, Math.min(100, goalFit))
     const boostedGoalFit = Math.min(100, normalizedGoalFit * weightConfig.primaryGoalBoost)
 
     let feeFit = 50
     if (annualFeeTolerance === 'free_only') {
       feeFit = card.annualFee === 0 ? 100 : card.annualFee <= 500 ? 45 : 10
+    } else if (annualFeeTolerance === 'up_to_500') {
+      feeFit = card.annualFee <= 500 ? 95 : card.annualFee <= 1000 ? 60 : 20
     } else if (annualFeeTolerance === 'up_to_1000') {
       feeFit = card.annualFee <= 1000 ? 90 : card.annualFee <= 2000 ? 55 : 20
+    } else if (annualFeeTolerance === 'up_to_2000') {
+      feeFit = card.annualFee <= 2000 ? 90 : card.annualFee <= 5000 ? 55 : 20
     } else if (annualFeeTolerance === 'up_to_5000') {
       feeFit = card.annualFee <= 5000 ? 85 : 35
     } else if (annualFeeTolerance === 'premium_ok') {
       feeFit = card.annualFee > 5000 ? 75 : 65
     }
     if (hasPrimaryBankBoost) feeFit = Math.min(100, feeFit + 5)
+
+    // Users who carry balances or miss due dates need lower-risk cards; do not
+    // let a flashy rewards rate outrank basic affordability and payment safety.
+    if (paymentBehavior === 'carry_balance' || paymentBehavior === 'minimum_often') {
+      feeFit = Math.max(0, feeFit - (card.annualFee > 1000 ? 18 : 0))
+    }
+    if (disciplineLevel === 'sometimes_late' || disciplineLevel === 'need_help') {
+      feeFit = Math.max(0, feeFit - (card.annualFee > 1000 ? 10 : 0))
+    }
 
     let diversificationFit = 85
     const normalizedCardName = card.cardName.toLowerCase().replace(/\s+/g, ' ').trim()

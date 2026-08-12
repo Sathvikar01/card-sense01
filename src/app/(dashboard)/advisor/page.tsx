@@ -343,6 +343,27 @@ export default function AdvisorPage() {
           secured_card_readiness: securedReadiness,
           primary_spend_focus: spendFocus,
           value_priority: goalToValue[primaryGoal] || 'cashback_everyday',
+          annual_fee_tolerance: store.annualFeeTolerance === 'zero'
+            ? 'free_only'
+            : store.annualFeeTolerance === 'under_500'
+              ? 'up_to_500'
+              : store.annualFeeTolerance === 'under_2000'
+                ? 'up_to_2000'
+                : store.annualFeeTolerance === 'under_5000'
+                  ? 'up_to_5000'
+                  : 'premium_ok',
+          reward_preference: store.preferredRewardType === 'miles' ? 'travel' : store.preferredRewardType,
+          travel_frequency: store.travelFrequency === 'frequently'
+            ? 'frequent'
+            : store.travelFrequency === 'occasionally'
+              ? 'occasional'
+              : 'rare',
+          upi_usage: store.upiUsage,
+          payment_behavior: store.paymentBehavior,
+          discipline_level: store.disciplineLevel,
+          international_spend: store.usesCardAbroad ? 'yes' : 'no',
+          intro_offer_interest: store.interestedInIntroOffers ? 'yes' : 'no',
+          card_complexity: store.cardComplexity,
         },
       }
 
