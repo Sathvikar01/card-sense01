@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getLatestRecordedCreditScore } from '@/lib/credit-score'
 
 interface ProfilePageClientProps {
   profile: {
@@ -132,7 +133,8 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
     return { text: 'Needs Work', color: 'text-red-600' }
   }
 
-  const scoreLabel = getScoreLabel(profile.credit_score)
+  const currentCreditScore = getLatestRecordedCreditScore(cibilHistory, profile.credit_score)
+  const scoreLabel = getScoreLabel(currentCreditScore)
 
   const infoItems = [
     { icon: Mail, label: 'Email', value: profile.email },
@@ -209,7 +211,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
             <div>
               <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">CIBIL Score</p>
               <p className="mt-1.5 text-3xl font-bold tabular-nums text-foreground">
-                {profile.credit_score || '--'}
+                {currentCreditScore || '--'}
               </p>
               {scoreLabel && (
                 <p className={`mt-0.5 text-xs font-medium ${scoreLabel.color}`}>

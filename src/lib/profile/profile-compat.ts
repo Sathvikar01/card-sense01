@@ -255,6 +255,13 @@ const normalizeLegacyHistory = (row: UnknownRow): NormalizedCreditScoreHistory =
   notes: asString(row.notes),
 })
 
+const removeSyntheticAdvisorScores = (history: NormalizedCreditScoreHistory[]) => {
+  const trustedHistory = history.filter(
+    (entry) => !/captured from advisor flow/i.test(entry.notes || '')
+  )
+  return trustedHistory.length > 0 ? trustedHistory : history
+}
+
 const buildLegacyIncomeRange = (annualIncome: number | null | undefined) => {
   if (typeof annualIncome !== 'number' || !Number.isFinite(annualIncome) || annualIncome <= 0) {
     return null
@@ -441,7 +448,9 @@ export async function getCreditScoreHistoryWithFallback(
     .order('score_date', { ascending: false })
 
   if (!modern.error && modern.data) {
-    return (modern.data as unknown as UnknownRow[]).map(normalizeModernHistory)
+    return removeSyntheticAdvisorScores(
+      (modern.data as unknown as UnknownRow[]).map(normalizeModernHistory)
+    )
   }
   if (isMissingTableError(modern.error?.message, 'credit_score_history')) {
     return []
@@ -454,7 +463,9 @@ export async function getCreditScoreHistoryWithFallback(
     .order('score_date', { ascending: false })
 
   if (!legacy.error && legacy.data) {
-    return (legacy.data as unknown as UnknownRow[]).map(normalizeLegacyHistory)
+    return removeSyntheticAdvisorScores(
+      (legacy.data as unknown as UnknownRow[]).map(normalizeLegacyHistory)
+    )
   }
   if (isMissingTableError(legacy.error?.message, 'credit_score_history')) {
     return []

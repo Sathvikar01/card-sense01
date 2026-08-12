@@ -16,6 +16,7 @@ import { trackInteraction } from '@/lib/interactions/client'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
 import { FollowUpQuestionStep } from '@/components/advisor/follow-up-question-step'
 import { RESEARCHED_QUESTIONS } from '@/components/advisor/researched-questions'
+import { getLatestRecordedCreditScore } from '@/lib/credit-score'
 
 type FlowStep = 'follow-up' | 'loading' | 'results'
 
@@ -173,7 +174,7 @@ export default function AdvisorPage() {
       persona: store.detectedPersona,
       profileSummary: {
         monthlyIncome: store.monthlyIncome,
-        creditScore: store.creditScore,
+        creditScore: String(store.creditScoreValue ?? store.creditScore),
         persona: store.detectedPersona ?? undefined,
         primaryGoal: store.primaryGoal,
         topSpending: store.topSpendingCategories,
@@ -207,9 +208,7 @@ export default function AdvisorPage() {
             ? (((await cibilRes.json()).history || []) as Array<{ credit_score: number; score_date: string }>)
             : []
 
-          const latestScore = latestHistory.length > 0
-            ? [...latestHistory].sort((a, b) => b.score_date.localeCompare(a.score_date))[0]?.credit_score
-            : profile?.credit_score
+          const latestScore = getLatestRecordedCreditScore(latestHistory, profile?.credit_score)
 
           const existingCards = cardsRes.ok
             ? ((await cardsRes.json()).cards || []).map((card: { card_name: string }) => card.card_name)

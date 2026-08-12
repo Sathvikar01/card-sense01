@@ -1041,6 +1041,12 @@ const saveRecommendation = async (params: {
     rank: index + 1,
   }))
 
+  // Never create an empty history row: the dashboard should only surface a
+  // recommendation that has at least one usable card.
+  if (normalizedCards.length === 0) {
+    return null
+  }
+
   // Use the base table contract first. Optional compatibility columns vary
   // between deployed Supabase schemas and must not prevent saving a result.
   const recommendationPayloads: Array<Record<string, unknown>> = [
@@ -1051,6 +1057,19 @@ const saveRecommendation = async (params: {
       recommended_cards: normalizedCards,
       ai_analysis_text: analysis,
       model_used: model,
+    },
+    {
+      user_id: userId,
+      recommendation_type: 'experienced',
+      input_snapshot: input,
+      recommended_cards: normalizedCards,
+      ai_analysis_text: analysis,
+    },
+    {
+      user_id: userId,
+      recommendation_type: 'experienced',
+      input_snapshot: input,
+      recommended_cards: normalizedCards,
     },
   ]
 
@@ -1065,53 +1084,6 @@ const saveRecommendation = async (params: {
       recommendationId = data.id
       break
     }
-  }
-
-  const today = new Date().toISOString().slice(0, 10)
-  const creditHistoryPayloads: Array<Record<string, unknown>> = [
-    {
-      user_id: userId,
-      credit_score: input.cibilScore,
-      score_date: today,
-      score_source: 'manual',
-      notes: 'Captured from advisor flow',
-    },
-    {
-      user_id: userId,
-      score: input.cibilScore,
-      score_date: today,
-      source: 'user_input',
-      notes: 'Captured from advisor flow',
-    },
-  ]
-
-  for (const payload of creditHistoryPayloads) {
-    const { error } = await supabase.from('credit_score_history').insert(payload)
-    if (!error) break
-  }
-
-  const profilePayloads: Array<Record<string, unknown>> = [
-    {
-      credit_score: input.cibilScore,
-      annual_income: input.annualIncome,
-      employment_type: input.employmentType,
-      primary_bank: input.primaryBank,
-      city: input.city,
-      updated_at: new Date().toISOString(),
-    },
-    {
-      cibil_score: input.cibilScore,
-      monthly_income: input.monthlyIncome,
-      employment_type: input.employmentType,
-      primary_bank: input.primaryBank,
-      city: input.city,
-      updated_at: new Date().toISOString(),
-    },
-  ]
-
-  for (const payload of profilePayloads) {
-    const { error } = await supabase.from('profiles').update(payload).eq('id', userId)
-    if (!error) break
   }
 
   return recommendationId

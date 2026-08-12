@@ -31,30 +31,31 @@ export async function GET() {
         .select('id, recommended_cards, ai_analysis_text, input_snapshot, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .limit(10),
       supabase
         .from('recommendations')
         .select('id, recommended_cards, ai_analysis, input_snapshot, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .limit(10),
       supabase
         .from('recommendations')
         .select('id, recommended_cards, ai_analysis, input_data, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .limit(10),
     ]
 
     let row: RecommendationRow | null = null
     for (const query of queries) {
       const { data, error } = await query
       if (!error && data) {
-        row = data as RecommendationRow
-        break
+        const rows = (Array.isArray(data) ? data : [data]) as RecommendationRow[]
+        const candidate = rows.find((item) => Array.isArray(item.recommended_cards) && item.recommended_cards.length > 0)
+        if (candidate) {
+          row = candidate
+          break
+        }
       }
     }
 

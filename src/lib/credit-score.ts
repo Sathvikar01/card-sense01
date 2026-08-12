@@ -14,3 +14,29 @@ export function getCibilScoreRange(score: number) {
 
 export const getCibilScoreRating = (score: number) => getCibilScoreRange(score).label
 export const getCibilScoreHexColor = (score: number) => getCibilScoreRange(score).color
+
+export interface CreditScoreHistoryPoint {
+  id?: string
+  credit_score: number
+  score_date: string
+}
+
+/**
+ * Score history is the source of truth for the current score. Profile rows
+ * can lag behind after imports or older advisor runs, so every surface uses
+ * the newest dated history entry when one exists.
+ */
+export function getLatestRecordedCreditScore(
+  history: CreditScoreHistoryPoint[] | null | undefined,
+  fallback: number | null | undefined
+) {
+  const latest = [...(history || [])]
+    .filter((entry) => Number.isFinite(entry.credit_score) && entry.credit_score > 0 && entry.score_date)
+    .sort((a, b) => {
+      const dateDiff = new Date(b.score_date).getTime() - new Date(a.score_date).getTime()
+      if (dateDiff !== 0) return dateDiff
+      return String(b.id || '').localeCompare(String(a.id || ''))
+    })[0]
+
+  return latest?.credit_score ?? fallback ?? null
+}

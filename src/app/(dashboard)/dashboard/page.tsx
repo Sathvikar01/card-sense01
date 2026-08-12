@@ -2,9 +2,10 @@ import { default as nextDynamic } from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
 import { QuickActions } from '@/components/dashboard/quick-actions'
-import type { Recommendation } from '@/types/recommendation'
+import { DashboardTopPicks, type DashboardTopPick } from '@/components/dashboard/dashboard-top-picks'
 import { formatCurrency } from '@/lib/utils/format-currency'
-import { getCibilScoreRating } from '@/lib/credit-score'
+import { getCibilScoreRating, getLatestRecordedCreditScore } from '@/lib/credit-score'
+import { getCreditScoreHistoryWithFallback } from '@/lib/profile/profile-compat'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,74 @@ interface UserCardSummary {
   id: string
   card_name: string
   bank_name: string
+}
+
+interface DashboardRecommendation {
+  id: string
+  input_snapshot: Record<string, unknown>
+  recommended_cards: DashboardTopPick[]
+  created_at: string
+}
+
+function normalizeDashboardCards(value: unknown): DashboardTopPick[] {
+  const container = value && typeof value === 'object' ? value as Record<string, unknown> : null
+  const rawCards = Array.isArray(value)
+    ? value
+    : Array.isArray(container?.cards)
+      ? container.cards
+      : Array.isArray(container?.recommendations)
+        ? container.recommendations
+        : []
+
+  return rawCards.flatMap((rawCard, index) => {
+    if (!rawCard || typeof rawCard !== 'object') return []
+    const card = rawCard as Record<string, unknown>
+    const cardName = String(card.cardName ?? card.card_name ?? card.name ?? '').trim()
+    if (!cardName) return []
+
+    return [{
+      cardId: String(card.cardId ?? card.card_id ?? card.id ?? `recommendation-${index}`),
+      cardName,
+      bank: String(card.bank ?? card.bankName ?? card.bank_name ?? '').trim(),
+      score: Number.isFinite(Number(card.score)) ? Number(card.score) : undefined,
+    }]
+  })
+}
+
+async function getDashboardRecommendations(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<DashboardRecommendation[]> {
+  const queries = [
+    supabase
+      .from('recommendations')
+      .select('id, input_snapshot, recommended_cards, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase
+      .from('recommendations')
+      .select('id, input_data, recommended_cards, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(3),
+  ]
+
+  for (const query of queries) {
+    const { data, error } = await query
+    if (error || !data) continue
+
+    return (data as unknown as Array<Record<string, unknown>>)
+      .map((row) => ({
+        id: String(row.id || ''),
+        input_snapshot: (row.input_snapshot || row.input_data || {}) as Record<string, unknown>,
+        recommended_cards: normalizeDashboardCards(row.recommended_cards),
+        created_at: String(row.created_at || ''),
+      }))
+      .filter((recommendation) => recommendation.recommended_cards.length > 0)
+  }
+
+  return []
 }
 
 const SpendingSummaryChart = nextDynamic(
@@ -66,6 +135,7 @@ async function getDashboardData() {
     return {
       profile: null,
       recommendations: [],
+      cibilHistory: [],
       monthlySpending: [],
       currentMonthTotal: 0,
       totalCards: 0,
@@ -77,14 +147,10 @@ async function getDashboardData() {
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
   const sixMonthsAgoDate = sixMonthsAgo.toISOString().split('T')[0]
 
-  const [profileResult, recommendationsResult, spendingResult, userCardsResult] = await Promise.all([
+  const [profileResult, recommendations, cibilHistory, spendingResult, userCardsResult] = await Promise.all([
     getProfileWithFallback(supabase, { userId: user.id, email: user.email ?? null }),
-    supabase
-      .from('recommendations')
-      .select('id, user_id, recommendation_type, input_snapshot, recommended_cards, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(3),
+    getDashboardRecommendations(supabase, user.id),
+    getCreditScoreHistoryWithFallback(supabase, user.id),
     supabase
       .from('spending_transactions')
       .select('amount, transaction_date, category')
@@ -101,7 +167,6 @@ async function getDashboardData() {
   ])
 
   const profile = profileResult as DashboardProfile
-  const recommendations = recommendationsResult.data as Recommendation[] | null
   const spendingData = spendingResult.data as SpendingRow[] | null
 
   // Monthly spending for current month total
@@ -163,7 +228,8 @@ async function getDashboardData() {
 
   return {
     profile,
-    recommendations: (recommendations || []) as Recommendation[],
+    recommendations,
+    cibilHistory,
     monthlySpending: dashboardSpending,
     currentMonthTotal: dashboardMonthlyTotal,
     totalCards,
@@ -172,10 +238,10 @@ async function getDashboardData() {
 }
 
 export default async function DashboardPage() {
-  const { profile, recommendations, monthlySpending, currentMonthTotal, userCards } =
+  const { profile, recommendations, cibilHistory, monthlySpending, currentMonthTotal, userCards } =
     await getDashboardData()
 
-  const cibilScore = profile?.credit_score || null
+  const cibilScore = getLatestRecordedCreditScore(cibilHistory, profile?.credit_score)
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
   const topCards = recommendations[0]?.recommended_cards.slice(0, 3) || []
 
@@ -257,25 +323,7 @@ export default async function DashboardPage() {
         <CardsOwnedStack cards={userCards} />
 
         {/* Top Picks */}
-        <div className="px-1 py-2 lg:border-r lg:border-border/50 lg:pr-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Top Picks</p>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#b8860b]"><path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.3" fill="none" /><path d="M5.5 8L7 9.5 10.5 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-          <div className="mt-3 space-y-1.5">
-            {topCards.length > 0 ? topCards.map((card, index) => (
-              <a
-                key={card.cardId || `${card.cardName}-${index}`}
-                href="/recommendations"
-                className="block truncate text-xs font-medium text-foreground hover:text-[#b8860b]"
-              >
-                <span className="mr-1.5 text-muted-foreground">{index + 1}.</span>{card.cardName}
-              </a>
-            )) : (
-              <p className="text-xs text-muted-foreground">No recommendations yet</p>
-            )}
-          </div>
-        </div>
+        <DashboardTopPicks cards={topCards} />
       </div>
 
       {/* ====== Quick Actions ====== */}

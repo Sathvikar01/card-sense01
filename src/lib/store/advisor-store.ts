@@ -66,6 +66,8 @@ export interface SpendingEntry {
 export interface AdvisorFormState {
   // Phase 0: Basics
   creditScore: CreditScoreRange
+  /** Exact score loaded from profile/history, when available. */
+  creditScoreValue: number | null
   employmentType: EmploymentType
   monthlyIncome: number
   age: number
@@ -119,6 +121,7 @@ export interface AdvisorFormState {
 
 const initialState: AdvisorFormState = {
   creditScore: '700_749',
+  creditScoreValue: null,
   employmentType: 'salaried',
   monthlyIncome: 50000,
   age: 28,
@@ -381,7 +384,10 @@ export const useAdvisorStore = create<AdvisorStore>()(
             : [...s.completedSteps, step],
         })),
 
-      updateField: (field, value) => set({ [field]: value }),
+      updateField: (field, value) =>
+        field === 'creditScore'
+          ? set({ creditScore: value as CreditScoreRange, creditScoreValue: null })
+          : set({ [field]: value }),
 
       updateSpendingAmount: (category, amount) =>
         set((s) => ({
@@ -421,6 +427,7 @@ export const useAdvisorStore = create<AdvisorStore>()(
 
         if (data.creditScore !== undefined && data.creditScore !== null) {
           updates.creditScore = bucketCibilScore(data.creditScore)
+          updates.creditScoreValue = data.creditScore
           filled.push('creditScore')
         }
         if (data.employmentType) {
@@ -524,7 +531,7 @@ export const useAdvisorStore = create<AdvisorStore>()(
           '800_plus': 850,
         }
         return {
-          cibilScore: scoreMap[s.creditScore],
+          cibilScore: s.creditScoreValue ?? scoreMap[s.creditScore],
           age: s.age,
           city: s.city,
           primaryBank: s.primaryBank,

@@ -3,10 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import {
   getProfileWithFallback,
+  getCreditScoreHistoryWithFallback,
   ProfileCompatError,
   upsertProfileWithFallback,
 } from '@/lib/profile/profile-compat'
 import { insertUserInteraction } from '@/lib/interactions/server'
+import { getLatestRecordedCreditScore } from '@/lib/credit-score'
 
 // GET /api/profile - Fetch user profile
 export async function GET() {
@@ -30,24 +32,31 @@ export async function GET() {
       userId: user.id,
       email: user.email ?? null,
     })
+    const cibilHistory = await getCreditScoreHistoryWithFallback(supabase, user.id)
+    const currentCreditScore = getLatestRecordedCreditScore(cibilHistory, profile.credit_score)
+    const effectiveProfile = {
+      ...profile,
+      credit_score: currentCreditScore,
+      credit_score_date: cibilHistory[0]?.score_date || profile.credit_score_date,
+    }
 
     const completionFields = {
-      full_name: Boolean(profile.full_name?.trim()),
-      city: Boolean(profile.city?.trim()),
-      employment_type: Boolean(profile.employment_type?.trim()),
-      annual_income: Boolean(profile.annual_income && profile.annual_income > 0),
-      primary_bank: Boolean(profile.primary_bank?.trim()),
-      credit_score: Boolean(profile.credit_score && profile.credit_score >= 300),
+      full_name: Boolean(effectiveProfile.full_name?.trim()),
+      city: Boolean(effectiveProfile.city?.trim()),
+      employment_type: Boolean(effectiveProfile.employment_type?.trim()),
+      annual_income: Boolean(effectiveProfile.annual_income && effectiveProfile.annual_income > 0),
+      primary_bank: Boolean(effectiveProfile.primary_bank?.trim()),
+      credit_score: Boolean(effectiveProfile.credit_score && effectiveProfile.credit_score >= 300),
     }
     const completionScore = Object.values(completionFields).filter(Boolean).length
     const profileCompletion = Math.round((completionScore / Object.keys(completionFields).length) * 100)
 
     const response = NextResponse.json({
-      profile,
+      profile: effectiveProfile,
       profileMeta: {
         completionFields,
         profileCompletion,
-        onboardingRequired: profile.onboarding_completed !== true || profileCompletion < 100,
+        onboardingRequired: effectiveProfile.onboarding_completed !== true || profileCompletion < 100,
       },
     })
     response.headers.set('Cache-Control', 'private, no-store')
