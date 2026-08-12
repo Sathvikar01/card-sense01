@@ -1,133 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ShieldCheck, TrendingUp, Cpu, CreditCard } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { ParticleField } from '@/components/shared/particle-field'
 import { CardSenseLogo, CardSenseIcon } from '@/components/shared/logo'
 import { AuthModal } from '@/components/shared/auth-modal'
-
-function AnimatedHero({ openAuth }: { openAuth: (path: string) => void }) {
-  const [phase, setPhase] = useState(0)
-
-  useEffect(() => {
-    // Phase 0: Particles assemble into card (0 -> 1.5s)
-    const t1 = setTimeout(() => setPhase(1), 1500)
-    // Phase 1: Content fades in on top of card (1.5s -> 3.5s)
-    const t2 = setTimeout(() => setPhase(2), 3500)
-    // Phase 2: Card bursts out, content stays
-    const t3 = setTimeout(() => setPhase(3), 4500)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [])
-
-  // Generate some particles
-  const particles = Array.from({ length: 60 }).map((_, i) => {
-    // scattered origins
-    const angle = ((i * 137.5) % 360) * Math.PI / 180
-    const dist = 400 + ((i * 83) % 800)
-    const startX = Math.cos(angle) * dist
-    const startY = Math.sin(angle) * dist
-
-    // target position inside the 3D card layout (simulating a grid or random inside a rect)
-    const tx = (((i * 47) % 100) / 100 - 0.5) * 280
-    const ty = (((i * 71) % 100) / 100 - 0.5) * 160
-
-    return { id: i, startX, startY, tx, ty }
-  })
-
-  return (
-    <div className="relative w-full h-[600px] bg-[#0a1128] overflow-hidden flex items-center justify-center pt-16 rounded-b-[3rem] shadow-2xl">
-      {/* Background glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,160,23,0.1)_0%,transparent_60%)] pointer-events-none" />
-
-      {/* Particles forming the 3D card */}
-      <div className="absolute inset-0 flex items-center justify-center perspective-[1000px] pointer-events-none">
-        <motion.div 
-          className="relative w-[340px] h-[200px]"
-          animate={
-            phase === 0 ? { rotateX: 60, rotateZ: -20, scale: 0.8, opacity: 1 } :
-            phase === 1 ? { rotateX: 60, rotateZ: -20, scale: 1, opacity: 1 } :
-            phase === 2 ? { rotateX: 0, rotateZ: 0, scale: 1.1, opacity: 1 } :
-            { scale: 2, opacity: 0 } // Burst out
-          }
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-        >
-          {/* Card Glassmorphic Background that fades in when assembled */}
-          <motion.div
-            className="absolute inset-0 rounded-2xl border border-[#d4a017]/50 bg-white/5 backdrop-blur-md shadow-[0_0_30px_rgba(212,160,23,0.2)]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: phase >= 1 && phase < 3 ? 1 : 0 }}
-            transition={{ duration: 0.5 }}
-          />
-
-          {particles.map((p) => (
-            <motion.div
-              key={p.id}
-              className="absolute w-2 h-2 rounded-full bg-[#d4a017] shadow-[0_0_8px_#d4a017]"
-              initial={{ x: p.startX, y: p.startY, opacity: 0 }}
-              animate={
-                phase === 0 ? { x: p.startX, y: p.startY, opacity: 0 } :
-                phase === 1 ? { x: p.tx + 170, y: p.ty + 100, opacity: 1, scale: 0.5 + (p.id % 5) * 0.1 } :
-                phase === 2 ? { x: p.tx + 170, y: p.ty + 100, opacity: 0.8, scale: 0.5 } :
-                { x: p.startX * 1.5, y: p.startY * 1.5, opacity: 0, scale: 2 } // Burst out
-              }
-              transition={{
-                duration: phase === 3 ? 1 : 1.5,
-                ease: "circOut",
-                delay: phase === 1 ? (p.id % 10) * 0.05 : 0
-              }}
-            />
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Main Content inside the Hero - Appears on the card, stays after burst */}
-      <motion.div 
-        className="relative z-10 flex flex-col items-center text-center max-w-2xl px-4"
-        initial={{ opacity: 0, y: 30, scale: 0.9 }}
-        animate={{ 
-          opacity: phase >= 2 ? 1 : 0, 
-          y: phase >= 2 ? 0 : 30,
-          scale: phase >= 3 ? 1 : 0.95
-        }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <motion.div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d4a017]/30 bg-white/5 px-4 py-1.5 backdrop-blur-md">
-          <CreditCard className="h-4 w-4 text-[#d4a017]" />
-          <span className="text-sm font-medium text-white/90">Independent Card Comparison</span>
-        </motion.div>
-        
-        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-4">
-          Find the credit card that
-          <span className="block text-gradient-gold">actually fits</span>
-          your life
-        </h1>
-        
-        <p className="mt-4 text-lg text-white/70 sm:text-xl max-w-xl mx-auto mb-8">
-          Compare fees, understand earning rules, and see estimates tailored to your spending.
-        </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <button
-            onClick={() => openAuth('/dashboard')}
-            className="group relative inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-8 py-4 text-base font-semibold text-white shadow-lg shadow-[#b8860b]/30 transition-transform hover:scale-105"
-          >
-            Get Started <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
-          <button
-            onClick={() => openAuth('/cards')}
-            className="inline-flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/5 backdrop-blur-md px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Browse All Cards
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
 
 const navItems = [
   { label: 'Features', href: '#features' },
@@ -162,7 +43,7 @@ const valuePoints = [
   },
 ]
 
-// A curated visual sample from the wider catalog.
+// All 20 available card IDs for the marquee
 const allCardIds = [
   'hdfc-regalia-gold',
   'sbi-cashback',
@@ -208,10 +89,18 @@ export default function HomePage() {
   const router = useRouter()
   const row1 = allCardIds.slice(0, 10)
   const row2 = allCardIds.slice(10, 20)
+  const heroRef = useRef<HTMLElement>(null)
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
   const [authModal, setAuthModal] = useState<{ open: boolean; redirectTo: string }>({ open: false, redirectTo: '/dashboard' })
 
   const openAuth = (redirectTo: string) => setAuthModal({ open: true, redirectTo })
   const closeAuth = () => setAuthModal((prev) => ({ ...prev, open: false }))
+
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -220,6 +109,19 @@ export default function HomePage() {
 
     router.replace(`/auth/callback?${params.toString()}`)
   }, [router])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!heroRef.current) return
+      const rect = heroRef.current.getBoundingClientRect()
+      setMousePos({
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height,
+      })
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   return (
     <div className="min-h-screen overflow-hidden">
@@ -281,7 +183,109 @@ export default function HomePage() {
 
       <main id="main-content" tabIndex={-1} className="outline-none">
         {/* ====== Hero Section ====== */}
-        <AnimatedHero openAuth={openAuth} />
+        <motion.section ref={heroRef} style={{ opacity: heroOpacity }} className="relative overflow-hidden px-4 pb-4 pt-16 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
+          {/* Mouse-following spotlight */}
+          <div
+            className="pointer-events-none absolute inset-0 transition-all duration-300"
+            style={{
+              background: `radial-gradient(ellipse 600px 400px at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(212, 160, 23, 0.08) 0%, transparent 70%)`,
+            }}
+          />
+
+          {/* Floating background elements */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <motion.div
+              className="absolute -left-20 top-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-[#d4a017]/20 to-transparent blur-3xl"
+              animate={{ y: [0, 30, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -right-10 top-1/3 h-48 w-48 rounded-full bg-gradient-to-bl from-[#e8c04a]/20 to-transparent blur-2xl"
+              animate={{ y: [0, -20, 0], scale: [1, 0.95, 1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+            />
+            <motion.div
+              className="absolute bottom-1/4 left-1/3 h-32 w-32 rounded-full bg-gradient-to-tr from-blue-200/20 to-transparent blur-2xl"
+              animate={{ y: [0, 15, 0], x: [0, 10, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+            />
+            <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle, #d4a017 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl">
+            <div className="flex flex-col items-center text-center">
+              {/* Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-[#d4a017]/20 bg-white/90 px-5 py-2.5 shadow-sm shadow-[#b8860b]/5"
+              >
+                <CreditCard className="h-4 w-4 text-[#b8860b]" />
+                <span className="text-sm font-medium text-[#7a5500]">Independent Card Comparison</span>
+              </motion.div>
+
+              {/* Title with staggered reveal */}
+              <div className="overflow-hidden">
+                <motion.h1
+                  initial={{ y: 60, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  className="cardsense-hero-title text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl"
+                >
+                  Find the credit card that
+                </motion.h1>
+              </div>
+              <div className="overflow-hidden">
+                <motion.h1
+                  initial={{ y: 60, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className="cardsense-hero-title text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+                >
+                  <span className="text-gradient-primary">actually fits</span> your life
+                </motion.h1>
+              </div>
+
+              {/* Subtitle */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl"
+              >
+                Compare fees, understand earning rules, and see estimates tailored to your spending.
+              </motion.p>
+
+              {/* CTA Row */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-10 flex flex-wrap items-center justify-center gap-4"
+              >
+                <motion.button
+                  onClick={() => openAuth('/dashboard')}
+                  className="group relative inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-8 py-4 text-base font-semibold text-white shadow-xl shadow-[#b8860b]/20"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#e8c04a] opacity-0 transition-opacity group-hover:opacity-100" />
+                  <span className="relative">Get Started</span>
+                  <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </motion.button>
+                <motion.button
+                  onClick={() => openAuth('/cards')}
+                  className="group inline-flex items-center gap-2.5 rounded-2xl border-2 border-border/60 bg-white px-8 py-4 text-base font-semibold text-foreground transition-colors hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/50"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Browse All Cards
+                </motion.button>
+              </motion.div>
+            </div>
+          </div>
+        </motion.section>
 
         {/* ====== Card Marquee ====== */}
         <section className="relative overflow-hidden py-3 lg:mt-8">
@@ -357,7 +361,7 @@ export default function HomePage() {
                 Built for the Indian credit card ecosystem
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Generic lists hide the trade-offs. CardSense combines your spending inputs with fee and reward rules to produce explainable estimates.
+                Most card comparison sites show you generic lists. We run real calculations on your spending data to show exactly how much each card is worth to you.
               </p>
             </motion.div>
 
