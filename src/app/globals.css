@@ -740,7 +740,12 @@ html.dark {
 
   .card-detail-sections [data-slot="tabs-content"] {
     display: block !important;
-    margin-top: 1.5rem;
+    margin-top: 0;
+    padding-top: 1.5rem;
+  }
+
+  .card-detail-sections [data-slot="tabs-content"] + [data-slot="tabs-content"] {
+    border-top: 1px solid oklch(0.88 0.02 270 / 0.7);
   }
 }
 

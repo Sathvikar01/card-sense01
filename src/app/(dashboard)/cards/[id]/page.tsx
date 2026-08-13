@@ -189,7 +189,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
           <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent forceMount value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {cardData.pros && cardData.pros.length > 0 && (
               <section className="pt-2">
@@ -255,7 +255,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
           )}
         </TabsContent>
 
-        <TabsContent value="rewards" className="space-y-6">
+        <TabsContent forceMount value="rewards" className="space-y-6">
           <section className="pt-2">
             <div className="mb-3">
               <CardTitle className="flex items-center gap-2">
@@ -329,7 +329,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
           )}
         </TabsContent>
 
-        <TabsContent value="benefits" className="space-y-6">
+        <TabsContent forceMount value="benefits" className="space-y-6">
           {cardData.welcome_benefits && (
             <section className="pt-2">
               <div className="mb-3">
@@ -478,7 +478,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
           )}
         </TabsContent>
 
-        <TabsContent value="fees" className="space-y-6">
+        <TabsContent forceMount value="fees" className="space-y-6">
           <section className="pt-2">
             <div className="mb-3">
               <CardTitle className="flex items-center gap-2">
@@ -521,7 +521,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
           </section>
         </TabsContent>
 
-        <TabsContent value="eligibility" className="space-y-6">
+        <TabsContent forceMount value="eligibility" className="space-y-6">
           <section className="pt-2">
             <div className="mb-3">
               <CardTitle>Eligibility Criteria</CardTitle>
