@@ -130,26 +130,26 @@ export function EducationLibrary({ articles }: EducationLibraryProps) {
 
   return (
     <div className="education-library space-y-14 sm:space-y-20">
-      <section className="education-hero !border !border-[#f0c85a]/25 !bg-[linear-gradient(135deg,#463510_0%,#2f2716_58%,#211d14_100%)] !rounded-xl px-5 py-8 text-white before:hidden sm:px-10 sm:py-12">
+      <section className="education-hero !border !border-[#d4a017]/25 !bg-[linear-gradient(135deg,#30313a_0%,#292b34_58%,#23252d_100%)] !rounded-xl px-5 py-8 text-white before:hidden sm:px-10 sm:py-12">
         <div className="relative grid gap-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div>
-            <p className="mb-5 flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#f8e5a8]">
-              <span className="h-px w-7 bg-[#f0c85a]" /> CardSense education
+            <p className="mb-5 flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#d4a017]">
+              <span className="h-px w-7 bg-[#b8860b]" /> CardSense education
             </p>
             <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] sm:text-5xl sm:leading-[1.05]">
               Learn the card before the card teaches you.
             </h1>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-[#fff8e5]/75 sm:text-base">
+            <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">
               Short, practical lessons on credit, CIBIL, rewards and fees. Start with what is useful today and build from there.
             </p>
-            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[#fff8e5]/70">
-              <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#f0c85a]" /> {articles.length} lessons</span>
-              <span className="inline-flex items-center gap-2"><GraduationCap className="h-4 w-4 text-[#f0c85a]" /> 4-step path</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#f0c85a]" /> Official reading included</span>
+            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-xs text-white/65">
+              <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#d4a017]" /> {articles.length} lessons</span>
+              <span className="inline-flex items-center gap-2"><GraduationCap className="h-4 w-4 text-[#d4a017]" /> 4-step path</span>
+              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#d4a017]" /> Official reading included</span>
             </div>
           </div>
-          <blockquote className="border-l border-[#f0c85a]/70 pl-5 lg:mb-1">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#f8e5a8]/75">Keep this close</p>
+          <blockquote className="border-l border-[#b8860b]/70 pl-5 lg:mb-1">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#d4a017]/75">Keep this close</p>
             <p className="mt-3 text-xl font-medium leading-8 text-white">A reward is never worth paying interest to earn it.</p>
           </blockquote>
         </div>

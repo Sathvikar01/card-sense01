@@ -21,7 +21,7 @@ if (existsSync(envPath)) {
 
 // Initialize Supabase admin client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('❌ Missing required environment variables:')
@@ -236,9 +236,7 @@ function extractTags(article: Article, category: string): string[] {
  * Create summary from introduction
  */
 function createSummary(introduction: string): string {
-  const sentences = introduction.split(/[.!?]/)
-  const summary = sentences.slice(0, 2).join('.').trim()
-  return summary.length > 200 ? summary.substring(0, 197) + '...' : summary + '.'
+  return introduction.trim()
 }
 
 /**
