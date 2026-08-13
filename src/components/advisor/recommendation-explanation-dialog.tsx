@@ -1,17 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Progress } from '@/components/ui/progress'
 import { trackInteraction } from '@/lib/interactions/client'
 import { cn } from '@/lib/utils'
@@ -78,8 +68,6 @@ export function RecommendationExplanationDialog({
   triggerLabel = 'View full explanation',
   triggerClassName,
 }: RecommendationExplanationDialogProps) {
-  const [open, setOpen] = useState(false)
-
   if (!hasExplainability(card)) {
     return null
   }
@@ -93,34 +81,32 @@ export function RecommendationExplanationDialog({
   const weightsUsed = card.ruleScores?.weightsUsed
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen)
-
-        if (nextOpen) {
-          void trackInteraction('recommendation_explanation_opened', {
-            page: '/advisor',
-            entityType: 'recommendation_explanation',
-            entityId: card.id,
-            metadata: {
-              cardName: card.name,
-              bank: card.bank,
-              rank,
-              finalScore: card.score,
-            },
-          })
-        }
+    <Accordion
+      type="single"
+      collapsible
+      className={cn('w-full', triggerClassName)}
+      onValueChange={(value) => {
+        if (!value) return
+        void trackInteraction('recommendation_explanation_opened', {
+          page: '/advisor',
+          entityType: 'recommendation_explanation',
+          entityId: card.id,
+          metadata: {
+            cardName: card.name,
+            bank: card.bank,
+            rank,
+            finalScore: card.score,
+          },
+        })
       }}
     >
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className={cn('gap-1.5', triggerClassName)}>
-          {triggerLabel}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl border-border/60 p-0 sm:max-w-3xl">
-        <div className="space-y-6 p-6 sm:p-7">
-          <DialogHeader className="text-left">
+      <AccordionItem value={`explanation-${card.id}`} className="rounded-xl border border-border/60 bg-background/70 px-4">
+        <AccordionTrigger className="py-3 text-sm">
+          <span className="font-semibold text-foreground">{triggerLabel}</span>
+        </AccordionTrigger>
+        <AccordionContent className="pb-4">
+          <div className="space-y-6 pt-2">
+            <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {typeof rank === 'number' && (
                 <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-primary">
@@ -131,11 +117,11 @@ export function RecommendationExplanationDialog({
                 {card.bank}
               </Badge>
             </div>
-            <DialogTitle className="text-xl">Why {card.name} was recommended</DialogTitle>
-            <DialogDescription className="leading-relaxed">
+            <h3 className="text-lg font-semibold text-foreground">Why {card.name} was recommended</h3>
+            <p className="leading-relaxed text-sm text-muted-foreground">
               This view shows the full rule list, scoring breakdown, and the main reasons this card ranked where it did.
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+            </div>
 
           {(card.whyThisCard?.summary || card.finalDecisionReason) && (
             <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
@@ -256,9 +242,9 @@ export function RecommendationExplanationDialog({
             </div>
           )}
 
-          <DialogFooter showCloseButton />
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   )
 }

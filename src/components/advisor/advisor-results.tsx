@@ -319,8 +319,8 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
 
   return (
     <div>
-      <CardDetailLink cardId={card.id} className="group block">
-        <div className="rounded-xl bg-card overflow-hidden">
+      <div className="rounded-xl bg-card overflow-hidden">
+        <CardDetailLink cardId={card.id} className="group block">
 
           {/* Card visual — identical to CardTile, no overlays */}
           <div className="flex justify-center px-6 pb-4 pt-6">
@@ -414,7 +414,10 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
                 {explanationSnippet}
               </p>
             )}
+          </div>
+        </CardDetailLink>
 
+        <div className="space-y-3 px-4 pb-4 sm:px-5 sm:pb-5">
             <RecommendationExplanationDialog
               card={card}
               rank={rank}
@@ -422,14 +425,12 @@ function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank
               triggerClassName="w-full"
             />
 
-            {/* CTA — same as CardTile */}
-            <div className="flex items-center justify-between pt-1">
+            <CardDetailLink cardId={card.id} className="flex items-center justify-between pt-1">
               <span className="text-xs font-medium text-violet-600">View Details</span>
               <ArrowRight className="h-3.5 w-3.5 text-[#b8860b]" />
-            </div>
+            </CardDetailLink>
           </div>
         </div>
-      </CardDetailLink>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   title: 'CardSense India — Smart Credit Card Advisor',
   description:
     'Compare Indian credit cards, understand fees and rewards, and get profile-based recommendations.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({

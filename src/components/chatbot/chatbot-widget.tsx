@@ -157,7 +157,7 @@ export function ChatbotWidget() {
               name="chat-message"
               aria-label="Message CardSense Assistant"
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#d4a017]"
+              className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#d4a017] sm:text-sm"
               placeholder="Ask about cards or rewards…"
               value={input}
               onChange={(e) => setInput(e.target.value)}

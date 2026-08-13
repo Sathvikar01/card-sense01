@@ -180,7 +180,7 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="overview" className="card-detail-sections w-full">
         <TabsList className="mb-8 grid w-full grid-cols-2 sm:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>

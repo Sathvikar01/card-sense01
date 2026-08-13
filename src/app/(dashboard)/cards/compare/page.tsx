@@ -112,7 +112,7 @@ export default function CardComparePage() {
 
   const count = cards.length
   const gridTemplate = useMemo(
-    () => ({ gridTemplateColumns: `180px repeat(${count}, minmax(0, 1fr))` }),
+    () => ({ gridTemplateColumns: `180px repeat(${count}, minmax(240px, 1fr))` }),
     [count]
   )
 
@@ -171,8 +171,10 @@ export default function CardComparePage() {
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="stat-card-premium overflow-x-auto overflow-hidden"
+        className="stat-card-premium"
       >
+        <div className="overflow-x-auto">
+          <div className="min-w-max">
         <div className="grid border-b border-border/30 bg-gradient-to-b from-[#fdf3d7]/20 to-transparent" style={gridTemplate}>
           <div className="flex items-end px-4 pb-4 pt-5">
             <span className="text-xs text-muted-foreground">Cards</span>
@@ -428,6 +430,8 @@ export default function CardComparePage() {
               </div>
             </div>
           ))}
+        </div>
+          </div>
         </div>
       </motion.div>
 
