@@ -1,6 +1,52 @@
 -- CardSense canonical card catalog. Safe to rerun.
 begin;
 
+-- Add every canonical catalog field before the import. This also upgrades
+-- projects that still have the older credit_cards table shape.
+alter table public.credit_cards
+  add column if not exists bank_name text,
+  add column if not exists card_network text,
+  add column if not exists card_variant text,
+  add column if not exists image_url text,
+  add column if not exists joining_fee integer default 0,
+  add column if not exists annual_fee_waiver_spend integer,
+  add column if not exists renewal_fee integer,
+  add column if not exists min_income_salaried integer,
+  add column if not exists min_income_self_employed integer,
+  add column if not exists min_income_required integer,
+  add column if not exists min_cibil_score integer,
+  add column if not exists min_credit_score integer,
+  add column if not exists min_age integer default 18,
+  add column if not exists max_age integer default 65,
+  add column if not exists requires_itr boolean default false,
+  add column if not exists requires_existing_relationship boolean default false,
+  add column if not exists reward_rate_default numeric(10, 4),
+  add column if not exists reward_rate_categories jsonb default '{}'::jsonb,
+  add column if not exists welcome_benefits jsonb default '{}'::jsonb,
+  add column if not exists milestone_benefits jsonb default '{}'::jsonb,
+  add column if not exists lounge_access text,
+  add column if not exists lounge_access_details text,
+  add column if not exists lounge_visits_per_quarter integer,
+  add column if not exists fuel_surcharge_waiver boolean default false,
+  add column if not exists fuel_surcharge_waiver_cap integer,
+  add column if not exists movie_benefits text,
+  add column if not exists dining_benefits text,
+  add column if not exists travel_insurance_cover integer,
+  add column if not exists purchase_protection_cover integer,
+  add column if not exists golf_access boolean default false,
+  add column if not exists concierge_service boolean default false,
+  add column if not exists forex_markup numeric(8, 4),
+  add column if not exists emi_conversion_available boolean default true,
+  add column if not exists description text,
+  add column if not exists pros text[] default '{}'::text[],
+  add column if not exists cons text[] default '{}'::text[],
+  add column if not exists best_for text[] default '{}'::text[],
+  add column if not exists apply_url text,
+  add column if not exists is_active boolean default true,
+  add column if not exists popularity_score integer default 0,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
 alter table public.credit_cards
   add column if not exists card_slug text,
   add column if not exists data_source text not null default 'catalog_import',
