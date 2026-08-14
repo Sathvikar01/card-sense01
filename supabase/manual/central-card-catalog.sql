@@ -53,6 +53,19 @@ alter table public.credit_cards
   add column if not exists data_last_verified_at timestamptz,
   add column if not exists metadata jsonb not null default '{}'::jsonb;
 
+alter table public.credit_cards
+  drop constraint if exists credit_cards_card_type_check;
+
+alter table public.credit_cards
+  add constraint credit_cards_card_type_check
+  check (
+    card_type is null
+    or card_type in (
+      'entry_level', 'premium', 'super_premium', 'business', 'fuel',
+      'cashback', 'rewards', 'travel', 'shopping', 'lifestyle', 'secured'
+    )
+  ) not valid;
+
 update public.credit_cards
 set card_slug = trim(both '-' from regexp_replace(
   lower(concat(coalesce(bank_name, 'card'), '-', coalesce(card_name, ''))),
