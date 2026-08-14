@@ -320,9 +320,13 @@ export default function SpendingPage() {
       </section>
 
       {transactions.length > 0 && (
-        <section className="grid gap-10 border-b border-border pb-8 md:grid-cols-2">
-          <SpendingCategoryChart transactions={transactions} />
-          <SpendingTrendChart transactions={transactions} />
+        <section className="space-y-10 border-b border-border pb-8">
+          <div className="mx-auto w-full max-w-xl">
+            <SpendingCategoryChart transactions={transactions} />
+          </div>
+          <div className="mx-auto w-full max-w-3xl border-t border-border pt-8">
+            <SpendingTrendChart transactions={transactions} />
+          </div>
         </section>
       )}
 

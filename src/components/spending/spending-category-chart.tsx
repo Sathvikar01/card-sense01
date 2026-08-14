@@ -74,7 +74,7 @@ export function SpendingCategoryChart({ transactions }: SpendingCategoryChartPro
 
   return (
     <div>
-      <h2 className="text-base font-semibold">Category breakdown</h2>
+      <h2 className="text-center text-base font-semibold">Category breakdown</h2>
       <div className="mt-4">
         <div className="flex flex-col items-center">
           <div className="h-[220px] w-full">
