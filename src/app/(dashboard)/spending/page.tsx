@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { TrendingUp, CreditCard, Calendar, Plus, Save } from 'lucide-react'
+import { Plus, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { SpendingCategoryChart } from '@/components/spending/spending-category-chart'
 import { SpendingTrendChart } from '@/components/spending/spending-trend-chart'
@@ -137,20 +137,6 @@ const SPENDING_CATEGORIES = [
   },
 ] as const
 
-const CATEGORY_COLORS: Record<string, string> = {
-  dining: 'bg-orange-100 text-orange-800',
-  shopping: 'bg-pink-100 text-pink-800',
-  travel: 'bg-blue-100 text-blue-800',
-  groceries: 'bg-green-100 text-green-800',
-  entertainment: 'bg-purple-100 text-purple-800',
-  fuel: 'bg-amber-100 text-amber-800',
-  utilities: 'bg-cyan-100 text-cyan-800',
-  rent: 'bg-violet-100 text-violet-800',
-  healthcare: 'bg-red-100 text-red-800',
-  education: 'bg-indigo-100 text-indigo-800',
-  other: 'bg-gray-100 text-gray-800',
-}
-
 export default function SpendingPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -257,49 +243,41 @@ export default function SpendingPage() {
   const entryTotal = Object.values(amounts).reduce((sum, val) => sum + (Number(val) || 0), 0)
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Spending Tracker</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track your monthly category-wise spending
-          </p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Money map</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">Spending tracker</h1>
+          <p className="mt-2 max-w-lg text-sm text-muted-foreground">See where your money goes, then use that pattern to choose better cards.</p>
         </div>
         <Button
-          className="gap-2 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-lg shadow-[#b8860b]/20"
+          variant={showEntry ? 'outline' : 'default'}
+          className="w-full gap-2 sm:w-auto"
           onClick={() => setShowEntry(!showEntry)}
         >
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Add Spending</span>
-          <span className="sm:hidden">Add</span>
+          {showEntry ? 'Close entry' : 'Add monthly spend'}
         </Button>
       </div>
 
       {showEntry && (
-        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <div className="flex items-center gap-2 text-base font-semibold">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-white">
-                <Plus className="h-3.5 w-3.5" />
-              </div>
-              Enter Monthly Spending
+        <section className="border-y border-border py-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Monthly spending</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Add rough amounts. Leave categories blank when they do not apply.</p>
+            </div>
+            <p className="text-sm text-muted-foreground">All amounts in INR</p>
           </div>
-          <div className="mt-5 space-y-5">
-            <p className="text-xs text-muted-foreground">
-              Enter approximate monthly spending for each category. Leave blank for categories you don&apos;t use.
-            </p>
-
-            {/* Category grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="mt-6">
+            <div className="grid grid-cols-1 gap-x-10 sm:grid-cols-2">
               {SPENDING_CATEGORIES.map((cat) => (
-                <div key={cat.key} className="flex items-center gap-3 rounded-xl border border-border/60 p-3 bg-muted/10">
-                  <span className="text-muted-foreground shrink-0">{cat.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <label htmlFor={`spend-${cat.key}`} className="text-sm font-medium text-foreground cursor-pointer">
-                      {cat.label}
-                    </label>
-                  </div>
-                  <div className="relative w-32 shrink-0">
+                <div key={cat.key} className="flex items-center gap-3 border-b border-border/70 py-3">
+                  <span className="w-6 shrink-0 text-muted-foreground">{cat.icon}</span>
+                  <label htmlFor={`spend-${cat.key}`} className="min-w-0 flex-1 cursor-pointer text-sm text-foreground">
+                    {cat.label}
+                  </label>
+                  <div className="relative w-28 shrink-0">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium select-none">&#8377;</span>
                     <Input
                       id={`spend-${cat.key}`}
@@ -309,90 +287,75 @@ export default function SpendingPage() {
                       placeholder="0"
                       value={amounts[cat.key] ?? ''}
                       onChange={(e) => setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))}
-                      className="pl-7 h-9 rounded-lg text-sm tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      className="h-9 rounded-md pl-7 text-sm tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Total + Save */}
-            <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/[0.04] p-4">
+            <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground">Total</p>
-                <p className="text-xs text-muted-foreground">Combined monthly spending</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Monthly total</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">&#8377;{entryTotal.toLocaleString('en-IN')}</p>
               </div>
-              <p className="text-xl font-bold tabular-nums text-primary">
-                &#8377;{entryTotal.toLocaleString('en-IN')}
-              </p>
+              <Button onClick={handleSaveSpending} disabled={saving || entryTotal === 0} className="w-full gap-2 sm:w-auto">
+                <Save className="h-4 w-4" />
+                {saving ? 'Saving...' : 'Save spending'}
+              </Button>
             </div>
-
-            <Button
-              onClick={handleSaveSpending}
-              disabled={saving || entryTotal === 0}
-              className="w-full gap-2 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-lg shadow-[#b8860b]/20"
-            >
-              <Save className="h-4 w-4" />
-              {saving ? 'Saving...' : 'Save Spending'}
-            </Button>
           </div>
         </section>
       )}
 
-      {/* One quiet summary strip keeps the page focused on the data. */}
-      <section className="grid grid-cols-1 divide-y divide-border border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        <div className="flex items-center justify-between px-1 py-4 sm:px-5">
-          <div><p className="text-xs text-muted-foreground">Total spending</p><p className="mt-1 text-2xl font-semibold tabular-nums">&#8377;{totalSpend.toLocaleString('en-IN')}</p></div>
-          <TrendingUp className="h-4 w-4 text-primary" />
+      <section className="flex flex-col gap-6 border-y border-border py-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Total spending</p>
+          <p className="mt-1 text-4xl font-semibold tracking-[-0.04em] tabular-nums text-foreground">&#8377;{totalSpend.toLocaleString('en-IN')}</p>
         </div>
-        <div className="flex items-center justify-between px-1 py-4 sm:px-5">
-          <div><p className="text-xs text-muted-foreground">Transactions</p><p className="mt-1 text-2xl font-semibold tabular-nums">{transactionCount}</p></div>
-          <CreditCard className="h-4 w-4 text-primary" />
-        </div>
-        <div className="flex items-center justify-between px-1 py-4 sm:px-5">
-          <div><p className="text-xs text-muted-foreground">Average entry</p><p className="mt-1 text-2xl font-semibold tabular-nums">&#8377;{transactionCount > 0 ? Math.round(totalSpend / transactionCount).toLocaleString('en-IN') : 0}</p></div>
-          <Calendar className="h-4 w-4 text-primary" />
-        </div>
+        <dl className="grid grid-cols-2 gap-x-10 gap-y-4 sm:min-w-[330px]">
+          <div><dt className="text-xs text-muted-foreground">Transactions</dt><dd className="mt-1 text-lg font-semibold tabular-nums">{transactionCount}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Average entry</dt><dd className="mt-1 text-lg font-semibold tabular-nums">&#8377;{transactionCount > 0 ? Math.round(totalSpend / transactionCount).toLocaleString('en-IN') : 0}</dd></div>
+        </dl>
       </section>
 
-      {/* Charts */}
       {transactions.length > 0 && (
-        <section className="grid gap-8 rounded-2xl border border-border bg-card p-5 sm:p-6 md:grid-cols-2">
+        <section className="grid gap-10 border-b border-border pb-8 md:grid-cols-2">
           <SpendingCategoryChart transactions={transactions} />
           <SpendingTrendChart transactions={transactions} />
         </section>
       )}
 
-      {/* Transactions list */}
       {transactions.length > 0 && (
-        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-base font-semibold">Recent Transactions</h2>
+        <section className="border-b border-border pb-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Ledger</p>
+              <h2 className="mt-1 text-lg font-semibold">Recent transactions</h2>
+            </div>
+            <p className="text-xs text-muted-foreground">{transactionCount} entries</p>
+          </div>
           <div className="mt-4">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading transactions...</div>
             ) : (
-              <div className="space-y-2">
+              <div>
                 {transactions.map((txn) => (
                   <div
                     key={txn.id}
-                    className="flex items-center justify-between p-3 border border-border/50 rounded-xl hover:bg-muted/30 transition-colors"
+                    className="flex items-center justify-between gap-4 border-t border-border/70 py-4 transition-colors hover:bg-muted/20"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm truncate">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="truncate text-sm font-medium">
                           {txn.merchant_name || txn.description || 'Transaction'}
                         </span>
-                        <span
-                          className={`text-[0.65rem] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                            CATEGORY_COLORS[txn.category] || CATEGORY_COLORS.other
-                          }`}
-                        >
-                          {txn.category.replace(/_/g, ' ')}
-                        </span>
+                        <span className="shrink-0 text-xs capitalize text-muted-foreground">{txn.category.replace(/_/g, ' ')}</span>
                       </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{new Date(txn.transaction_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-sm">
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="text-sm font-semibold tabular-nums">
                         &#8377;{Number(txn.amount).toLocaleString('en-IN')}
                       </span>
                       <Button
