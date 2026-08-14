@@ -6,7 +6,7 @@ import { ArrowLeft, ExternalLink, CheckCircle2, XCircle } from 'lucide-react'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import type { CreditCard } from '@/types/credit-card'
-import { getLocalCreditCardByIdentifier, isUuid } from '@/lib/cards/local-catalog'
+import { isUuid } from '@/lib/cards/card-mappers'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -20,24 +20,19 @@ interface CardQueryResult {
 export default async function CardDetailPage({ params }: PageProps) {
   const { id: rawId } = await params
   const id = decodeURIComponent(rawId)
-  const localCard = getLocalCreditCardByIdentifier(id)
-
-  if (localCard && !isUuid(id)) {
-    return <CardDetailContent cardData={localCard} />
-  }
 
   const supabase = createPublicServerClient()
-  const byIdQuery = supabase.from('credit_cards').select('*').eq('is_active', true)
-  const { data: card, error } = (await (isUuid(id)
-    ? byIdQuery.eq('id', id).maybeSingle()
-    : byIdQuery.ilike('card_name', id).limit(1).maybeSingle())) as CardQueryResult
+  const createCardQuery = () => supabase.from('credit_cards').select('*').eq('is_active', true)
+  const initialResult = (await (isUuid(id)
+    ? createCardQuery().eq('id', id).maybeSingle()
+    : createCardQuery().eq('card_slug', id).maybeSingle())) as CardQueryResult
+  const { data: card, error } = !initialResult.error && !initialResult.data && !isUuid(id)
+    ? (await createCardQuery().ilike('card_name', id).limit(1).maybeSingle()) as CardQueryResult
+    : initialResult
 
-  if (error && !localCard) notFound()
+  if (error || !card) notFound()
 
-  const resolvedCard = card ?? localCard
-  if (!resolvedCard) notFound()
-
-  return <CardDetailContent cardData={resolvedCard as unknown as CreditCard} />
+  return <CardDetailContent cardData={card as unknown as CreditCard} />
 }
 
 function CardDetailContent({ cardData }: { cardData: CreditCard }) {

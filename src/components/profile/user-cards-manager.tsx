@@ -29,7 +29,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { LOCAL_CARD_CATALOG } from '@/lib/cards/local-catalog'
 
 interface UserCard {
   id: string
@@ -42,17 +41,10 @@ interface UserCard {
   notes: string | null
 }
 
-const CATALOG_CARDS = LOCAL_CARD_CATALOG
-  .map((c) => ({
-    value: c.id,
-    label: c.card_name,
-    bank: c.bank_name,
-  }))
-  .sort((a, b) => a.label.localeCompare(b.label))
-
 export function UserCardsManager() {
   const router = useRouter()
   const [cards, setCards] = useState<UserCard[]>([])
+  const [catalogCards, setCatalogCards] = useState<Array<{ value: string; label: string; bank: string }>>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -67,11 +59,25 @@ export function UserCardsManager() {
 
   const fetchCards = useCallback(async () => {
     try {
-      const res = await fetch('/api/cards/user', { cache: 'no-store' })
-      const data = await res.json()
-      setCards(data.cards || [])
+      const [userCardsResponse, catalogResponse] = await Promise.all([
+        fetch('/api/cards/user', { cache: 'no-store' }),
+        fetch('/api/cards?fields=summary&limit=200', { cache: 'no-store' }),
+      ])
+      const userCardsData = await userCardsResponse.json()
+      const catalogData = await catalogResponse.json()
+      setCards(userCardsData.cards || [])
+      setCatalogCards(
+        (catalogData.cards || [])
+          .map((card: { id: string; card_name: string; bank_name: string }) => ({
+            value: card.id,
+            label: card.card_name,
+            bank: card.bank_name,
+          }))
+          .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label))
+      )
     } catch {
       setCards([])
+      setCatalogCards([])
     } finally {
       setLoading(false)
     }
@@ -185,7 +191,7 @@ export function UserCardsManager() {
                     <CommandList>
                       <CommandEmpty>No card found.</CommandEmpty>
                       <CommandGroup>
-                        {CATALOG_CARDS.map((card) => (
+                        {catalogCards.map((card) => (
                           <CommandItem
                             key={card.value}
                             value={card.label}

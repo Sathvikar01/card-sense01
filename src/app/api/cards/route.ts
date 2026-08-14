@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicServerClient } from '@/lib/supabase/public-server'
-import {
-  LOCAL_CARD_CATALOG,
-  isMissingCreditCardsTableError,
-  toCreditCardListItem,
-} from '@/lib/cards/local-catalog'
+import { toCreditCardListItem } from '@/lib/cards/card-mappers'
 import { normalizeRewardRate } from '@/lib/cards/reward-rate'
 
 export const runtime = 'nodejs'
@@ -25,18 +21,6 @@ const SUMMARY_FIELDS = [
 const PERFORMANCE_LOGS_ENABLED = process.env.PERF_LOGS === '1'
 const DEFAULT_LIMIT = 60
 const MAX_LIMIT = 200
-const TRANSIENT_CATALOG_ERROR_MARKERS = [
-  'fetch failed',
-  'network',
-  'timeout',
-  'econnreset',
-  'econnrefused',
-  'ssl',
-  'handshake',
-  'cloudflare',
-  '525',
-]
-
 const normalizeFilter = (value: string | null) => {
   if (!value) return ''
 
@@ -57,95 +41,6 @@ const parsePositiveInteger = (value: string | null) => {
   }
 
   return parsed
-}
-
-const isTransientCatalogError = (message: string | undefined) => {
-  if (!message) return false
-  const normalized = message.toLowerCase()
-  return TRANSIENT_CATALOG_ERROR_MARKERS.some((marker) => normalized.includes(marker))
-}
-
-const getFallbackCardsResponse = (params: {
-  search: string
-  bank: string
-  cardType: string
-  network: string
-  maxFee: number | undefined
-  minIncome: number | undefined
-  sortBy: string
-  fields: 'summary' | 'full'
-  limit: number
-  offset: number
-}) => {
-  const { search, bank, cardType, network, maxFee, minIncome, sortBy, fields, limit, offset } = params
-  const normalizedSearch = search.toLowerCase()
-  const normalizedBank = bank.toLowerCase()
-  const normalizedNetwork = network.toLowerCase()
-
-  let cards = LOCAL_CARD_CATALOG.filter((card) => card.is_active)
-
-  if (normalizedSearch) {
-    cards = cards.filter((card) => {
-      const haystack = `${card.card_name} ${card.bank_name} ${card.description || ''}`.toLowerCase()
-      return haystack.includes(normalizedSearch)
-    })
-  }
-
-  if (normalizedBank) {
-    cards = cards.filter((card) => card.bank_name.toLowerCase() === normalizedBank)
-  }
-
-  if (cardType) {
-    cards = cards.filter((card) => card.card_type === cardType)
-  }
-
-  if (normalizedNetwork) {
-    cards = cards.filter((card) => card.card_network === normalizedNetwork)
-  }
-
-  if (typeof maxFee === 'number') {
-    cards = cards.filter((card) => card.annual_fee <= maxFee)
-  }
-
-  if (typeof minIncome === 'number') {
-    cards = cards.filter(
-      (card) => !card.min_income_salaried || card.min_income_salaried <= minIncome
-    )
-  }
-
-  switch (sortBy) {
-    case 'fee_low':
-      cards.sort((a, b) => a.annual_fee - b.annual_fee || b.popularity_score - a.popularity_score)
-      break
-    case 'fee_high':
-      cards.sort((a, b) => b.annual_fee - a.annual_fee || b.popularity_score - a.popularity_score)
-      break
-    case 'reward_high':
-      cards.sort((a, b) => b.reward_rate_default - a.reward_rate_default || b.popularity_score - a.popularity_score)
-      break
-    case 'name':
-      cards.sort((a, b) => a.card_name.localeCompare(b.card_name))
-      break
-    case 'popularity':
-    default:
-      cards.sort((a, b) => b.popularity_score - a.popularity_score)
-      break
-  }
-
-  const total = cards.length
-  const paginated = cards.slice(offset, offset + limit)
-
-  return NextResponse.json({
-    cards: fields === 'full'
-      ? paginated.map(normalizeRewardRate)
-      : paginated.map(normalizeRewardRate).map(toCreditCardListItem),
-    meta: {
-      total,
-      limit,
-      offset,
-      source: 'local_fallback',
-    },
-  })
 }
 
 export async function GET(request: NextRequest) {
@@ -223,24 +118,7 @@ export async function GET(request: NextRequest) {
 
   const { data: cards, error } = await cardsQuery
   if (error) {
-    if (
-      isMissingCreditCardsTableError(error.message) ||
-      isTransientCatalogError(error.message)
-    ) {
-      return getFallbackCardsResponse({
-        search,
-        bank,
-        cardType,
-        network,
-        maxFee,
-        minIncome,
-        sortBy,
-        fields,
-        limit,
-        offset,
-      })
-    }
-    return NextResponse.json({ error: 'Unable to load the card catalog' }, { status: 500 })
+    return NextResponse.json({ error: 'Unable to load the canonical card catalog' }, { status: 503 })
   }
 
   if (!cards || cards.length === 0) {
@@ -249,23 +127,12 @@ export async function GET(request: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .eq('is_active', true)
 
-    if (
-      (typeof activeCatalogCount === 'number' && activeCatalogCount === 0) ||
-      isMissingCreditCardsTableError(activeCatalogCountError?.message) ||
-      isTransientCatalogError(activeCatalogCountError?.message)
-    ) {
-      return getFallbackCardsResponse({
-        search,
-        bank,
-        cardType,
-        network,
-        maxFee,
-        minIncome,
-        sortBy,
-        fields,
-        limit,
-        offset,
-      })
+    if (activeCatalogCountError) {
+      return NextResponse.json({ error: 'Unable to verify the canonical card catalog' }, { status: 503 })
+    }
+
+    if (typeof activeCatalogCount === 'number' && activeCatalogCount === 0) {
+      return NextResponse.json({ error: 'The canonical card catalog is empty' }, { status: 503 })
     }
   }
 

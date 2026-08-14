@@ -1,6 +1,10 @@
+/**
+ * One-time migration input for scripts/migrate-card-catalog.ts.
+ * Runtime routes and components must read public.credit_cards instead.
+ */
 import { cards as legacyCards } from '@/data/cards'
 import type { CreditCard as LegacyCreditCard } from '@/types'
-import type { CreditCard, CreditCardListItem } from '@/types/credit-card'
+import type { CreditCard } from '@/types/credit-card'
 import { estimateBaseRewardRate } from '@/lib/cards/reward-rate'
 
 const BANK_NAME_MAP: Record<string, string> = {
@@ -849,56 +853,3 @@ const mapLegacyCardToCreditCard = (card: LegacyCreditCard): CreditCard => {
 }
 
 export const LOCAL_CARD_CATALOG: CreditCard[] = legacyCards.map(mapLegacyCardToCreditCard)
-
-export const toCreditCardListItem = (card: CreditCard): CreditCardListItem => ({
-  id: card.id,
-  bank_name: card.bank_name,
-  card_name: card.card_name,
-  card_type: card.card_type,
-  annual_fee: card.annual_fee,
-  reward_rate_default: card.reward_rate_default,
-  lounge_access: card.lounge_access,
-  best_for: card.best_for,
-  popularity_score: card.popularity_score,
-})
-
-const normalizeIdentifier = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-export const getLocalCreditCardById = (id: string) => {
-  return LOCAL_CARD_CATALOG.find((card) => card.id === id)
-}
-
-export const getLocalCreditCardByIdentifier = (identifier: string) => {
-  const normalized = normalizeIdentifier(identifier)
-  if (!normalized) return null
-
-  const byId = LOCAL_CARD_CATALOG.find((card) => card.id === normalized)
-  if (byId) return byId
-
-  return (
-    LOCAL_CARD_CATALOG.find((card) => normalizeIdentifier(card.card_name) === normalized) ?? null
-  )
-}
-
-export const isUuid = (value: string) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value.trim()
-  )
-
-export const isMissingCreditCardsTableError = (message: string | undefined) => {
-  if (!message) return false
-  const normalized = message.toLowerCase()
-  if (!normalized.includes('credit_cards')) return false
-  return (
-    normalized.includes("could not find the table 'public.credit_cards' in the schema cache") ||
-    normalized.includes('schema cache') ||
-    normalized.includes('relation "public.credit_cards" does not exist') ||
-    normalized.includes('relation "credit_cards" does not exist') ||
-    normalized.includes('does not exist')
-  )
-}

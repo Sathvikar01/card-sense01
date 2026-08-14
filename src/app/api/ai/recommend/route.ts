@@ -2,14 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { insertUserInteraction } from '@/lib/interactions/server'
-import {
-  LOCAL_CARD_CATALOG,
-  isMissingCreditCardsTableError,
-} from '@/lib/cards/local-catalog'
 import { verifyTurnstileToken } from '@/lib/security/turnstile'
 import { getRecommendationWeightConfig } from '@/lib/recommendations/weight-config'
 
-type CatalogSource = 'database' | 'local_fallback'
+type CatalogSource = 'database'
 
 type CardForRecommendation = {
   id: string
@@ -482,22 +478,6 @@ const mapCatalogRow = (row: Record<string, unknown>): CardForRecommendation => {
   }
 }
 
-const mapLocalCatalog = (): CardForRecommendation[] => {
-  return LOCAL_CARD_CATALOG.map((card) => ({
-    id: card.id,
-    cardName: card.card_name,
-    bank: card.bank_name,
-    annualFee: card.annual_fee,
-    joiningFee: card.joining_fee,
-    minAge: card.min_age,
-    maxAge: card.max_age,
-    minIncome: card.min_income_salaried,
-    minCibilScore: card.min_cibil_score,
-    bestFor: card.best_for || [],
-    perks: [...(card.pros || []), ...(card.description ? [card.description] : [])].slice(0, 5),
-  }))
-}
-
 const normalizeBank = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ')
 
 const normalizeCardName = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
@@ -521,21 +501,17 @@ const fetchCatalog = async (supabase: Awaited<ReturnType<typeof createClient>>) 
     .limit(100)
 
   if (error) {
-    // The recommendation engine has a bundled catalog. A database outage or
-    // an older schema must not turn a local scoring request into a 500.
-    if (!isMissingCreditCardsTableError(error.message)) {
-      console.warn('Card catalog query failed; using bundled catalog:', error.message)
-    }
+    console.error('Canonical card catalog query failed:', error.message)
     return {
-      cards: dedupeCards(mapLocalCatalog()),
-      source: 'local_fallback' as CatalogSource,
+      cards: [],
+      source: 'database' as CatalogSource,
     }
   }
 
   if (!data || data.length === 0) {
     return {
-      cards: dedupeCards(mapLocalCatalog()),
-      source: 'local_fallback' as CatalogSource,
+      cards: [],
+      source: 'database' as CatalogSource,
     }
   }
 

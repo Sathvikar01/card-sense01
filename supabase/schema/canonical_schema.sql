@@ -34,6 +34,7 @@ create table if not exists public.profiles (
 
 create table if not exists public.credit_cards (
   id uuid primary key default gen_random_uuid(),
+  card_slug text not null unique,
   bank_name text not null,
   card_name text not null,
   card_network text not null,
@@ -89,6 +90,9 @@ create table if not exists public.credit_cards (
   reward_point_value numeric(10, 4),
   benefits text[] default array[]::text[],
   card_image_url text,
+  data_source text not null default 'catalog_import',
+  data_last_verified_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -112,6 +116,20 @@ create table if not exists public.recommendations (
   processing_time_ms integer,
   created_at timestamptz not null default now(),
   updated_at timestamptz default now()
+);
+
+create table if not exists public.recommendation_logs (
+  id uuid primary key default gen_random_uuid(),
+  recommendation_id uuid not null references public.recommendations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  card_id text not null,
+  card_name text not null,
+  rank integer not null check (rank > 0),
+  rules_evaluated jsonb not null default '[]'::jsonb,
+  rule_scores jsonb not null default '{}'::jsonb,
+  final_decision_reason text not null,
+  explanation jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.user_cards (

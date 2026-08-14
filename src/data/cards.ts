@@ -1,5 +1,6 @@
 import type { CreditCard } from "@/types";
 
+// Migration-only source. Runtime card details are read from public.credit_cards.
 export const cards: CreditCard[] = [
   {
     id: "hdfc-regalia-gold",

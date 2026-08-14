@@ -93,6 +93,7 @@ export interface Database {
       credit_cards: {
         Row: {
           id: string
+          card_slug: string
           bank_name: string
           card_name: string
           card_network: string
@@ -146,6 +147,9 @@ export interface Database {
           reward_point_value: number | null
           benefits: string[] | null
           card_image_url: string | null
+          data_source: string
+          data_last_verified_at: string | null
+          metadata: Json
           is_active: boolean
           popularity_score: number | null
           created_at: string
@@ -153,6 +157,7 @@ export interface Database {
         }
         Insert: {
           id?: string
+          card_slug: string
           bank_name?: string
           card_name: string
           card_network?: string
@@ -206,6 +211,9 @@ export interface Database {
           reward_point_value?: number | null
           benefits?: string[] | null
           card_image_url?: string | null
+          data_source?: string
+          data_last_verified_at?: string | null
+          metadata?: Json
           is_active?: boolean
           popularity_score?: number | null
           created_at?: string
@@ -213,6 +221,7 @@ export interface Database {
         }
         Update: {
           id?: string
+          card_slug?: string
           bank_name?: string
           card_name?: string
           card_network?: string
@@ -266,6 +275,9 @@ export interface Database {
           reward_point_value?: number | null
           benefits?: string[] | null
           card_image_url?: string | null
+          data_source?: string
+          data_last_verified_at?: string | null
+          metadata?: Json
           is_active?: boolean
           popularity_score?: number | null
           created_at?: string

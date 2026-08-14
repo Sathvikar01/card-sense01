@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { BeginnerInput } from '@/types/financial-profile'
 import type { CreditCard } from '@/types/credit-card'
-import { LOCAL_CARD_CATALOG } from '@/lib/cards/local-catalog'
-import { estimateBaseRewardRate } from '@/lib/cards/reward-rate'
 
 const MIN_BEGINNER_RECOMMENDATIONS = 3
 
@@ -77,7 +75,7 @@ const normalizeDbCardRow = (row: Record<string, unknown>): CreditCard => {
     max_age: asNumber(row.max_age, 65),
     requires_itr: Boolean(row.requires_itr),
     requires_existing_relationship: Boolean(row.requires_existing_relationship),
-    reward_rate_default: estimateBaseRewardRate(asString(row.description)),
+    reward_rate_default: asNumber(row.reward_rate_default, 0),
     reward_rate_categories: typeof row.reward_rate_categories === 'object' && row.reward_rate_categories
       ? (row.reward_rate_categories as CreditCard['reward_rate_categories'])
       : {},
@@ -119,46 +117,13 @@ async function fetchBeginnerCards(supabase: Awaited<ReturnType<typeof createClie
     .order('popularity_score', { ascending: false })
     .limit(20)
 
-  if (!primaryQuery.error && primaryQuery.data && primaryQuery.data.length > 0) {
-    return {
-      cards: primaryQuery.data.map((row) => normalizeDbCardRow(row as Record<string, unknown>)),
-      usedFallback: false,
-    }
+  if (primaryQuery.error) {
+    throw new Error(`Canonical card catalog unavailable: ${primaryQuery.error.message}`)
   }
 
-  const secondaryQuery = await supabase
-    .from('credit_cards')
-    .select('*')
-    .order('popularity_score', { ascending: false })
-    .limit(20)
-
-  if (!secondaryQuery.error && secondaryQuery.data && secondaryQuery.data.length > 0) {
-    return {
-      cards: secondaryQuery.data.map((row) => normalizeDbCardRow(row as Record<string, unknown>)),
-      usedFallback: false,
-    }
-  }
-
-  const fallbackCards = LOCAL_CARD_CATALOG.filter((card) => card.is_active).slice(0, 20)
   return {
-    cards: fallbackCards,
-    usedFallback: true,
+    cards: (primaryQuery.data || []).map((row) => normalizeDbCardRow(row as Record<string, unknown>)),
   }
-}
-
-const ensureCatalogDepth = (cards: CreditCard[], minCount = MIN_BEGINNER_RECOMMENDATIONS) => {
-  if (cards.length >= minCount) return cards
-
-  const merged = new Map(cards.map((card) => [card.id, card]))
-  const fallbackCards = LOCAL_CARD_CATALOG.filter((card) => card.is_active)
-  for (const fallbackCard of fallbackCards) {
-    if (!merged.has(fallbackCard.id)) {
-      merged.set(fallbackCard.id, fallbackCard)
-    }
-    if (merged.size >= minCount) break
-  }
-
-  return Array.from(merged.values())
 }
 
 const clampScore = (value: number) => Math.max(45, Math.min(95, Math.round(value)))
@@ -388,9 +353,7 @@ export async function POST(request: Request) {
 
     const body: BeginnerInput = await request.json()
 
-    const fetchedCatalog = await fetchBeginnerCards(supabase)
-    const cards = ensureCatalogDepth(fetchedCatalog.cards)
-    const usedFallback = fetchedCatalog.usedFallback || cards.length > fetchedCatalog.cards.length
+    const { cards } = await fetchBeginnerCards(supabase)
 
     if (!cards || cards.length === 0) {
       return NextResponse.json({
@@ -466,7 +429,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       recommendation_id: savedRecId,
-      fallback_catalog: usedFallback,
+      catalog_source: 'database',
       data: finalResponse,
     })
   } catch (error) {

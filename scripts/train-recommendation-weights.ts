@@ -1,9 +1,11 @@
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
+import { config } from 'dotenv'
 import { createAdminClient } from '../src/lib/supabase/admin'
-import { LOCAL_CARD_CATALOG } from '../src/lib/cards/local-catalog'
 import type { Database } from '../src/types/database'
+
+config({ path: path.resolve(process.cwd(), '.env.local') })
 
 type WeightSet = {
   eligibilityFit: number
@@ -17,6 +19,12 @@ type TrainingSample = {
   input: Record<string, unknown>
   topCardId?: string
   goal?: string
+}
+
+type CatalogTrainingCard = {
+  id: string
+  annual_fee: number
+  best_for: string[] | null
 }
 
 const OUTPUT_PATH = path.resolve(process.cwd(), 'src/config/recommendation-weights.json')
@@ -86,7 +94,7 @@ const mapGoalToValuePriority = (goal?: string) => {
   return 'cashback_everyday'
 }
 
-const seedSyntheticSamples = (): TrainingSample[] => {
+const seedSyntheticSamples = (catalog: CatalogTrainingCard[]): TrainingSample[] => {
   const sampleGoals = [
     'rewards_cashback',
     'travel_perks',
@@ -96,7 +104,7 @@ const seedSyntheticSamples = (): TrainingSample[] => {
   ]
 
   return sampleGoals.map((goal, idx) => {
-    const card = LOCAL_CARD_CATALOG[idx % LOCAL_CARD_CATALOG.length]
+    const card = catalog[idx % catalog.length]
     return {
       input: {
         primaryGoal: goal,
@@ -108,6 +116,29 @@ const seedSyntheticSamples = (): TrainingSample[] => {
       goal,
     }
   })
+}
+
+const fetchCanonicalCards = async (): Promise<CatalogTrainingCard[]> => {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY)) {
+    throw new Error('Missing Supabase credentials for canonical card training data')
+  }
+
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('credit_cards')
+    .select('id, annual_fee, best_for')
+    .eq('is_active', true)
+
+  if (error) {
+    throw new Error(`Unable to load canonical cards for training: ${error.message}`)
+  }
+
+  const cards = (data || []) as CatalogTrainingCard[]
+  if (cards.length === 0) {
+    throw new Error('Canonical card catalog is empty; training cannot continue')
+  }
+  return cards
 }
 
 const fetchSupabaseSamples = async (): Promise<TrainingSample[]> => {
@@ -192,7 +223,7 @@ const fetchExternalIncomeSamples = async (): Promise<TrainingSample[]> => {
   }
 }
 
-const scoreWeightSet = (weights: WeightSet, samples: TrainingSample[]) => {
+const scoreWeightSet = (weights: WeightSet, samples: TrainingSample[], catalog: CatalogTrainingCard[]) => {
   const baseGoalWeight = weights.goalFit
   const goalBoost = clamp(1 + baseGoalWeight * 0.6, 1.05, 1.35)
   let score = 0
@@ -204,7 +235,7 @@ const scoreWeightSet = (weights: WeightSet, samples: TrainingSample[]) => {
       : []
     const annualIncome = Number(sample.input.annualIncome || 0)
     const card = sample.topCardId
-      ? LOCAL_CARD_CATALOG.find((entry) => entry.id === sample.topCardId)
+      ? catalog.find((entry) => entry.id === sample.topCardId)
       : null
 
     const cardBestFor = card?.best_for || []
@@ -241,7 +272,7 @@ const scoreWeightSet = (weights: WeightSet, samples: TrainingSample[]) => {
 const runGA = (populationSize: number, generations: number, mutationRate: number) => {
   let population = Array.from({ length: populationSize }, randomWeightSet)
 
-  return async (samples: TrainingSample[]) => {
+  return async (samples: TrainingSample[], catalog: CatalogTrainingCard[]) => {
     let best = population[0]
     let bestScore = -Infinity
 
@@ -249,7 +280,7 @@ const runGA = (populationSize: number, generations: number, mutationRate: number
       const scored = population
         .map((weights) => ({
           weights,
-          score: scoreWeightSet(weights, samples),
+          score: scoreWeightSet(weights, samples, catalog),
         }))
         .sort((a, b) => b.score - a.score)
 
@@ -280,15 +311,16 @@ async function main() {
   const generations = Number(process.env.GA_GENERATIONS || 40)
   const mutationRate = Number(process.env.GA_MUTATION_RATE || 0.18)
 
+  const catalog = await fetchCanonicalCards()
   const [supabaseSamples, syntheticSamples, externalSamples] = await Promise.all([
     fetchSupabaseSamples(),
-    Promise.resolve(seedSyntheticSamples()),
+    Promise.resolve(seedSyntheticSamples(catalog)),
     fetchExternalIncomeSamples(),
   ])
 
   const samples = [...supabaseSamples, ...syntheticSamples, ...externalSamples]
   const run = runGA(population, generations, mutationRate)
-  const bestWeights = await run(samples)
+  const bestWeights = await run(samples, catalog)
 
   const output = {
     version: 1,
