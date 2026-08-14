@@ -39,7 +39,10 @@ create index if not exists credit_cards_active_popularity_idx
 
 create index if not exists credit_cards_search_idx
   on public.credit_cards using gin (
-    (to_tsvector('simple', concat_ws(' ', bank_name, card_name, coalesce(description, ''))))
+    to_tsvector(
+      'simple'::regconfig,
+      coalesce(bank_name, '') || ' ' || coalesce(card_name, '') || ' ' || coalesce(description, '')
+    )
   );
 
 comment on table public.credit_cards is
@@ -50,4 +53,3 @@ comment on column public.credit_cards.data_source is
   'Origin of the current record, for example catalog_import, manual, or partner.';
 comment on column public.credit_cards.data_last_verified_at is
   'When the current card details were last verified.';
-
