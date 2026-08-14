@@ -7,7 +7,7 @@ const STAGES = [
   'Evaluating your financial profile',
   'Matching eligibility against card requirements',
   'Calculating potential rewards from your spending',
-  'Refining matches as the model learns over time',
+  'Applying the current catalog and scoring rules',
   'Ranking by overall fit',
 ]
 

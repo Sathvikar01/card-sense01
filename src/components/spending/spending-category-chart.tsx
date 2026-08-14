@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface Transaction {
@@ -74,11 +73,9 @@ export function SpendingCategoryChart({ transactions }: SpendingCategoryChartPro
   if (data.length === 0) return null
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Category Breakdown</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div>
+      <h2 className="text-base font-semibold">Category breakdown</h2>
+      <div className="mt-4">
         <div className="flex flex-col items-center">
           <div className="h-[220px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -119,7 +116,7 @@ export function SpendingCategoryChart({ transactions }: SpendingCategoryChartPro
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

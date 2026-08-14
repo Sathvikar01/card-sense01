@@ -58,7 +58,11 @@ export default function RecommendationsPage() {
                   : undefined,
               })),
             }
-            store.setSavedResult(mapped)
+            store.setSavedResult({
+              ...mapped,
+              persona: mapped.persona ?? null,
+              profileSummary: mapped.profileSummary ?? '',
+            })
             applyResult(mapped)
             return
           }
@@ -118,17 +122,7 @@ export default function RecommendationsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="px-6 py-8 sm:px-8 sm:py-10 mb-8">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#b8860b]/70">Your Recommendations</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
-          Your matched credit cards
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2 max-w-lg leading-relaxed">
-          These cards were selected based on your profile and preferences. Start over any time to update your answers.
-        </p>
-      </div>
-
+    <div className="mx-auto max-w-5xl">
       <AdvisorResults result={recommendation} onStartOver={handleStartOver} />
     </div>
   )

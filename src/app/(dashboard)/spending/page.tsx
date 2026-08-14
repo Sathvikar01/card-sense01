@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TrendingUp, CreditCard, Calendar, Plus, Save } from 'lucide-react'
@@ -278,16 +277,14 @@ export default function SpendingPage() {
       </div>
 
       {showEntry && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="flex items-center gap-2 text-base font-semibold">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017] text-white">
                 <Plus className="h-3.5 w-3.5" />
               </div>
               Enter Monthly Spending
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
+          </div>
+          <div className="mt-5 space-y-5">
             <p className="text-xs text-muted-foreground">
               Enter approximate monthly spending for each category. Leave blank for categories you don&apos;t use.
             </p>
@@ -338,61 +335,39 @@ export default function SpendingPage() {
               <Save className="h-4 w-4" />
               {saving ? 'Saving...' : 'Save Spending'}
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
-            <TrendingUp className="h-4 w-4 text-[#d4a017]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">&#8377;{totalSpend.toLocaleString('en-IN')}</div>
-            <p className="text-xs text-muted-foreground">All transactions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-            <CreditCard className="h-4 w-4 text-[#d4a017]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{transactionCount}</div>
-            <p className="text-xs text-muted-foreground">Total entries</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg per Transaction</CardTitle>
-            <Calendar className="h-4 w-4 text-[#d4a017]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              &#8377;{transactionCount > 0 ? Math.round(totalSpend / transactionCount).toLocaleString('en-IN') : 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Average amount</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* One quiet summary strip keeps the page focused on the data. */}
+      <section className="grid grid-cols-1 divide-y divide-border border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <div className="flex items-center justify-between px-1 py-4 sm:px-5">
+          <div><p className="text-xs text-muted-foreground">Total spending</p><p className="mt-1 text-2xl font-semibold tabular-nums">&#8377;{totalSpend.toLocaleString('en-IN')}</p></div>
+          <TrendingUp className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex items-center justify-between px-1 py-4 sm:px-5">
+          <div><p className="text-xs text-muted-foreground">Transactions</p><p className="mt-1 text-2xl font-semibold tabular-nums">{transactionCount}</p></div>
+          <CreditCard className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex items-center justify-between px-1 py-4 sm:px-5">
+          <div><p className="text-xs text-muted-foreground">Average entry</p><p className="mt-1 text-2xl font-semibold tabular-nums">&#8377;{transactionCount > 0 ? Math.round(totalSpend / transactionCount).toLocaleString('en-IN') : 0}</p></div>
+          <Calendar className="h-4 w-4 text-primary" />
+        </div>
+      </section>
 
       {/* Charts */}
       {transactions.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2">
+        <section className="grid gap-8 rounded-2xl border border-border bg-card p-5 sm:p-6 md:grid-cols-2">
           <SpendingCategoryChart transactions={transactions} />
           <SpendingTrendChart transactions={transactions} />
-        </div>
+        </section>
       )}
 
       {/* Transactions list */}
       {transactions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <h2 className="text-base font-semibold">Recent Transactions</h2>
+          <div className="mt-4">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading transactions...</div>
             ) : (
@@ -433,8 +408,8 @@ export default function SpendingPage() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
     </div>
   )

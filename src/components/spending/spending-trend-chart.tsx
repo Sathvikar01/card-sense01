@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface Transaction {
@@ -59,12 +58,10 @@ export function SpendingTrendChart({ transactions }: SpendingTrendChartProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Monthly Trend</CardTitle>
-        <p className="text-xs text-muted-foreground">Spending over the last {data.length} months</p>
-      </CardHeader>
-      <CardContent>
+    <div>
+      <h2 className="text-base font-semibold">Monthly trend</h2>
+      <p className="mt-1 text-xs text-muted-foreground">Spending over the last {data.length} months</p>
+      <div className="mt-4">
         <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -101,7 +98,7 @@ export function SpendingTrendChart({ transactions }: SpendingTrendChartProps) {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

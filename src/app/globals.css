@@ -733,20 +733,6 @@ html.dark {
     max-height: min(24rem, calc(100dvh - 5rem));
   }
 
-  /* Card details read as one continuous mobile page. Desktop keeps the tabbed view. */
-  .card-detail-sections [data-slot="tabs-list"] {
-    display: none;
-  }
-
-  .card-detail-sections [data-slot="tabs-content"] {
-    display: block !important;
-    margin-top: 0;
-    padding-top: 1.5rem;
-  }
-
-  .card-detail-sections [data-slot="tabs-content"] + [data-slot="tabs-content"] {
-    border-top: 1px solid oklch(0.88 0.02 270 / 0.7);
-  }
 }
 
 /* Calm visual system: keep the interface tactile, quiet, and legible. */

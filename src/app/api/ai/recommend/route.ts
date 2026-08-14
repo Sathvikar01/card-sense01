@@ -104,6 +104,8 @@ type RecommendationCardResult = {
   annualFee: number
   joiningFee: number
   annualValue: number
+  bestCategories: string[]
+  eligibilityMatch: 'high' | 'moderate' | 'uncertain'
   scoreBreakdown: ScoreBreakdown
   comparisonMetrics: ComparisonMetrics
   rulesEvaluated: RecommendationRuleEvaluation[]
@@ -498,6 +500,18 @@ const mapLocalCatalog = (): CardForRecommendation[] => {
 
 const normalizeBank = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ')
 
+const normalizeCardName = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+const dedupeCards = (cards: CardForRecommendation[]) => {
+  const seen = new Set<string>()
+  return cards.filter((card) => {
+    const key = `${normalizeBank(card.bank)}::${normalizeCardName(card.cardName)}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 const fetchCatalog = async (supabase: Awaited<ReturnType<typeof createClient>>) => {
   const { data, error } = await supabase
     .from('credit_cards')
@@ -513,20 +527,20 @@ const fetchCatalog = async (supabase: Awaited<ReturnType<typeof createClient>>) 
       console.warn('Card catalog query failed; using bundled catalog:', error.message)
     }
     return {
-      cards: mapLocalCatalog(),
+      cards: dedupeCards(mapLocalCatalog()),
       source: 'local_fallback' as CatalogSource,
     }
   }
 
   if (!data || data.length === 0) {
     return {
-      cards: mapLocalCatalog(),
+      cards: dedupeCards(mapLocalCatalog()),
       source: 'local_fallback' as CatalogSource,
     }
   }
 
   return {
-    cards: data.map((row) => mapCatalogRow(row as Record<string, unknown>)),
+    cards: dedupeCards(data.map((row) => mapCatalogRow(row as Record<string, unknown>))),
     source: 'database' as CatalogSource,
   }
 }
@@ -561,9 +575,9 @@ const ruleBasedRecommendations = (
     normalizeSpendCategory(category.toLowerCase())
   )
   const primaryBank = normalizeBank(input.primaryBank)
-  const existingCards = new Set(
-    input.existingCards.map((name) => name.toLowerCase().replace(/\s+/g, ' ').trim())
-  )
+  const existingCards = input.existingCards
+    .map(normalizeCardName)
+    .filter(Boolean)
 
   const ageBand = getFollowUpAnswer(answers, ['age_band'], '21_24')
   const incomeProfile = getFollowUpAnswer(
@@ -638,11 +652,14 @@ const ruleBasedRecommendations = (
         ? 22
         : ageBand === '25_30'
           ? 27
-          : 35
+        : 35
+
+  const isSecuredCard = (card: CardForRecommendation) =>
+    /secured|fd|fixed deposit|wow/i.test(`${card.cardName} ${card.perks.join(' ')}`)
 
   const baseEligibility = (card: CardForRecommendation) => {
-    const normalizedCardName = card.cardName.toLowerCase().replace(/\s+/g, ' ').trim()
-    if (existingCards.has(normalizedCardName)) {
+    const normalizedName = normalizeCardName(card.cardName)
+    if (existingCards.some((existingName) => normalizedName === existingName || normalizedName.includes(existingName) || existingName.includes(normalizedName))) {
       return false
     }
     if (card.minCibilScore && input.cibilScore < card.minCibilScore) {
@@ -652,6 +669,9 @@ const ruleBasedRecommendations = (
       return false
     }
     if (card.maxAge && estimatedAge > card.maxAge) {
+      return false
+    }
+    if (securedCardReadiness === 'unsecured_only' && isSecuredCard(card)) {
       return false
     }
     return true
@@ -682,7 +702,7 @@ const ruleBasedRecommendations = (
     const bestFor = card.bestFor.map((value) => normalizeSpendCategory(value.toLowerCase()))
     const perkText = card.perks.join(' ').toLowerCase()
     const cardText = `${card.cardName} ${card.bank} ${bestFor.join(' ')} ${perkText}`.toLowerCase()
-    const hasSecuredSignals = /secured|fd|fixed deposit|wow/.test(cardText)
+    const hasSecuredSignals = isSecuredCard(card)
     const hasCashbackSignals = /cashback|statement/.test(cardText)
     const hasTravelSignals = /travel|lounge|mile|air/.test(cardText)
     const hasUpiSignals = /upi|rupay|qr/.test(cardText)
@@ -758,9 +778,9 @@ const ruleBasedRecommendations = (
     }
 
     let diversificationFit = 85
-    const normalizedCardName = card.cardName.toLowerCase().replace(/\s+/g, ' ').trim()
-    if (existingCards.has(normalizedCardName)) diversificationFit = 20
-    else if (existingCards.size > 0 && normalizeBank(card.bank).includes(primaryBank)) diversificationFit = 55
+    const normalizedName = normalizeCardName(card.cardName)
+    if (existingCards.some((existingName) => normalizedName === existingName || normalizedName.includes(existingName) || existingName.includes(normalizedName))) diversificationFit = 20
+    else if (existingCards.length > 0 && normalizeBank(card.bank).includes(primaryBank)) diversificationFit = 55
 
     const weightedRawBase =
       (eligibilityFit * weightConfig.baseWeights.eligibilityFit) +
@@ -895,6 +915,8 @@ const ruleBasedRecommendations = (
       card,
       score: normalizedScore,
       annualValue: estimatedAnnualValue,
+      bestCategories: card.bestFor.slice(0, 3),
+      eligibilityMatch: eligibilityFit >= 75 ? 'high' : eligibilityFit >= 55 ? 'moderate' : 'uncertain',
       breakdown: {
         eligibilityFit,
         spendFit,
@@ -925,37 +947,6 @@ const ruleBasedRecommendations = (
     .map(scoreCard)
     .sort((a, b) => b.score - a.score || a.card.annualFee - b.card.annualFee)
     .slice(0, 3)
-
-  if (ranked.length < 3) {
-    const usedIds = new Set(ranked.map((entry) => entry.card.id))
-    const extra = cards
-      .filter((card) => !usedIds.has(card.id))
-      .map(scoreCard)
-      .sort((a, b) => b.score - a.score || a.card.annualFee - b.card.annualFee)
-      .slice(0, 3 - ranked.length)
-    ranked = [...ranked, ...extra]
-  }
-
-  // Guarantee minimum gap between ranks so cards never show identical percentages
-  for (let i = 1; i < ranked.length; i++) {
-    if (ranked[i].score >= ranked[i - 1].score) {
-      ranked[i] = { ...ranked[i], score: ranked[i - 1].score - 1 }
-    }
-  }
-
-  // Apply rank-based bonus so the best card clearly stands out
-  const RANK_BONUS = [10, 4, 0] as const
-  ranked = ranked.map((entry, index) => ({
-    ...entry,
-    score: Math.max(35, Math.min(96, entry.score + (RANK_BONUS[index] ?? 0))),
-  }))
-
-  // Re-enforce minimum gap after rank bonus (bonus could re-equalize rank 2 and 1)
-  for (let i = 1; i < ranked.length; i++) {
-    if (ranked[i].score >= ranked[i - 1].score) {
-      ranked[i] = { ...ranked[i], score: ranked[i - 1].score - 1 }
-    }
-  }
 
   ranked = ranked.map((entry) => {
     const finalRuleScores: RecommendationRuleScores = {
@@ -1003,6 +994,12 @@ const ruleBasedRecommendations = (
         annualFee: card.annualFee,
         joiningFee: card.joiningFee,
         annualValue,
+        bestCategories: card.bestFor.slice(0, 3),
+        eligibilityMatch: ruleScores.eligibilityFit >= 75
+          ? 'high'
+          : ruleScores.eligibilityFit >= 55
+            ? 'moderate'
+            : 'uncertain',
         scoreBreakdown: breakdown,
         comparisonMetrics,
         rulesEvaluated,
@@ -1032,6 +1029,8 @@ const saveRecommendation = async (params: {
     reasoning: card.reason,
     keyPerks: card.keyPerks,
     annualValue: card.annualValue,
+    bestCategories: card.bestCategories,
+    eligibilityMatch: card.eligibilityMatch,
     scoreBreakdown: card.scoreBreakdown,
     comparisonMetrics: card.comparisonMetrics,
     rulesEvaluated: card.rulesEvaluated,
@@ -1195,9 +1194,13 @@ export async function POST(request: NextRequest) {
         const cat = (txn.category as string) || 'other'
         txnBreakdown[cat] = (txnBreakdown[cat] || 0) + Number(txn.amount || 0)
       }
-      // Merge transaction data into spendingBreakdown (transaction data supplements user input)
+      // Use tracker data only for categories the advisor did not already provide.
+      // The advisor can be prefilled from this same tracker, so summing both sources
+      // would inflate spend and duplicate reward estimates.
       for (const [cat, amount] of Object.entries(txnBreakdown)) {
-        input.spendingBreakdown[cat] = (input.spendingBreakdown[cat] || 0) + amount
+        if (!input.spendingBreakdown[cat] || input.spendingBreakdown[cat] <= 0) {
+          input.spendingBreakdown[cat] = amount
+        }
       }
     }
 
@@ -1279,7 +1282,8 @@ export async function POST(request: NextRequest) {
             : null,
         },
         pros: card.keyPerks,
-        bestCategories: [],
+        bestCategories: card.bestCategories || [],
+        eligibilityMatch: card.eligibilityMatch || 'moderate',
       })),
       analysis: result.analysis,
       recommendationId,

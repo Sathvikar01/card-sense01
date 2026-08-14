@@ -82,9 +82,9 @@ export function Sidebar() {
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold text-foreground">Smarter over time</p>
+              <p className="text-xs font-semibold text-foreground">Sharper matches</p>
               <p className="mt-0.5 text-[0.68rem] leading-relaxed text-muted-foreground">
-                Add spending data for sharper card matches.
+                Use current spending data for a more relevant match.
               </p>
             </div>
           </div>

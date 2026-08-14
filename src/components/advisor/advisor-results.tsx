@@ -2,602 +2,106 @@
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { CardDetailLink } from '@/components/cards/card-detail-link'
-import { TrendingUp, Award, ArrowRight, GitCompare, Wallet, Shield, Target, Briefcase, User } from 'lucide-react'
+import { ArrowRight, GitCompare } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAnalysisStore } from '@/store/use-analysis-store'
 import { motion } from 'framer-motion'
 import type { SavedAdvisorCard, SavedAdvisorResult, ProfileSummaryData } from '@/lib/store/advisor-store'
 import { trackInteraction } from '@/lib/interactions/client'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { Progress } from '@/components/ui/progress'
 import { RecommendationExplanationDialog } from '@/components/advisor/recommendation-explanation-dialog'
 
-/* ------------------------------------------------------------------ */
-/*  Re-export types under the names used by the advisor page          */
-/* ------------------------------------------------------------------ */
-
 export type AdvisorCardResult = SavedAdvisorCard
-export type AdvisorResult = SavedAdvisorResult
+export type AdvisorResult = Pick<SavedAdvisorResult, 'cards' | 'analysis'> &
+  Partial<Pick<SavedAdvisorResult, 'persona' | 'profileSummary'>>
 
-/* ------------------------------------------------------------------ */
-/*  Score ring SVG                                                     */
-/* ------------------------------------------------------------------ */
+function formatInr(value: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
 
-function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
-  const r = (size - 6) / 2
-  const circ = 2 * Math.PI * r
-  const offset = circ - (score / 100) * circ
+function eligibilityLabel(level: AdvisorCardResult['eligibilityMatch']) {
+  if (level === 'high') return 'High likelihood'
+  if (level === 'moderate') return 'Moderate likelihood'
+  return 'Approval uncertain'
+}
 
-  const color =
-    score >= 85 ? 'stroke-emerald-500' :
-    score >= 70 ? 'stroke-lime-500' :
-    score >= 55 ? 'stroke-amber-500' : 'stroke-red-400'
+function ProfileSummaryLine({ data }: { data: ProfileSummaryData }) {
+  const details = [
+    data.monthlyIncome ? `${formatInr(data.monthlyIncome)} monthly income` : null,
+    data.creditScore ? `CIBIL ${data.creditScore}` : null,
+    data.age ? `${data.age} years old` : null,
+    data.employment ? data.employment.replace(/_/g, ' ') : null,
+  ].filter(Boolean) as string[]
+
+  if (data.topSpending?.length) details.push(`Spends most on ${data.topSpending.slice(0, 3).join(', ')}`)
+  if (details.length === 0) return null
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="currentColor"
-          strokeWidth={3}
-          fill="none"
-          className="text-muted/60"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          strokeWidth={3}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          className={cn(color, 'transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-700 ease-out')}
-        />
-      </svg>
-      <span className="absolute text-sm font-bold tabular-nums text-foreground">
-        {score}
-      </span>
-    </div>
+    <section className="border-y border-border py-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Based on your profile</p>
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-foreground/75">{details.join(' · ')}</p>
+    </section>
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  Eligibility badge                                                  */
-/* ------------------------------------------------------------------ */
-
-function EligibilityBadge({ level }: { level: AdvisorCardResult['eligibilityMatch'] }) {
-  const config = {
-    high: { label: 'High approval likelihood', bg: 'bg-emerald-500/10', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-    moderate: { label: 'Moderate approval likelihood', bg: 'bg-amber-500/10', text: 'text-amber-700', dot: 'bg-amber-500' },
-    uncertain: { label: 'Approval uncertain', bg: 'bg-red-400/10', text: 'text-red-600', dot: 'bg-red-400' },
-  }
-  const c = config[level]
-  return (
-    <div className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1', c.bg)}>
-      <span className={cn('h-1.5 w-1.5 rounded-full', c.dot)} />
-      <span className={cn('text-[11px] font-medium', c.text)}>{c.label}</span>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Detailed card (existing style)                                     */
-/* ------------------------------------------------------------------ */
-
-function ResultCard({ card, rank }: { card: AdvisorCardResult; rank: number }) {
-  const primaryRules = [...(card.rulesEvaluated || [])]
-    .sort((a, b) => {
-      const aContribution = Number.isFinite(Number(a.contribution)) ? Number(a.contribution) : 0
-      const bContribution = Number.isFinite(Number(b.contribution)) ? Number(b.contribution) : 0
-      return bContribution - aContribution
-    })
-    .slice(0, 3)
-  const hasExplanation = Boolean(
-    card.finalDecisionReason || card.whyThisCard?.summary || (card.rulesEvaluated && card.rulesEvaluated.length > 0)
-  )
-  const ruleScores = card.ruleScores
-  const scoreRows = ruleScores
-    ? [
-        { id: 'eligibilityFit', label: 'Eligibility', value: Number(ruleScores.eligibilityFit) },
-        { id: 'spendFit', label: 'Spend match', value: Number(ruleScores.spendFit) },
-        { id: 'goalFit', label: 'Goal match', value: Number(ruleScores.goalFit) },
-        { id: 'feeFit', label: 'Fee comfort', value: Number(ruleScores.feeFit) },
-        { id: 'diversificationFit', label: 'Portfolio balance', value: Number(ruleScores.diversificationFit) },
-      ].filter((row) => Number.isFinite(row.value))
-    : []
+function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: number }) {
+  const explanation = card.whyThisCard?.summary || card.finalDecisionReason || card.reason
+  const categories = card.bestCategories.length > 0 ? card.bestCategories.slice(0, 2) : []
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
-      {/* Rank stripe */}
-      <div className={cn(
-        'absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl',
-        rank === 1 ? 'bg-primary' : rank === 2 ? 'bg-primary/60' : 'bg-primary/30'
-      )} />
-
-      <div className="p-4 pl-5 sm:p-5 sm:pl-6 space-y-4">
-        {/* Header row */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1 min-w-0 flex-1">
-            <div className="flex items-center gap-2.5">
-              <span className="flex items-center justify-center h-6 w-6 rounded-md bg-muted text-[11px] font-bold text-muted-foreground tabular-nums">
-                {rank}
-              </span>
-              <h3 className="text-base font-semibold text-foreground">{card.name}</h3>
-            </div>
-            <p className="text-sm text-muted-foreground">{card.bank}</p>
-          </div>
-          <ScoreRing score={card.score} />
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: (rank - 1) * 0.08 }}
+      className={cn(
+        'border-t border-border py-8 first:border-t-0 sm:py-10',
+        rank === 1 && 'border-l-2 border-primary pl-4 sm:pl-6'
+      )}
+    >
+      <div className="grid gap-7 lg:grid-cols-[12rem_minmax(0,1fr)_6rem] lg:items-start lg:gap-8">
+        <div className="flex justify-start sm:justify-center lg:justify-start">
+          <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank} interactive />
         </div>
 
-        {/* Key metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Annual Fee</p>
-            <p className="text-sm font-semibold text-foreground mt-0.5">
-              {card.annualFee === 0 ? 'Free' : `₹${card.annualFee.toLocaleString('en-IN')}`}
-            </p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="font-mono text-[0.68rem] tracking-[0.16em] text-primary">{String(rank).padStart(2, '0')}</span>
+            <span>{card.bank}</span>
+            <span aria-hidden="true">·</span>
+            <span>{eligibilityLabel(card.eligibilityMatch)}</span>
           </div>
-          <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Reward Rate</p>
-            <p className="text-sm font-semibold text-foreground mt-0.5">{card.rewardRate}%</p>
-          </div>
-          <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Est. Value/yr</p>
-            <p className="text-sm font-semibold text-primary mt-0.5">
-              {card.estimatedAnnualValue > 0 ? `₹${card.estimatedAnnualValue.toLocaleString('en-IN')}` : '—'}
-            </p>
-          </div>
+          <h3 className="mt-3 text-xl font-semibold tracking-[-0.025em] text-foreground sm:text-2xl">{card.name}</h3>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-foreground/75">{card.reason}</p>
+          {categories.length > 0 && <p className="mt-3 text-xs text-muted-foreground">Best for: {categories.map((category) => category.replace(/_/g, ' ')).join(' · ')}</p>}
         </div>
 
-        {/* Eligibility */}
-        <EligibilityBadge level={card.eligibilityMatch} />
-
-        {/* Reason */}
-        <p className="text-sm text-foreground/80 leading-relaxed">{card.reason}</p>
-
-        {/* Best for categories */}
-        {card.bestCategories.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {card.bestCategories.map((cat) => (
-              <span key={cat} className="rounded-md bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                {cat}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Pros & Cons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          {card.pros.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Advantages</p>
-              <ul className="space-y-1">
-                {card.pros.map((pro, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/70 leading-snug">
-                    <span className="mt-1 h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
-                    {pro}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {card.cons.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Caveats</p>
-              <ul className="space-y-1">
-                {card.cons.map((con, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/70 leading-snug">
-                    <span className="mt-1 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
-                    {con}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <div className="flex items-baseline gap-2 lg:block lg:text-right">
+          <span className="text-xs text-muted-foreground">Match</span>
+          <span className="text-3xl font-semibold tabular-nums tracking-[-0.04em] text-foreground">{card.score}</span>
+          <span className="text-xs text-muted-foreground">/100</span>
         </div>
-
-        {/* Usage strategy */}
-        {card.usageStrategy && (
-          <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-            <p className="text-xs font-semibold text-foreground mb-1">How to use this card</p>
-            <p className="text-xs text-foreground/70 leading-relaxed">{card.usageStrategy}</p>
-          </div>
-        )}
-
-        {/* Explanation */}
-        {hasExplanation && (
-          <div className="rounded-xl border border-border/60 bg-background/70">
-            <Accordion type="single" collapsible>
-              <AccordionItem value="explain">
-                <AccordionTrigger className="px-4 py-3 text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why this card</span>
-                    <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-[10px] text-primary">
-                      Transparent scoring
-                    </Badge>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  {card.whyThisCard?.summary && (
-                    <p className="text-sm text-foreground/80 leading-relaxed">
-                      {card.whyThisCard.summary}
-                    </p>
-                  )}
-                  {card.finalDecisionReason && (
-                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                      {card.finalDecisionReason}
-                    </p>
-                  )}
-
-                  {scoreRows.length > 0 && (
-                    <div className="mt-4 space-y-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Score breakdown</p>
-                      {scoreRows.map((row) => {
-                        const clampedValue = Math.max(0, Math.min(100, row.value))
-                        return (
-                          <div key={row.id} className="space-y-1">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{row.label}</span>
-                              <span className="tabular-nums text-foreground/80">{Math.round(clampedValue)}</span>
-                            </div>
-                            <Progress value={clampedValue} className="h-1.5" />
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  {primaryRules.length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top signals</p>
-                      <div className="mt-2 space-y-2">
-                        {primaryRules.map((rule) => {
-                          const weightValue = Number.isFinite(Number(rule.weight)) ? Number(rule.weight) : 0
-                          const weightPct = Math.round(weightValue * 100)
-                          const contribution = Number.isFinite(Number(rule.contribution)) ? Number(rule.contribution) : 0
-                          const scoreValue = Number.isFinite(Number(rule.score)) ? Number(rule.score) : 0
-
-                          return (
-                            <div key={rule.ruleId} className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold text-foreground">{rule.label}</p>
-                                <span className="text-[10px] text-muted-foreground">Weight {weightPct}%</span>
-                              </div>
-                              {rule.detail && (
-                                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{rule.detail}</p>
-                              )}
-                              <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span>Score {Math.round(scoreValue)}</span>
-                                <span>Contribution {contribution.toFixed(1)}</span>
-                                <span className={rule.matched ? 'text-emerald-600' : 'text-amber-600'}>
-                                  {rule.matched ? 'Matched' : 'Partial'}
-                                </span>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-4">
-                    <RecommendationExplanationDialog
-                      card={card}
-                      rank={rank}
-                      triggerClassName="w-full sm:w-auto"
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        )}
       </div>
-    </div>
-  )
-}
 
-/* ------------------------------------------------------------------ */
-/*  Card grid tile (same layout as CardTile + match rank badge)       */
-/* ------------------------------------------------------------------ */
+      <dl className="mt-7 grid grid-cols-3 divide-x divide-border border-y border-border py-4">
+        <div className="pr-4 sm:pr-6"><dt className="text-xs text-muted-foreground">Annual fee</dt><dd className="mt-1 text-sm font-semibold text-foreground">{card.annualFee === 0 ? 'Free' : formatInr(card.annualFee)}</dd></div>
+        <div className="px-4 sm:px-6"><dt className="text-xs text-muted-foreground">Reward rate</dt><dd className="mt-1 text-sm font-semibold text-foreground">{card.rewardRate > 0 ? `${card.rewardRate}%` : 'Issuer rules'}</dd></div>
+        <div className="pl-4 sm:pl-6"><dt className="text-xs text-muted-foreground">Est. annual value</dt><dd className="mt-1 text-sm font-semibold text-foreground">{card.estimatedAnnualValue > 0 ? formatInr(card.estimatedAnnualValue) : 'Not listed'}</dd></div>
+      </dl>
 
-const RANK_GRADIENTS = [
-  'from-amber-500 to-yellow-400',
-  'from-slate-400 to-slate-300',
-  'from-amber-700 to-amber-600',
-]
-
-function RecommendedCardGridTile({ card, rank }: { card: AdvisorCardResult; rank: number }) {
-  const rankLabel = rank === 1 ? '#1 Match' : rank === 2 ? '#2 Match' : '#3 Match'
-  const explanationSnippet = card.whyThisCard?.summary || card.finalDecisionReason || card.reason
-
-  return (
-    <div>
-      <div className="rounded-xl bg-card overflow-hidden">
-        <CardDetailLink cardId={card.id} className="group block">
-
-          {/* Card visual — identical to CardTile, no overlays */}
-          <div className="flex justify-center px-6 pb-4 pt-6">
-            <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank} interactive />
-          </div>
-
-          {/* Content */}
-          <div className="space-y-4 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
-
-            {/* Header: rank badge + card info + score */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={cn(
-                    'inline-flex items-center rounded-md border px-2 py-[3px] text-[10px] font-bold text-[#7a5500] bg-[#fdf3d7] border-[#d4a017]/20',
-                    RANK_GRADIENTS[rank - 1] ?? RANK_GRADIENTS[2]
-                  )}>
-                    {rankLabel}
-                  </span>
-                </div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground leading-snug">
-                  {card.bank}
-                </p>
-                <h3 className="text-base font-semibold leading-tight text-foreground">{card.name}</h3>
-              </div>
-              {/* Match score badge */}
-            <div className="shrink-0 flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-primary/20 bg-primary/5 text-sm font-bold text-primary tabular-nums">
-                {card.score}
-              </div>
-            </div>
-
-            {/* Eligibility dot */}
-            <div className="flex items-center gap-1.5">
-              <EligibilityBadgeDot level={card.eligibilityMatch} />
-              <span className="text-[11px] text-muted-foreground">
-                {card.eligibilityMatch === 'high' ? 'High approval likelihood' :
-                 card.eligibilityMatch === 'moderate' ? 'Moderate approval likelihood' :
-                 'Approval uncertain'}
-              </span>
-            </div>
-
-            {/* Key metrics — same pattern as CardTile */}
-            <div className="space-y-2.5 pt-1">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Annual Fee</span>
-                <span className="font-semibold text-foreground">
-                  {card.annualFee === 0 ? 'Free' : `₹${card.annualFee.toLocaleString('en-IN')}`}
-                </span>
-              </div>
-
-              {card.rewardRate > 0 && (
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-violet-50">
-                    <TrendingUp className="h-3 w-3 text-violet-600" />
-                  </div>
-                  <span className="text-muted-foreground">{card.rewardRate}% base rewards</span>
-                </div>
-              )}
-
-              {card.estimatedAnnualValue > 0 && (
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-50">
-                    <Award className="h-3 w-3 text-amber-600" />
-                  </div>
-                  <span className="text-muted-foreground">
-                    Est. ₹{card.estimatedAnnualValue.toLocaleString('en-IN')} annual value
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Tags — same pattern as CardTile's best_for badges */}
-            {(card.bestCategories.length > 0 || card.pros.length > 0) && (
-              <div className="flex flex-wrap gap-1">
-                {(card.bestCategories.length > 0 ? card.bestCategories : card.pros)
-                  .slice(0, 3)
-                  .map((tag, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="rounded-full bg-secondary/60 px-2 py-[3px] text-[10px]"
-                    >
-                      {tag.replace(/_/g, ' ')}
-                    </Badge>
-                ))}
-              </div>
-            )}
-
-            {explanationSnippet && (
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {explanationSnippet}
-              </p>
-            )}
-          </div>
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <CardDetailLink cardId={card.id} className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-foreground">
+          View card details <ArrowRight className="h-4 w-4" />
         </CardDetailLink>
-
-        <div className="space-y-3 px-4 pb-4 sm:px-5 sm:pb-5">
-            <RecommendationExplanationDialog
-              card={card}
-              rank={rank}
-              triggerLabel="See full scoring"
-              triggerClassName="w-full"
-            />
-
-            <CardDetailLink cardId={card.id} className="flex items-center justify-between pt-1">
-              <span className="text-xs font-medium text-violet-600">View Details</span>
-              <ArrowRight className="h-3.5 w-3.5 text-[#b8860b]" />
-            </CardDetailLink>
-          </div>
-        </div>
-    </div>
+        {explanation && <RecommendationExplanationDialog card={card} rank={rank} triggerLabel="How we matched it" triggerClassName="w-auto" />}
+      </div>
+    </motion.article>
   )
 }
-
-function EligibilityBadgeDot({ level }: { level: AdvisorCardResult['eligibilityMatch'] }) {
-  const config = {
-    high: { dot: 'bg-emerald-500', title: 'High approval likelihood' },
-    moderate: { dot: 'bg-amber-500', title: 'Moderate approval likelihood' },
-    uncertain: { dot: 'bg-red-400', title: 'Approval uncertain' },
-  }
-  const c = config[level]
-  return (
-    <span
-      className={cn('h-2.5 w-2.5 rounded-full shrink-0 mt-1', c.dot)}
-      title={c.title}
-    />
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Profile summary card                                               */
-/* ------------------------------------------------------------------ */
-
-const SPENDING_PILL_COLORS: Record<string, string> = {
-  dining: 'bg-orange-100 text-orange-800 border-orange-200',
-  shopping: 'bg-pink-100 text-pink-800 border-pink-200',
-  online_shopping: 'bg-pink-100 text-pink-800 border-pink-200',
-  travel: 'bg-blue-100 text-blue-800 border-blue-200',
-  groceries: 'bg-green-100 text-green-800 border-green-200',
-  entertainment: 'bg-purple-100 text-purple-800 border-purple-200',
-  fuel: 'bg-amber-100 text-amber-800 border-amber-200',
-  utilities: 'bg-cyan-100 text-cyan-800 border-cyan-200',
-  bills: 'bg-violet-100 text-violet-800 border-violet-200',
-  rent: 'bg-violet-100 text-violet-800 border-violet-200',
-  healthcare: 'bg-red-100 text-red-800 border-red-200',
-  education: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  other: 'bg-gray-100 text-gray-800 border-gray-200',
-}
-
-function getCreditScoreStyle(scoreStr: string | undefined) {
-  if (!scoreStr) return { dot: 'bg-slate-400', iconBg: 'bg-slate-100 text-slate-600', text: 'text-slate-600', label: '' }
-  const num = parseInt(scoreStr.replace(/\D/g, ''), 10)
-  if (isNaN(num)) return { dot: 'bg-slate-400', iconBg: 'bg-slate-100 text-slate-600', text: 'text-slate-600', label: 'No history' }
-  if (num >= 800) return { dot: 'bg-green-500', iconBg: 'bg-green-100 text-green-600', text: 'text-green-700', label: 'Excellent' }
-  if (num >= 750) return { dot: 'bg-emerald-500', iconBg: 'bg-emerald-100 text-emerald-600', text: 'text-emerald-700', label: 'Very Good' }
-  if (num >= 700) return { dot: 'bg-lime-500', iconBg: 'bg-lime-100 text-lime-700', text: 'text-lime-700', label: 'Good' }
-  if (num >= 650) return { dot: 'bg-amber-500', iconBg: 'bg-amber-100 text-amber-600', text: 'text-amber-700', label: 'Fair' }
-  if (num >= 600) return { dot: 'bg-orange-500', iconBg: 'bg-orange-100 text-orange-600', text: 'text-orange-700', label: 'Needs Work' }
-  return { dot: 'bg-red-500', iconBg: 'bg-red-100 text-red-600', text: 'text-red-700', label: 'Low' }
-}
-
-function cap(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
-function ProfileSummaryCard({ data }: { data: ProfileSummaryData }) {
-  const scoreStyle = getCreditScoreStyle(data.creditScore)
-  const hasAnyData = data.monthlyIncome || data.creditScore || data.age || data.employment || data.persona || (data.topSpending && data.topSpending.length > 0)
-  if (!hasAnyData) return null
-
-  const secondaryItems: { icon: React.ReactNode; iconBg: string; label: string; value: string }[] = []
-  if (data.age) {
-    secondaryItems.push({
-      icon: <User className="h-3.5 w-3.5" />,
-      iconBg: 'bg-blue-100 text-blue-600',
-      label: 'Age',
-      value: `${data.age} years`,
-    })
-  }
-  if (data.employment) {
-    secondaryItems.push({
-      icon: <Briefcase className="h-3.5 w-3.5" />,
-      iconBg: 'bg-amber-100 text-amber-600',
-      label: 'Employment',
-      value: cap(data.employment),
-    })
-  }
-  if (data.persona) {
-    secondaryItems.push({
-      icon: <Target className="h-3.5 w-3.5" />,
-      iconBg: 'bg-primary/10 text-primary',
-      label: 'Profile',
-      value: cap(data.persona),
-    })
-  }
-
-  return (
-    <div className="py-3 space-y-3">
-      {/* Header */}
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Your Profile</p>
-
-      {/* Tier 1: Primary stats */}
-      {(data.monthlyIncome || data.creditScore) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {data.monthlyIncome && (
-            <div className="flex items-start gap-3 py-2">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-600">
-                <Wallet className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Monthly Income</p>
-                <p className="text-base font-bold text-foreground tabular-nums mt-0.5">
-                  ₹{data.monthlyIncome.toLocaleString('en-IN')}
-                </p>
-                <p className="text-[10px] text-muted-foreground">per month</p>
-              </div>
-            </div>
-          )}
-          {data.creditScore && (
-            <div className="flex items-start gap-3 py-2">
-              <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', scoreStyle.iconBg)}>
-                <Shield className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Credit Score</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-base font-bold text-foreground tabular-nums">{data.creditScore}</p>
-                  <span className={cn('h-2 w-2 rounded-full shrink-0', scoreStyle.dot)} />
-                </div>
-                <p className={cn('text-[10px] font-medium', scoreStyle.text)}>{scoreStyle.label}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tier 2: Secondary stats */}
-      {secondaryItems.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {secondaryItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-2.5 px-1 py-2">
-              <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-md', item.iconBg)}>
-                {item.icon}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide leading-none">{item.label}</p>
-                <p className="text-xs font-semibold text-foreground mt-0.5 leading-tight truncate">{item.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Tier 3: Spending categories */}
-      {data.topSpending && data.topSpending.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Top spending categories</p>
-          <div className="flex flex-wrap gap-1.5">
-            {data.topSpending.map((cat) => {
-              const key = cat.toLowerCase().replace(/\s+/g, '_')
-              const pillClass = SPENDING_PILL_COLORS[key] ?? SPENDING_PILL_COLORS.other
-              return (
-                <span key={cat} className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium', pillClass)}>
-                  {cat.split(' ').map(cap).join(' ')}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Main results component                                             */
-/* ------------------------------------------------------------------ */
 
 interface Props {
   result: AdvisorResult
@@ -624,131 +128,45 @@ export function AdvisorResults({ result, onStartOver }: Props) {
     void trackInteraction('compare_started', {
       page: '/advisor',
       entityType: 'advisor_result',
-      metadata: {
-        comparedCardIds: compareCards.map((card) => card.id),
-      },
+      metadata: { comparedCardIds: compareCards.map((card) => card.id) },
     })
     router.push('/cards/compare')
   }
 
-  const PERSONA_LABELS: Record<string, string> = {
-    student_firsttime: 'Student / First-time user',
-    salaried_everyday: 'Salaried professional',
-    rewards_maximizer: 'Rewards maximizer',
-    frequent_traveller: 'Frequent traveller',
-    online_shopper: 'Online shopper',
-    self_employed: 'Self-employed / Business owner',
-    credit_builder: 'Credit builder / Rebuilder',
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold text-foreground tracking-tight">
-            Your recommendations
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            {result.persona && (
-              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/[0.05] px-3 py-1 text-xs font-medium text-primary">
-                {PERSONA_LABELS[result.persona] ?? result.persona}
-              </span>
-            )}
-            <span className="text-xs text-muted-foreground">
-              {result.cards.length} cards matched your profile
-            </span>
-          </div>
+    <div className="space-y-10">
+      <header className="flex flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Recommendation</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">Recommended Cards</h2>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{result.cards.length} match{result.cards.length === 1 ? '' : 'es'} ranked by eligibility, spending fit, goals, fees, and portfolio balance.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={onStartOver} className="shrink-0 gap-1.5">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7a5 5 0 019.33-2.5M12 7a5 5 0 01-9.33 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <path d="M11 2v3h-3M3 12V9h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Start over
-        </Button>
-      </div>
+        <div className="flex flex-wrap gap-3">
+          {result.cards.length >= 2 && <Button variant="outline" size="sm" onClick={handleCompareAll} className="gap-2"><GitCompare className="h-3.5 w-3.5" /> Compare all</Button>}
+          <Button variant="ghost" size="sm" onClick={onStartOver}>Adjust answers</Button>
+        </div>
+      </header>
 
-      {/* Compare */}
-      <div className="flex justify-end">
-        {result.cards.length >= 2 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCompareAll}
-            className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
-          >
-            <GitCompare className="h-3.5 w-3.5" />
-            Compare All {result.cards.length} Cards
-          </Button>
-        )}
-      </div>
+      {result.profileSummary && (typeof result.profileSummary === 'string' ? (
+        <section className="border-y border-border py-5"><p className="text-sm leading-6 text-foreground/75">{result.profileSummary}</p></section>
+      ) : <ProfileSummaryLine data={result.profileSummary} />)}
 
-      {/* Profile summary */}
-      {result.profileSummary && (
-        typeof result.profileSummary === 'string' ? (
-          <div className="py-4">
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Profile summary</p>
-            <p className="text-sm text-foreground/80 leading-relaxed">{result.profileSummary}</p>
-          </div>
-        ) : (
-          <ProfileSummaryCard data={result.profileSummary} />
-        )
+      {result.analysis && (
+        <section className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What stood out</p>
+          <p className="mt-3 text-base leading-7 text-foreground/80">{result.analysis}</p>
+        </section>
       )}
 
-        {/* Analysis */}
-        {result.analysis && (
-          <div className="py-4">
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Analysis</p>
-            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{result.analysis}</p>
-          </div>
-        )}
+      <section>
+        <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Your shortlist</p><p className="mt-2 text-sm text-muted-foreground">{result.cards.length} options, ordered by fit.</p></div>
+          <span className="hidden text-xs text-muted-foreground sm:block">Start with #1</span>
+        </div>
+        <div>{result.cards.map((card, index) => <RecommendedCardRow key={card.id} card={card} rank={index + 1} />)}</div>
+      </section>
 
-        {/* Transparency callout */}
-        {result.cards.some((card) =>
-          (card.rulesEvaluated && card.rulesEvaluated.length > 0) ||
-          card.ruleScores ||
-          card.finalDecisionReason ||
-          card.whyThisCard?.summary
-        ) && (
-          <div className="py-4">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Transparency</p>
-            <p className="mt-2 text-sm text-foreground/80 leading-relaxed">
-              Your match score is built from five signals: eligibility, spend alignment, goal fit, fee comfort, and portfolio balance.
-              Expand any card to see the scoring weights and the exact rules we evaluated.
-            </p>
-          </div>
-        )}
-
-      {/* Card list / grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-        {result.cards.map((card, index) => (
-          <motion.div
-            key={card.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-          >
-            <RecommendedCardGridTile card={card} rank={index + 1} />
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Bottom actions */}
-      <div className="flex items-center justify-center gap-3 pt-4">
-        <Button variant="outline" onClick={onStartOver} className="gap-1.5">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7a5 5 0 019.33-2.5M12 7a5 5 0 01-9.33 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <path d="M11 2v3h-3M3 12V9h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Adjust answers
-        </Button>
-      </div>
-
-      {/* Disclaimer */}
-      <p className="text-[11px] text-muted-foreground text-center leading-relaxed max-w-xl mx-auto">
-        Recommendations are based on publicly available card information and your stated profile. Actual approval depends on the issuer&apos;s criteria. Reward calculations are estimates and may vary. We do not guarantee approval or specific reward rates.
-      </p>
+      <p className="mx-auto max-w-2xl text-center text-[11px] leading-5 text-muted-foreground">Recommendations use publicly available card information and your stated profile. Actual approval, fees and rewards depend on the issuer&apos;s current terms.</p>
     </div>
   )
 }

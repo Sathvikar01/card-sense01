@@ -80,8 +80,8 @@ const steps = [
   },
   {
     number: '03',
-    title: 'Get Matched Cards',
-    description: 'Receive your top 3 picks with detailed breakdowns of fees, rewards, and annual value.',
+    title: 'Get a Ranked Shortlist',
+    description: 'See the strongest eligible matches with clear breakdowns of fees, rewards, and annual value.',
   },
 ]
 
@@ -407,7 +407,7 @@ export default function HomePage() {
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.2em] text-white/60">Ready to start</p>
                   <p className="cardsense-hero-title mt-3 text-3xl text-white sm:text-4xl">
-                    Get your top 3 card picks
+                    Get your ranked card shortlist
                   </p>
                   <p className="mt-2 max-w-md text-sm text-white/70">
                     Free personalized recommendations tailored to your Indian credit profile.
