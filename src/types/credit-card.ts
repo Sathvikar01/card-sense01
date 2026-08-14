@@ -1,5 +1,6 @@
 export interface CreditCard {
   id: string
+  card_slug: string
   bank_name: string
   card_name: string
   card_network: 'visa' | 'mastercard' | 'rupay' | 'amex' | 'diners'
@@ -48,8 +49,12 @@ export interface CreditCard {
 export type CreditCardListItem = Pick<
   CreditCard,
   | 'id'
+  | 'card_slug'
   | 'bank_name'
   | 'card_name'
+  | 'card_network'
+  | 'card_variant'
+  | 'image_url'
   | 'card_type'
   | 'annual_fee'
   | 'reward_rate_default'

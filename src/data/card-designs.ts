@@ -527,9 +527,22 @@ const BANK_FALLBACK_COLORS: Record<string, string> = {
   'Federal Bank': '#1565c0',
 }
 
-export function getCardDesign(cardId: string, bankName?: string): CardDesign {
-  if (CARD_DESIGNS[cardId]) {
-    return CARD_DESIGNS[cardId]
+const toDesignSlug = (value: string) => value
+  .trim()
+  .toLowerCase()
+  .replace(/&/g, ' and ')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '')
+
+export function getCardDesign(cardId: string, bankName?: string, cardName?: string): CardDesign {
+  const candidates = [cardId, cardName].filter((value): value is string => Boolean(value))
+
+  for (const candidate of candidates) {
+    const directDesign = CARD_DESIGNS[candidate]
+    if (directDesign) return directDesign
+
+    const normalizedDesign = CARD_DESIGNS[toDesignSlug(candidate)]
+    if (normalizedDesign) return normalizedDesign
   }
 
   const bankColor = bankName ? BANK_FALLBACK_COLORS[bankName] || '#3b5998' : '#3b5998'

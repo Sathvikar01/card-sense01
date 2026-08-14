@@ -54,6 +54,7 @@ const normalizeDbCardRow = (row: Record<string, unknown>): CreditCard => {
 
   return {
     id: asString(row.id, crypto.randomUUID()),
+    card_slug: asString(row.card_slug, asString(row.id)),
     bank_name: asString(row.bank_name ?? row.bank, 'Unknown Bank'),
     card_name: asString(row.card_name, 'Unknown Card'),
     card_network: toAppCardNetwork(asString(row.card_network ?? row.network, 'visa')),

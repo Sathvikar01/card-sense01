@@ -50,9 +50,12 @@ function CardDetailContent({ cardData }: { cardData: CreditCard }) {
         <div className="flex justify-center lg:justify-start">
           <CreditCardVisual
             cardId={cardData.id}
+            cardSlug={cardData.card_slug}
             size="lg"
             cardName={cardData.card_name}
             bankName={cardData.bank_name}
+            network={cardData.card_network}
+            imageUrl={cardData.image_url}
             interactive
           />
         </div>

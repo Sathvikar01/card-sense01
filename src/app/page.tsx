@@ -165,7 +165,7 @@ export default function HomePage() {
 
       <main id="main-content" tabIndex={-1} className="outline-none">
         {/* ====== Hero Section ====== */}
-        <motion.section ref={heroRef} style={{ opacity: heroOpacity }} className="relative overflow-hidden px-4 pb-4 pt-16 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
+        <motion.section ref={heroRef} style={{ opacity: heroOpacity }} className="relative overflow-hidden px-4 pb-3 pt-10 sm:px-6 sm:pb-4 sm:pt-20 lg:px-8 lg:pt-24">
           <div className="relative mx-auto max-w-7xl">
             <div className="flex flex-col items-center text-center">
               {/* Badge */}
@@ -173,10 +173,10 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-[#d4a017]/20 bg-white/90 px-5 py-2.5 shadow-sm shadow-[#b8860b]/5"
+                className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d4a017]/20 bg-white/90 px-4 py-2 shadow-sm shadow-[#b8860b]/5 sm:mb-8 sm:gap-2.5 sm:px-5 sm:py-2.5"
               >
-                <CreditCard className="h-4 w-4 text-[#b8860b]" />
-                <span className="text-sm font-medium text-[#7a5500]">Independent Card Comparison</span>
+                <CreditCard className="h-3.5 w-3.5 text-[#b8860b] sm:h-4 sm:w-4" />
+                <span className="text-xs font-medium text-[#7a5500] sm:text-sm">Independent Card Comparison</span>
               </motion.div>
 
               {/* Title with staggered reveal */}
@@ -185,7 +185,7 @@ export default function HomePage() {
                   initial={{ y: 60, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  className="cardsense-hero-title text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl"
+                  className="cardsense-hero-title max-w-[22rem] text-[2.85rem] font-bold leading-[0.98] tracking-tight text-foreground sm:max-w-none sm:text-6xl sm:leading-[1.05] lg:text-7xl"
                 >
                   Find the credit card that
                 </motion.h1>
@@ -195,7 +195,7 @@ export default function HomePage() {
                   initial={{ y: 60, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  className="cardsense-hero-title text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+                  className="cardsense-hero-title max-w-[22rem] text-[2.85rem] font-bold leading-[0.98] tracking-tight sm:max-w-none sm:text-6xl sm:leading-[1.05] lg:text-7xl"
                 >
                   <span className="text-gradient-primary">actually fits</span> your life
                 </motion.h1>
@@ -206,7 +206,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl"
+                className="mt-5 max-w-[20rem] text-base leading-relaxed text-muted-foreground sm:mt-6 sm:max-w-lg sm:text-xl"
               >
                 Compare fees, understand earning rules, and see estimates tailored to your spending.
               </motion.p>
@@ -216,11 +216,11 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-10 flex flex-wrap items-center justify-center gap-4"
+                className="mt-8 flex w-full max-w-[21rem] flex-col items-center justify-center gap-3 sm:mt-10 sm:w-auto sm:max-w-none sm:flex-row sm:gap-4"
               >
                 <motion.button
                   onClick={() => openAuth('/dashboard')}
-                  className="group relative inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-8 py-4 text-base font-semibold text-white shadow-xl shadow-[#b8860b]/20"
+                  className="group relative inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#b8860b] to-[#d4a017] px-6 py-3.5 text-base font-semibold text-white shadow-xl shadow-[#b8860b]/20 sm:w-auto sm:px-8 sm:py-4"
                 >
                   <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#e8c04a] opacity-0 transition-opacity group-hover:opacity-100" />
                   <span className="relative">Get Started</span>
@@ -228,7 +228,7 @@ export default function HomePage() {
                 </motion.button>
                 <motion.button
                   onClick={() => openAuth('/cards')}
-                  className="group inline-flex items-center gap-2.5 rounded-2xl border-2 border-border/60 bg-white px-8 py-4 text-base font-semibold text-foreground transition-colors hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/50"
+                  className="group inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-border/60 bg-white px-6 py-3.5 text-base font-semibold text-foreground transition-colors hover:border-[#d4a017]/40 hover:bg-[#fdf3d7]/50 sm:w-auto sm:px-8 sm:py-4"
                 >
                   Browse All Cards
                 </motion.button>
@@ -238,13 +238,13 @@ export default function HomePage() {
         </motion.section>
 
         {/* ====== Card Marquee ====== */}
-        <section className="relative overflow-hidden py-3 lg:mt-8">
+        <section className="relative overflow-hidden py-1.5 sm:py-3 lg:mt-8">
           {/* Left/right fade overlays */}
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-background to-transparent sm:w-40" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-background to-transparent sm:w-40" />
 
           {/* Row 1 — scrolls left */}
-          <div className="marquee-row mt">
+          <div className="marquee-row mt-0">
             <div className="marquee-track marquee-left">
               {[...row1, ...row1].map((id, idx) => (
                 <div key={`r1-${idx}`} className="marquee-card shrink-0">
@@ -255,7 +255,7 @@ export default function HomePage() {
           </div>
 
           {/* Row 2 — scrolls right, visible on scroll */}
-          <div className="marquee-row mt-25">
+          <div className="marquee-row mt-3 hidden sm:block sm:mt-4">
             <div className="marquee-track marquee-right">
               {[...row2, ...row2].map((id, idx) => (
                 <div key={`r2-${idx}`} className="marquee-card shrink-0">

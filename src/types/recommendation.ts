@@ -2,6 +2,8 @@
 
 export interface CardRecommendation {
   cardId: string
+  cardSlug?: string
+  imageUrl?: string | null
   cardName: string
   bank: string
   score: number // 0-100 match score

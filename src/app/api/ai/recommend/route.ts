@@ -9,6 +9,8 @@ type CatalogSource = 'database'
 
 type CardForRecommendation = {
   id: string
+  cardSlug: string
+  imageUrl: string | null
   cardName: string
   bank: string
   annualFee: number
@@ -91,6 +93,8 @@ type WhyThisCardExplanation = {
 
 type RecommendationCardResult = {
   id: string
+  cardSlug: string
+  imageUrl: string | null
   name: string
   bank: string
   score: number
@@ -458,6 +462,8 @@ const asStringArray = (value: unknown) => {
 const mapCatalogRow = (row: Record<string, unknown>): CardForRecommendation => {
   return {
     id: asString(row.id, crypto.randomUUID()),
+    cardSlug: asString(row.card_slug),
+    imageUrl: row.image_url ? asString(row.image_url) : null,
     cardName: asString(row.card_name ?? row.name, 'Unknown Card'),
     bank: asString(row.bank_name ?? row.bank, 'Unknown Bank'),
     annualFee: asNumber(row.annual_fee, 0),
@@ -961,6 +967,8 @@ const ruleBasedRecommendations = (
         whyThisCard,
       }) => ({
         id: card.id,
+        cardSlug: card.cardSlug,
+        imageUrl: card.imageUrl,
         name: card.cardName,
         bank: card.bank,
         score,
@@ -999,6 +1007,8 @@ const saveRecommendation = async (params: {
   // Map cards to the CardRecommendation format expected by the dashboard / Recommendation type
   const normalizedCards = cards.map((card, index) => ({
     cardId: card.id,
+    cardSlug: card.cardSlug,
+    imageUrl: card.imageUrl,
     cardName: card.name,
     bank: card.bank,
     score: card.score,

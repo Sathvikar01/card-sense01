@@ -7,6 +7,8 @@ import { useAdvisorStore } from '@/lib/store/advisor-store'
 
 export interface DashboardTopPick {
   cardId: string
+  cardSlug?: string
+  imageUrl?: string | null
   cardName: string
   bank: string
   score?: number

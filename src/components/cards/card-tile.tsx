@@ -73,7 +73,16 @@ export function CardTile({ card }: CardTileProps) {
         >
           {/* Card visual */}
           <div className="flex justify-center border-b border-border/50 px-6 pb-4 pt-6">
-            <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank_name} interactive />
+            <CreditCardVisual
+              cardId={card.id}
+              cardSlug={card.card_slug}
+              size="sm"
+              cardName={card.card_name}
+              bankName={card.bank_name}
+              network={card.card_network}
+              imageUrl={card.image_url}
+              interactive
+            />
           </div>
 
           {/* Content */}

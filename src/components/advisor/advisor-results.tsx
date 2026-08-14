@@ -65,7 +65,15 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
     >
       <div className="grid gap-7 lg:grid-cols-[12rem_minmax(0,1fr)_6rem] lg:items-start lg:gap-8">
         <div className="flex justify-start sm:justify-center lg:justify-start">
-          <CreditCardVisual cardId={card.id} size="sm" bankName={card.bank} interactive />
+          <CreditCardVisual
+            cardId={card.id}
+            cardSlug={card.cardSlug}
+            size="sm"
+            cardName={card.name}
+            bankName={card.bank}
+            imageUrl={card.imageUrl}
+            interactive
+          />
         </div>
 
         <div className="min-w-0">
@@ -115,8 +123,12 @@ export function AdvisorResults({ result, onStartOver }: Props) {
   const handleCompareAll = () => {
     const compareCards = result.cards.map((card) => ({
       id: card.id,
+      card_slug: card.cardSlug || card.id,
       card_name: card.name,
       bank_name: card.bank,
+      card_network: 'visa' as const,
+      card_variant: 'classic' as const,
+      image_url: card.imageUrl || null,
       card_type: 'rewards' as const,
       annual_fee: card.annualFee,
       reward_rate_default: card.rewardRate,

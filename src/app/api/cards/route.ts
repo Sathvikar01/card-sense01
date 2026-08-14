@@ -7,8 +7,12 @@ export const runtime = 'nodejs'
 
 const SUMMARY_FIELDS = [
   'id',
+  'card_slug',
   'bank_name',
   'card_name',
+  'card_network',
+  'card_variant',
+  'image_url',
   'card_type',
   'annual_fee',
   'reward_rate_default',

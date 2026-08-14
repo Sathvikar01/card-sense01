@@ -1,16 +1,20 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { getCardDesign } from '@/data/card-designs'
+import { getCardDesign, type CardDesign } from '@/data/card-designs'
 import { NetworkLogo, ContactlessIcon } from './network-logos'
 import { useRef, useState, useCallback, useMemo } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import Image from 'next/image'
 
 interface CreditCardVisualProps {
   cardId: string
+  cardSlug?: string | null
   size?: 'sm' | 'md' | 'lg'
   cardName?: string
   bankName?: string
+  network?: CardDesign['network']
+  imageUrl?: string | null
   interactive?: boolean
   className?: string
   enableFlip?: boolean
@@ -60,17 +64,24 @@ const sizeConfig = {
 
 export function CreditCardVisual({
   cardId,
+  cardSlug,
   size = 'md',
   cardName,
   bankName,
+  network,
+  imageUrl,
   interactive = false,
   className,
   enableFlip = false,
 }: CreditCardVisualProps) {
-  const design = getCardDesign(cardId, bankName)
+  const design = getCardDesign(cardSlug || cardId, bankName, cardName)
+  const displayNetwork = network || design.network
   const s = sizeConfig[size]
   const cardRef = useRef<HTMLDivElement>(null)
   const [isFlipped, setIsFlipped] = useState(false)
+  const [imageFailed, setImageFailed] = useState(false)
+
+  const hasCardArtwork = Boolean(imageUrl && !imageFailed)
 
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
@@ -113,6 +124,10 @@ export function CreditCardVisual({
     setIsFlipped((prev) => !prev)
   }, [enableFlip])
 
+  const handleArtworkError = useCallback(() => {
+    setImageFailed(true)
+  }, [])
+
   const textColor = design.textColor === 'white' ? 'text-white' : 'text-gray-900'
   const textMuted = design.textColor === 'white' ? 'text-white/60' : 'text-gray-500'
   const textSubtle = design.textColor === 'white' ? 'text-white/40' : 'text-gray-400'
@@ -138,6 +153,21 @@ export function CreditCardVisual({
         isPremium && 'card-holographic'
       )}
     >
+      {hasCardArtwork ? (
+        <Image
+          src={imageUrl || ''}
+          alt={`${cardName || design.cardLabel} card design`}
+          fill
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          sizes="(max-width: 640px) 200px, 400px"
+          unoptimized
+          onError={handleArtworkError}
+        />
+      ) : null}
+
+      {!hasCardArtwork && (
+        <>
       {/* Subtle noise texture overlay */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay"
@@ -214,7 +244,7 @@ export function CreditCardVisual({
           >
             {design.bankLabel}
           </span>
-          <NetworkLogo network={design.network} className={cn(s.network, textColor)} />
+          <NetworkLogo network={displayNetwork} className={cn(s.network, textColor)} />
         </div>
 
         {/* Middle: EMV chip with realistic contacts */}
@@ -297,6 +327,8 @@ export function CreditCardVisual({
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 

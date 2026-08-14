@@ -183,9 +183,12 @@ export default function CardComparePage() {
             <div key={card.id} className="flex flex-col items-center gap-2 border-l border-border/20 px-4 pb-4 pt-5">
               <CreditCardVisual
                 cardId={card.id}
+                cardSlug={card.card_slug}
                 size="sm"
                 bankName={card.bank_name}
                 cardName={card.card_name}
+                network={card.card_network}
+                imageUrl={card.image_url}
                 interactive
               />
               <div className="text-center">

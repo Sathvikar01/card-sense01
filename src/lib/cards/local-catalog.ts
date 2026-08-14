@@ -806,6 +806,7 @@ const mapLegacyCardToCreditCard = (card: LegacyCreditCard): CreditCard => {
 
   return {
     id: card.id,
+    card_slug: card.id,
     bank_name: toBankName(card.issuer),
     card_name: card.name,
     card_network: toAppCardNetwork(card.network),

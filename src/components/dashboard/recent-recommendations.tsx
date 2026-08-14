@@ -32,6 +32,8 @@ export function RecentRecommendations({ recommendations: dbRecommendations }: Re
           input_snapshot: {},
           recommended_cards: saved.cards.map((card, idx) => ({
             cardId: card.id,
+            cardSlug: card.cardSlug,
+            imageUrl: card.imageUrl,
             cardName: card.name,
             bank: card.bank,
             score: card.score,
@@ -172,8 +174,11 @@ export function RecentRecommendations({ recommendations: dbRecommendations }: Re
                       <div className="shrink-0 pt-0.5">
                         <CreditCardVisual
                           cardId={topCard.cardId || ''}
+                          cardSlug={topCard.cardSlug}
                           size="sm"
+                          cardName={topCard.cardName}
                           bankName={topCard.bank}
+                          imageUrl={topCard.imageUrl}
                           className="!w-16"
                         />
                       </div>

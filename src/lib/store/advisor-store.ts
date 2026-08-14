@@ -244,6 +244,8 @@ export function detectPersona(state: AdvisorFormState): UserPersona {
 
 export interface SavedAdvisorCard {
   id: string
+  cardSlug?: string
+  imageUrl?: string | null
   name: string
   bank: string
   score: number

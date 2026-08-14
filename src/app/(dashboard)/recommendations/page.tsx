@@ -34,6 +34,8 @@ export default function RecommendationsPage() {
               analysis: saved.analysis || '',
               cards: (saved.cards as Record<string, unknown>[]).map((card) => ({
                 id: ((card.id || card.cardId) || '') as string,
+                cardSlug: card.cardSlug ? String(card.cardSlug) : undefined,
+                imageUrl: card.imageUrl ? String(card.imageUrl) : null,
                 name: ((card.name || card.cardName) || '') as string,
                 bank: (card.bank || '') as string,
                 score: (card.score || 0) as number,

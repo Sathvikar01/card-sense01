@@ -54,6 +54,8 @@ function normalizeDashboardCards(value: unknown): DashboardTopPick[] {
 
     return [{
       cardId: String(card.cardId ?? card.card_id ?? card.id ?? `recommendation-${index}`),
+      cardSlug: card.cardSlug ? String(card.cardSlug) : card.card_slug ? String(card.card_slug) : undefined,
+      imageUrl: card.imageUrl ? String(card.imageUrl) : card.image_url ? String(card.image_url) : null,
       cardName,
       bank: String(card.bank ?? card.bankName ?? card.bank_name ?? '').trim(),
       score: Number.isFinite(Number(card.score)) ? Number(card.score) : undefined,
