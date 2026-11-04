@@ -91,7 +91,7 @@ export default function Account() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
         {!isConfigured ? (
-          <Text style={styles.body}>Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to ios-app/.env.local, then restart Expo.</Text>
+          <Text style={styles.body}>Sign-in arrives once this build is connected to CardSense.</Text>
         ) : session ? (
           <SignedIn session={session} />
         ) : (

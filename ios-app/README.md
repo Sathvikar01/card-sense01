@@ -24,6 +24,16 @@ The CardSense app for iPhone, built with Expo. Same four colours, type and card 
 
 `.env.local` takes the same public values the website uses: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and `EXPO_PUBLIC_WEB_URL` (your Vercel production URL).
 
+## Share a preview (QR code for Expo Go)
+
+The project is linked to Expo as `@sathvikar01/cardsense`. Publishing sends the current code to Expo's servers; anyone with Expo Go can then open it from a QR code, with no computer running.
+
+```bash
+EXPO_TOKEN=<token> npx eas-cli@latest update --branch preview --platform ios --message "What changed"
+```
+
+The link for Expo Go is `exp://u.expo.dev/<project id>/group/<update group id>`; the command prints the group id. `runtimeVersion` stays on the `sdkVersion` policy so Expo Go accepts the update.
+
 ## Put it on the App Store
 
 Needs an Apple Developer account and a free Expo account. EAS builds in the cloud, so no Mac is needed.

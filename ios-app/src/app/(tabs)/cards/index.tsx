@@ -5,6 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { CardArt } from '@/components/CardArt'
 import { Empty, Failed, Loading } from '@/components/States'
 import { feeLabel, useCards, type CardSummary } from '@/lib/cards'
+import { isConfigured } from '@/lib/env'
 import { EDGE, colors, font } from '@/theme'
 
 function Row({ card }: { card: CardSummary }) {
@@ -41,7 +42,9 @@ export default function Cards() {
   return (
     <>
       <Stack.Screen options={{ headerSearchBarOptions: { placeholder: 'Search cards or banks', onChangeText: (e) => setQuery(e.nativeEvent.text), tintColor: colors.pine } }} />
-      {result.state === 'loading' ? (
+      {!isConfigured ? (
+        <Empty title="Cards appear here once this build is connected to CardSense." />
+      ) : result.state === 'loading' ? (
         <Loading />
       ) : result.state === 'error' ? (
         <Failed what="cards" onRetry={reload} />

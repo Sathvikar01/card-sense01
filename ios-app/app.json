@@ -44,6 +44,18 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fa716018-dfa0-4300-8795-9333e6434c14"
+      }
+    },
+    "owner": "sathvikar01",
+    "updates": {
+      "url": "https://u.expo.dev/fa716018-dfa0-4300-8795-9333e6434c14"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
     }
   }
 }
