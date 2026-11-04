@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Link href="/" className="mb-8 flex justify-center">
           <Logo />
         </Link>
-        <div className="surface p-6 sm:p-8">{children}</div>
+        <div>{children}</div>
         <p className="mt-6 text-center text-xs text-muted-foreground">
           <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
           <span className="mx-2">·</span>

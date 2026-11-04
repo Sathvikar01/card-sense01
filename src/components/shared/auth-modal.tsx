@@ -354,7 +354,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           />
 
                           {tab === 'signup' && TURNSTILE_ENABLED && (
-                              <div className="rounded-lg border border-border p-2">
+                              <div>
                               <TurnstileWidget
                                 key={turnstileWidgetNonce}
                                 siteKey={TURNSTILE_SITE_KEY}

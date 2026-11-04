@@ -81,7 +81,7 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
       </div>
 
       {filtered.length > 0 ? (
-        <ul className="surface p-1.5">
+        <ul>
           {filtered.map((article) => (
             <li key={article.id}>
               <Link href={`/education/${article.slug}`} className="row items-baseline">
@@ -95,7 +95,7 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
         <p className="py-16 text-center text-sm text-muted-foreground">No lessons match</p>
       )}
 
-      <Section title="Further reading" className="mt-10">
+      <Section title="Further reading" className="mt-12">
         <ul>
           {EDUCATION_RESOURCES.map((resource) => (
             <li key={resource.url}>

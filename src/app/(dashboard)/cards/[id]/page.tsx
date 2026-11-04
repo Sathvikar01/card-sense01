@@ -44,7 +44,7 @@ function SpecGroup({ title, rows }: { title: string; rows: Array<SpecRow | false
     <Section title={title}>
       <dl>
         {visible.map(([label, value]) => (
-          <div key={label} className="row justify-between py-2.5 text-sm">
+          <div key={label} className="row justify-between py-2 text-sm">
             <dt className="text-muted-foreground">{label}</dt>
             <dd className="text-right font-medium">{value}</dd>
           </div>
@@ -60,7 +60,7 @@ function ListGroup({ title, items }: { title: string; items?: string[] | null })
     <Section title={title}>
       <ul>
         {items.map((item, i) => (
-          <li key={i} className="row py-2.5 text-sm leading-relaxed">{item}</li>
+          <li key={i} className="row py-2 text-sm leading-relaxed">{item}</li>
         ))}
       </ul>
     </Section>
@@ -128,58 +128,31 @@ function CardDetailContent({ cardData: c }: { cardData: CreditCard }) {
 
       {c.description && <p className="mt-10 text-[15px] leading-relaxed text-foreground/80">{c.description}</p>}
 
-      <div className="mt-10 space-y-8">
-        <ListGroup title="Good" items={c.pros} />
+      <div className="mt-10 space-y-10">
+        <ListGroup title="Good" items={[...(c.pros || []), ...benefits]} />
         <ListGroup title="Watch out" items={c.cons} />
-
         <SpecGroup
-          title="Rewards"
+          title="Details"
           rows={[
-            ['Base', c.reward_rate_default > 0 ? `${c.reward_rate_default}%` : '—'],
+            ['Joining fee', fee(c.joining_fee)],
+            ['Annual fee', fee(c.annual_fee)],
+            ['Renewal fee', fee(c.renewal_fee)],
+            Boolean(c.annual_fee_waiver_spend) && ['Fee waived at', `${inr(c.annual_fee_waiver_spend!)} spend`],
+            Boolean(c.forex_markup) && ['Forex markup', `${c.forex_markup}%`],
+            ['Base rewards', c.reward_rate_default > 0 ? `${c.reward_rate_default}%` : '—'],
             ...Object.entries(c.reward_rate_categories || {}).map(
               ([category, reward]): SpecRow => [category.replace(/_/g, ' '), `${reward.rate}${rewardUnit(reward.unit)}`]
             ),
             ...Object.entries(c.milestone_benefits || {}).map(
-              ([key, m]): SpecRow => [`${lakh(m.spend_threshold)} spend`, m.benefit || inr(m.value) || key]
+              ([key, m]): SpecRow => [`At ${lakh(m.spend_threshold)} spend`, m.benefit || inr(m.value) || key]
             ),
-          ]}
-        />
-
-        <SpecGroup
-          title="Fees"
-          rows={[
-            ['Joining', fee(c.joining_fee)],
-            ['Annual', fee(c.annual_fee)],
-            ['Renewal', fee(c.renewal_fee)],
-            Boolean(c.annual_fee_waiver_spend) && ['Waived at', `${inr(c.annual_fee_waiver_spend!)} spend`],
-            Boolean(c.forex_markup) && ['Forex markup', `${c.forex_markup}%`],
-          ]}
-        />
-
-        <SpecGroup
-          title="Welcome"
-          rows={[
-            ...(c.welcome_benefits?.vouchers || []).map((v): SpecRow => [v.brand, inr(v.value)]),
-            Boolean(c.welcome_benefits?.points) && ['Points', c.welcome_benefits!.points!.toLocaleString('en-IN')],
-            Boolean(c.welcome_benefits?.cashback) && ['Cashback', inr(c.welcome_benefits!.cashback!)],
-          ]}
-        />
-
-        <SpecGroup
-          title="Travel"
-          rows={[
+            ...(c.welcome_benefits?.vouchers || []).map((v): SpecRow => [`Welcome: ${v.brand}`, inr(v.value)]),
+            Boolean(c.welcome_benefits?.points) && ['Welcome points', c.welcome_benefits!.points!.toLocaleString('en-IN')],
+            Boolean(c.welcome_benefits?.cashback) && ['Welcome cashback', inr(c.welcome_benefits!.cashback!)],
             c.lounge_access !== 'none' && ['Lounge', c.lounge_access.replace(/_/g, ' ')],
-            Boolean(c.lounge_visits_per_quarter) && ['Visits per quarter', c.lounge_visits_per_quarter],
+            Boolean(c.lounge_visits_per_quarter) && ['Lounge visits a quarter', c.lounge_visits_per_quarter],
             Boolean(c.travel_insurance_cover) && ['Travel insurance', lakh(c.travel_insurance_cover!)],
             Boolean(c.purchase_protection_cover) && ['Purchase protection', lakh(c.purchase_protection_cover!)],
-          ]}
-        />
-
-        <ListGroup title="Benefits" items={benefits} />
-
-        <SpecGroup
-          title="Eligibility"
-          rows={[
             Boolean(c.min_income_salaried) && ['Income, salaried', lakh(c.min_income_salaried!)],
             Boolean(c.min_income_self_employed) && ['Income, self-employed', lakh(c.min_income_self_employed!)],
             c.min_cibil_score > 0 && ['CIBIL score', c.min_cibil_score],

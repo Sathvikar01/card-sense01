@@ -42,9 +42,9 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: (rank - 1) * 0.06, ease: [0.23, 1, 0.32, 1] }}
-      className="surface grid gap-5 p-5 sm:grid-cols-[180px_1fr] sm:p-6"
+      className="grid gap-5 sm:grid-cols-[180px_1fr]"
     >
-      <CardDetailLink cardId={card.id} className="block self-start">
+      <CardDetailLink cardId={card.id} className="block max-w-[260px] self-start">
         <CreditCardVisual
           cardId={card.id}
           cardSlug={card.cardSlug}
@@ -90,7 +90,7 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
         </dl>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <CardDetailLink cardId={card.id} className="font-medium text-primary hover:underline">
+          <CardDetailLink cardId={card.id} className="font-medium text-foreground hover:text-muted-foreground">
             Details
           </CardDetailLink>
           {hasExplanation && (
@@ -152,15 +152,15 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         </div>
       </div>
 
-      {result.analysis && <p className="max-w-2xl px-1 text-[15px] leading-relaxed text-foreground/80">{result.analysis}</p>}
+      {result.analysis && <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">{result.analysis}</p>}
 
-      <ol className="mt-6 space-y-3">
+      <ol className="mt-10 space-y-12">
         {result.cards.map((card, index) => (
           <RecommendedCardRow key={card.id} card={card} rank={index + 1} />
         ))}
       </ol>
 
-      <p className="mt-6 px-1 text-xs text-muted-foreground">Approval, fees and rewards are set by the issuer.</p>
+      <p className="mt-12 text-xs text-muted-foreground">Approval, fees and rewards are set by the issuer.</p>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BackLink } from '@/components/shared/back-link'
@@ -11,7 +11,6 @@ import { useAnalysisStore } from '@/store/use-analysis-store'
 import type { CreditCard } from '@/types/credit-card'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { trackInteraction } from '@/lib/interactions/client'
-import { cn } from '@/lib/utils'
 
 const fee = (value: number) => (value === 0 ? 'Free' : formatCurrency(value, { showDecimals: false }))
 const lakh = (value: number) => formatCurrency(value, { compact: true, showDecimals: false })
@@ -19,34 +18,19 @@ const yesNo = (value: boolean | null) => (value === null ? '—' : value ? 'Yes'
 
 type Row = [label: string, value: (card: CreditCard) => React.ReactNode]
 
-const GROUPS: Array<{ title: string; rows: Row[] }> = [
-  {
-    title: 'Fees',
-    rows: [
-      ['Joining', (c) => fee(c.joining_fee)],
-      ['Annual', (c) => fee(c.annual_fee)],
-      ['Waived at', (c) => (c.annual_fee_waiver_spend ? `${lakh(c.annual_fee_waiver_spend)} spend` : '—')],
-      ['Forex markup', (c) => (c.forex_markup !== null ? `${c.forex_markup}%` : '—')],
-    ],
-  },
-  {
-    title: 'Rewards',
-    rows: [
-      ['Base', (c) => (c.reward_rate_default > 0 ? `${c.reward_rate_default}%` : '—')],
-      ['Lounge', (c) => (c.lounge_access === 'none' ? '—' : <span className="capitalize">{c.lounge_access.replace(/_/g, ' ')}</span>)],
-      ['Fuel waiver', (c) => yesNo(c.fuel_surcharge_waiver)],
-      ['Golf', (c) => yesNo(c.golf_access)],
-    ],
-  },
-  {
-    title: 'Eligibility',
-    rows: [
-      ['CIBIL score', (c) => (c.min_cibil_score > 0 ? c.min_cibil_score : '—')],
-      ['Income, salaried', (c) => (c.min_income_salaried ? lakh(c.min_income_salaried) : '—')],
-      ['Age', (c) => `${c.min_age}–${c.max_age}`],
-      ['ITR required', (c) => yesNo(c.requires_itr)],
-    ],
-  },
+const ROWS: Row[] = [
+  ['Joining fee', (c) => fee(c.joining_fee)],
+  ['Annual fee', (c) => fee(c.annual_fee)],
+  ['Waived at', (c) => (c.annual_fee_waiver_spend ? `${lakh(c.annual_fee_waiver_spend)} spend` : '—')],
+  ['Forex markup', (c) => (c.forex_markup !== null ? `${c.forex_markup}%` : '—')],
+  ['Rewards', (c) => (c.reward_rate_default > 0 ? `${c.reward_rate_default}%` : '—')],
+  ['Lounge', (c) => (c.lounge_access === 'none' ? '—' : <span className="capitalize">{c.lounge_access.replace(/_/g, ' ')}</span>)],
+  ['Fuel waiver', (c) => yesNo(c.fuel_surcharge_waiver)],
+  ['Golf', (c) => yesNo(c.golf_access)],
+  ['CIBIL score', (c) => (c.min_cibil_score > 0 ? c.min_cibil_score : '—')],
+  ['Income, salaried', (c) => (c.min_income_salaried ? lakh(c.min_income_salaried) : '—')],
+  ['Age', (c) => `${c.min_age}–${c.max_age}`],
+  ['ITR required', (c) => yesNo(c.requires_itr)],
 ]
 
 export default function CardComparePage() {
@@ -170,38 +154,17 @@ export default function CardComparePage() {
             </tr>
           </thead>
           <tbody>
-            {GROUPS.map((group) => (
-              <Fragment key={group.title}>
-                <tr>
-                  <th
-                    scope="colgroup"
-                    colSpan={count + 1}
-                    className="px-1 pb-2 pt-8 text-left text-[15px] font-semibold"
-                  >
-                    {group.title}
-                  </th>
-                </tr>
-                {group.rows.map(([label, value], i) => (
-                  // Each group reads as one white panel: round its outer corners, no lines inside.
-                  <tr
-                    key={label}
-                    className={cn(
-                      '[&>*]:bg-white',
-                      i === 0 && '[&>:first-child]:rounded-tl-2xl [&>:last-child]:rounded-tr-2xl [&>*]:pt-3.5',
-                      i === group.rows.length - 1 && '[&>:first-child]:rounded-bl-2xl [&>:last-child]:rounded-br-2xl [&>*]:pb-3.5'
-                    )}
-                  >
-                    <th scope="row" className="sticky left-0 py-2 pl-5 pr-3 text-left font-normal text-muted-foreground">
-                      {label}
-                    </th>
-                    {cards.map((card) => (
-                      <td key={card.id} className="px-3 py-2 tabular-nums">
-                        {value(card)}
-                      </td>
-                    ))}
-                  </tr>
+            {ROWS.map(([label, value]) => (
+              <tr key={label}>
+                <th scope="row" className="sticky left-0 bg-background py-2 pr-3 text-left font-normal text-muted-foreground">
+                  {label}
+                </th>
+                {cards.map((card) => (
+                  <td key={card.id} className="px-3 py-2 tabular-nums">
+                    {value(card)}
+                  </td>
                 ))}
-              </Fragment>
+              </tr>
             ))}
             <tr>
               <td className="sticky left-0 bg-background" />

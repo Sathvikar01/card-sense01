@@ -24,10 +24,11 @@ Helps people in India pick a credit card for how they spend. Next.js App Router,
 
 The bar is Linear / Apple Notes: one purpose per screen, nothing decorative. These come from the Impeccable, Taste v2, Interface Design and Emil Kowalski skills.
 
-- **Four colours, no more** (`src/app/globals.css`): `paper` ground, `white` panels, `pine` text and primary actions, `gold` accent. Muted text, fills and the rare line are pine at lower strength. Gold is a fill only (selection, data, the active-nav chip), always with pine on top; it fails contrast as text. SVG/Recharts literals: `src/lib/theme.ts`.
-- **No lines.** Panels are white on paper with no border; rows inside are separated by space (`.row`), not dividers. Inputs are tinted fills, not outlines. Shadows only on things that float (menus, dialogs, toasts, the compare bar).
+- **Four colours, no more** (`src/app/globals.css`): `paper` ground, `white` for controls and floating layers only, `pine` text and primary actions, `gold` accent. Muted text and fills are pine at lower strength. Gold is a fill only (selected answers, the top match score, the avatar, the logo chip), always with pine on top; it fails contrast as text.
+- **No lines, no panels.** Content sits straight on the paper. Sections are a heading plus content (`Section` in `src/components/shared/section.tsx`), separated by space. Lists use `.row`: space between rows, a faint tint on hover. No borders, dividers, separators, chart axes, bar tracks or progress bars. Shadows only on things that float (menus, dialogs, toasts, the compare bar).
+- **No charts.** Numbers and short lists say it; figures use tabular numerals.
 - **No icon library.** Say it in words ("Remove", "Back", "Close", "Send"). The only drawn marks are `Chevron` and `Tick` in `src/components/shared/glyph.tsx`, plus the logo.
-- **One layout.** Every app page is `PageHeader` then a column of `Section` blocks (`src/components/shared/section.tsx`) inside a 768px column. Totals sit inside the section they explain; no KPI strips.
+- **One layout.** Every app page is `PageHeader`, an optional one-line summary, then `Section`s, in a 768px column. Keep sections few: a page that needs more than three is doing too much.
 - **No taglines, eyebrows, subtitles or helper text.** `PageHeader` has no description prop on purpose.
 - **Type:** Hanken Grotesk only, self-hosted from Fontsource. Page titles 28px/600, section titles 15px/600, body 15px, money uses tabular figures.
 - **Motion:** under 300ms, custom ease-out (`--ease-out`), `scale(0.97)` on press, nothing on keyboard-driven actions.

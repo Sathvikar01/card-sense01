@@ -51,7 +51,6 @@
  *   pine   text and primary actions
  *   gold   the one accent: selection and data, always with pine on top
  * Muted text, fills and the rare line are pine at lower strength.
- * Literal copies for SVG/Recharts live in src/lib/theme.ts.
  */
 :root {
   --paper: #f4f3ef;
@@ -131,18 +130,13 @@
 }
 
 @layer components {
-  /* The one container: a white panel on paper. No border; the tone step separates it. */
-  .surface {
-    border-radius: 1rem;
-    background: var(--white);
-  }
-
-  /* A row inside a .surface. Rows are separated by space, not lines. */
+  /* A list row on the paper. Rows are separated by space, never lines; hover is a faint tint. */
   .row {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.875rem 1.25rem;
+    margin-inline: -0.75rem;
+    padding: 0.75rem;
     border-radius: 0.75rem;
     transition: background-color 150ms ease;
   }
@@ -198,9 +192,7 @@
     padding: 0.5em;
     text-align: left;
   }
-  .markdown tr:nth-child(even) td {
-    background: var(--tint);
-  }
+
 
   .shimmer {
     border-radius: var(--radius-md);
@@ -208,9 +200,6 @@
     animation: pulse 1.6s ease-in-out infinite;
   }
 
-  .credit-card-visual {
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
-  }
 
   .marquee-track {
     display: flex;

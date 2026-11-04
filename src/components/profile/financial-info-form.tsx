@@ -159,7 +159,7 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5">
           {/* Employment Type */}
           <FormField
             control={form.control}
@@ -274,7 +274,7 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
 
         {/* FD Amount (conditional) */}
         {hasFD && (
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5">
             <FormField
               control={form.control}
               name="fd_amount"

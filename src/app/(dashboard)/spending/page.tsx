@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/shared/page-header'
 import { toast } from 'sonner'
-import { CategoryBars, toCategoryShares } from '@/components/dashboard/category-breakdown'
+import { CategoryList, toCategoryShares } from '@/components/dashboard/category-breakdown'
 import { Section } from '@/components/shared/section'
-import { SpendingTrendChart } from '@/components/spending/spending-trend-chart'
 
 interface Transaction {
   id: string
@@ -138,7 +137,7 @@ export default function SpendingPage() {
 
   return (
     <div>
-      <PageHeader title="Spending">
+      <PageHeader title="Spending" className={transactions.length > 0 ? 'mb-2' : undefined}>
         {!loading && transactions.length > 0 && (
           <Button variant={showEntry ? 'ghost' : 'default'} onClick={() => setShowEntry(!showEntry)}>
             {showEntry ? 'Cancel' : 'Add'}
@@ -147,7 +146,9 @@ export default function SpendingPage() {
       </PageHeader>
 
       {!loading && (
-        <div className="space-y-8">
+        <div className="space-y-10">
+          {transactions.length > 0 && <p className="text-muted-foreground">{formatInr(totalSpend)} logged</p>}
+
           {showEntry && (
             <Section title="A typical month">
               <form
@@ -156,28 +157,26 @@ export default function SpendingPage() {
                   void handleSaveSpending()
                 }}
               >
-                <div className="grid sm:grid-cols-2 sm:gap-x-2">
-                  {SPENDING_CATEGORIES.map((cat) => (
-                    <label key={cat.key} htmlFor={`spend-${cat.key}`} className="row py-2">
-                      <span className="flex-1 text-sm">{cat.label}</span>
-                      <span className="relative w-32">
-                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
-                        <Input
-                          id={`spend-${cat.key}`}
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          step={100}
-                          placeholder="0"
-                          value={amounts[cat.key] ?? ''}
-                          onChange={(e) => setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))}
-                          className="h-9 pl-7 text-right tabular-nums"
-                        />
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between gap-4 px-4 pb-2.5 pt-4">
+                {SPENDING_CATEGORIES.map((cat) => (
+                  <label key={cat.key} htmlFor={`spend-${cat.key}`} className="row py-1.5">
+                    <span className="flex-1 text-sm">{cat.label}</span>
+                    <span className="relative w-32">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+                      <Input
+                        id={`spend-${cat.key}`}
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        step={100}
+                        placeholder="0"
+                        value={amounts[cat.key] ?? ''}
+                        onChange={(e) => setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))}
+                        className="h-9 pl-7 text-right tabular-nums"
+                      />
+                    </span>
+                  </label>
+                ))}
+                <div className="flex items-center justify-between gap-4 pt-5">
                   <p className="text-xl font-semibold tabular-nums">{formatInr(entryTotal)}</p>
                   <Button type="submit" disabled={saving || entryTotal === 0}>
                     {saving ? 'Saving…' : 'Save'}
@@ -190,23 +189,20 @@ export default function SpendingPage() {
           {transactions.length > 0 && (
             <>
               <Section title="By category">
-                <p className="px-4 pt-3 text-3xl font-semibold tabular-nums tracking-tight">{formatInr(totalSpend)}</p>
-                <CategoryBars data={toCategoryShares(transactions)} />
+                <CategoryList data={toCategoryShares(transactions)} />
               </Section>
-
-              <SpendingTrendChart transactions={transactions} />
 
               <Section title="Entries">
                 <ul>
                   {transactions.map((txn) => (
-                    <li key={txn.id} className="row group">
+                    <li key={txn.id} className="row group py-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm">{txn.merchant_name || txn.description || txn.category}</p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(txn.transaction_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
-                      <span className="text-sm font-medium tabular-nums">{formatInr(Number(txn.amount))}</span>
+                      <span className="text-sm tabular-nums">{formatInr(Number(txn.amount))}</span>
                       <button
                         type="button"
                         onClick={() => deleteTransaction(txn.id)}

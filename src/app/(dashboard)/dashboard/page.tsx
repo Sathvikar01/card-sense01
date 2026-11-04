@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
-import { CategoryBars } from '@/components/dashboard/category-breakdown'
-import { Section } from '@/components/shared/section'
+import { CategoryList } from '@/components/dashboard/category-breakdown'
+import { Empty, Section } from '@/components/shared/section'
 import { PageHeader } from '@/components/shared/page-header'
 import { DashboardTopPicks, type DashboardTopPick } from '@/components/dashboard/dashboard-top-picks'
 import { formatCurrency } from '@/lib/utils/format-currency'
@@ -220,31 +220,23 @@ export default async function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0]
   const topCards = recommendations[0]?.recommended_cards.slice(0, 3) || []
 
+  const summary = [
+    cibilScore ? `CIBIL ${cibilScore}, ${getCibilScoreRating(cibilScore).toLowerCase()}` : null,
+    `${userCards.length} ${userCards.length === 1 ? 'card' : 'cards'}`,
+    `${formatCurrency(currentMonthTotal, { showDecimals: false })} this month`,
+  ].filter(Boolean)
+
   return (
-    <div className="space-y-8">
-      <PageHeader title={firstName ? `Hi, ${firstName}` : 'Home'} />
+    <div className="space-y-10">
+      <div>
+        <PageHeader title={firstName ? `Hi, ${firstName}` : 'Home'} className="mb-2" />
+        <p className="text-muted-foreground">{summary.join(' · ')}</p>
+      </div>
 
       <DashboardTopPicks cards={topCards} />
 
       <Section title="Spending" action={{ label: monthlySpending.length ? 'View all' : 'Add', href: '/spending' }}>
-        <p className="px-4 pt-3 text-3xl font-semibold tabular-nums tracking-tight">
-          {formatCurrency(currentMonthTotal, { showDecimals: false })}
-          <span className="ml-2 text-sm font-normal tracking-normal text-muted-foreground">this month</span>
-        </p>
-        {monthlySpending.length > 0 ? <CategoryBars data={monthlySpending} /> : <div className="h-3" />}
-      </Section>
-
-      <Section title="Credit" action={{ label: 'Edit', href: '/profile' }}>
-        <div className="flex gap-10 px-4 py-3">
-          <p>
-            <span className="block text-3xl font-semibold tabular-nums tracking-tight">{cibilScore ?? '—'}</span>
-            <span className="text-sm text-muted-foreground">{cibilScore ? getCibilScoreRating(cibilScore) : 'CIBIL score'}</span>
-          </p>
-          <p>
-            <span className="block text-3xl font-semibold tabular-nums tracking-tight">{userCards.length}</span>
-            <span className="text-sm text-muted-foreground">{userCards.length === 1 ? 'card' : 'cards'}</span>
-          </p>
-        </div>
+        {monthlySpending.length > 0 ? <CategoryList data={monthlySpending} /> : <Empty>Nothing logged yet</Empty>}
       </Section>
     </div>
   )

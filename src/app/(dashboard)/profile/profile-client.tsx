@@ -85,7 +85,7 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Section title={title}>
-      <div className="p-3.5">{children}</div>
+      <div className="pt-2">{children}</div>
     </Section>
   )
 }

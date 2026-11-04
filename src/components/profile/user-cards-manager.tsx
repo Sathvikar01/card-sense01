@@ -52,7 +52,7 @@ export function UserCardsManager() {
   // Form state
   const [cardName, setCardName] = useState('')
   const [bankName, setBankName] = useState('')
-  const [notes, setNotes] = useState('')
+  const notes = ''
   const [comboboxOpen, setComboboxOpen] = useState(false)
   const [isManualEntry, setIsManualEntry] = useState(false)
 
@@ -89,7 +89,6 @@ export function UserCardsManager() {
   const resetForm = () => {
     setCardName('')
     setBankName('')
-    setNotes('')
     setIsManualEntry(false)
   }
 
@@ -254,21 +253,10 @@ export function UserCardsManager() {
           {!isManualEntry && bankName && (
             <div className="grid gap-2">
               <Label>Bank</Label>
-              <Input value={bankName} readOnly className="h-10 bg-muted/30 text-muted-foreground" />
+              <Input value={bankName} readOnly className="h-10 text-muted-foreground" />
             </div>
           )}
 
-          {/* Notes */}
-          <div className="grid gap-2">
-            <Label htmlFor="card-notes">Notes</Label>
-            <Input
-              id="card-notes"
-              placeholder="Optional notes"
-              className="h-10"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
         </div>
         <DialogFooter>
           <Button
@@ -309,9 +297,9 @@ export function UserCardsManager() {
 
   return (
     <div className="space-y-4">
-      <ul className="-mx-3.5 -mt-2">
+      <ul>
         {cards.map((card) => (
-          <li key={card.id} className="row justify-between px-3.5 py-2.5">
+          <li key={card.id} className="row justify-between py-2.5">
             <div className="flex items-center gap-3 min-w-0">
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate text-foreground">{card.card_name}</p>

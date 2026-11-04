@@ -43,7 +43,7 @@ export function DashboardTopPicks({ cards: initialCards }: { cards: DashboardTop
     <Section title="Your matches" action={cards.length > 0 ? { label: 'View all', href: '/recommendations' } : undefined}>
       {cards.length === 0 ? (
         <Empty>
-          No matches yet
+          <span className="flex-1">No matches yet</span>
           <Button asChild size="sm">
             <Link href="/advisor">Find my card</Link>
           </Button>

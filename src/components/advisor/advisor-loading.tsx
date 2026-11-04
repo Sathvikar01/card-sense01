@@ -14,9 +14,8 @@ export function AdvisorLoading() {
   }, [])
 
   return (
-    <div role="status" className="flex flex-col items-center gap-4 py-32">
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary" />
-      <p className="text-sm text-muted-foreground">{STAGES[stage]}…</p>
-    </div>
+    <p role="status" className="animate-pulse py-32 text-center text-muted-foreground">
+      {STAGES[stage]}…
+    </p>
   )
 }

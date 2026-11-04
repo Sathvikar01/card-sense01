@@ -160,7 +160,7 @@ export function SettingsClient({
             <span className="text-sm text-muted-foreground">{email}</span>
           </Row>
           <form
-            className="flex flex-col gap-2 px-4 pb-3 pt-2 sm:flex-row sm:items-end"
+            className="flex flex-col gap-2 py-3 sm:flex-row sm:items-end"
             onSubmit={(e) => {
               e.preventDefault()
               void handleSaveName()
@@ -174,14 +174,13 @@ export function SettingsClient({
               {savingName ? 'Saving…' : 'Save'}
             </Button>
           </form>
-        </Section>
-
-        <Section title="Password">
           {isOAuthUser ? (
-            <Row label={<span className="capitalize">Signed in with {provider}</span>} />
+            <Row label="Password">
+              <span className="text-sm capitalize text-muted-foreground">Managed by {provider}</span>
+            </Row>
           ) : (
             <form
-              className="space-y-3 px-4 py-3"
+              className="space-y-3 py-3"
               onSubmit={(e) => {
                 e.preventDefault()
                 void handleChangePassword()

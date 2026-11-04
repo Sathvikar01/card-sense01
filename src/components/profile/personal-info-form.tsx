@@ -91,7 +91,7 @@ export function PersonalInfoForm({ initialData, onUpdate }: PersonalInfoFormProp
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5">
           {/* Full Name */}
           <FormField
             control={form.control}

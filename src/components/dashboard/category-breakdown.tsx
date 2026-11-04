@@ -22,17 +22,15 @@ export interface CategoryShare {
   percentage: number
 }
 
-/** Category shares as gold bars. Labels carry the numbers, so the bars never need a scale. */
-export function CategoryBars({ data }: { data: CategoryShare[] }) {
+/** Category shares as plain rows: name, amount, share. No bars, no tracks. */
+export function CategoryList({ data }: { data: CategoryShare[] }) {
   return (
-    <ul className="space-y-1 px-4 py-3">
+    <ul>
       {data.map((item) => (
-        <li key={item.category} className="grid grid-cols-[7rem_1fr_2.5rem] items-center gap-4 py-1.5 text-sm sm:grid-cols-[9rem_1fr_2.5rem]">
-          <span className="truncate">{LABELS[item.category] || item.category.replace(/_/g, ' ')}</span>
-          <span className="h-2 overflow-hidden rounded-full bg-muted">
-            <span className="block h-full rounded-full bg-gold" style={{ width: `${Math.max(item.percentage, 2)}%` }} />
-          </span>
-          <span className="text-right tabular-nums text-muted-foreground">{item.percentage}%</span>
+        <li key={item.category} className="row py-2.5 text-sm">
+          <span className="flex-1 truncate">{LABELS[item.category] || item.category.replace(/_/g, ' ')}</span>
+          <span className="tabular-nums">₹{Math.round(item.amount).toLocaleString('en-IN')}</span>
+          <span className="w-10 text-right tabular-nums text-muted-foreground">{item.percentage}%</span>
         </li>
       ))}
     </ul>

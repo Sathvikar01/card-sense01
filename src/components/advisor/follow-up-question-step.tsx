@@ -48,7 +48,7 @@ export function FollowUpQuestionStep({
 
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-10 flex items-center gap-4">
+      <div className="mb-8 flex items-center gap-4">
         <button
           type="button"
           onClick={() => setIndex((i) => Math.max(i - 1, 0))}
@@ -57,19 +57,9 @@ export function FollowUpQuestionStep({
         >
           Back
         </button>
-        <div
-          role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={total}
-          aria-valuenow={index + 1}
-          aria-label={`Question ${index + 1} of ${total}`}
-          className="h-[3px] flex-1 overflow-hidden rounded-full bg-muted"
-        >
-          <div
-            className="h-full rounded-full bg-gold transition-[width] duration-300 ease-[var(--ease-out)]"
-            style={{ width: `${((index + 1) / total) * 100}%` }}
-          />
-        </div>
+        <p className="ml-auto text-sm tabular-nums text-muted-foreground" aria-live="polite">
+          {index + 1} of {total}
+        </p>
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
