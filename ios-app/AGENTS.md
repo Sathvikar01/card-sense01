@@ -42,8 +42,8 @@ Docs: https://docs.expo.dev/eas/index.md
 
 ## CardSense iOS
 
-- Routes: `src/app/(tabs)/` holds three tabs in `NativeTabs`: `index` (four worked examples, no inputs), `cards/` (Stack: list and `[id]`), `account`.
+- Routes: `src/app/(tabs)/` holds three tabs in `NativeTabs`: `index` (four examples, no inputs, no prices), `cards/` (Stack: list and `[id]`), `account`.
 - Design: the website's skill at `../.claude/skills/cardsense-design/` applies. Colours and type live in `src/theme.ts`; use them, never raw values. Light theme only. Errors are ink, not red. SF Symbols appear only in the system tab bar.
 - Shared data comes from the web app through the `@web/*` alias (`../src/*`). Only `components/landing` and `data` are watched by Metro; add a folder to `metro.config.js` before importing anything else, and never import web code that depends on Next.js or the DOM.
-- Data: Supabase `credit_cards` read with the anon key (`src/lib/cards.ts`). Every data region has loading, error with retry, empty and ready states (`src/components/States.tsx`).
+- Data: the catalogue comes from the website's public `/api/cards` and `/api/cards/[id]` (`src/lib/cards.ts`), so the app matches the site and holds no database keys; Supabase is used only for sign-in. Every data region has loading, error with retry, empty and ready states (`src/components/States.tsx`).
 - Before finishing: `npm run typecheck`, `npm run lint`, `npx expo export --platform ios`.

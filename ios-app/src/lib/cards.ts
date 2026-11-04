@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { isConfigured } from './env'
-import { supabase } from './supabase'
+import { WEB_URL, hasWebsite } from './env'
 
-/** The catalog row the list needs. Same table and columns as the web's /api/cards. */
+/**
+ * The catalogue comes from the website's public API, so the app shows exactly what the
+ * site shows (active cards only, same normalisation) and needs no database keys.
+ */
 export type CardSummary = {
   id: string
   card_slug: string
@@ -14,18 +16,23 @@ export type CardSummary = {
 }
 
 export type CardDetail = CardSummary & {
-  joining_fee: number
+  joining_fee: number | null
   annual_fee_waiver_spend: number | null
   lounge_access: string | null
   description: string | null
   pros: string[] | null
   apply_url: string | null
+  application_url: string | null
 }
 
-const SUMMARY = 'id, card_slug, bank_name, card_name, card_network, annual_fee, best_for'
-const DETAIL = `${SUMMARY}, joining_fee, annual_fee_waiver_spend, lounge_access, description, pros, apply_url`
-
 export type Load<T> = { state: 'loading' } | { state: 'error' } | { state: 'ready'; data: T }
+
+async function getJson<T>(path: string): Promise<T> {
+  if (!hasWebsite) throw new Error('No website address')
+  const response = await fetch(`${WEB_URL}${path}`, { headers: { accept: 'application/json' } })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return (await response.json()) as T
+}
 
 /** Runs `load` on mount and whenever it changes; `retry` starts it again from "loading". */
 function useLoad<T>(load: () => Promise<T>) {
@@ -47,27 +54,26 @@ function useLoad<T>(load: () => Promise<T>) {
     setAttempt((n) => n + 1)
   }, [])
 
-  return [result, retry] as const
+  /** Reloads without dropping what is on screen, for pull-to-refresh. */
+  const refresh = useCallback(async () => {
+    try {
+      setResult({ state: 'ready', data: await load() })
+    } catch {
+      // Keep the list that is showing; the next pull tries again.
+    }
+  }, [load])
+
+  return [result, retry, refresh] as const
 }
 
-const fetchCards = async () => {
-  if (!isConfigured) throw new Error('not configured')
-  const { data, error } = await supabase().from('credit_cards').select(SUMMARY).order('popularity_score', { ascending: false }).limit(200)
-  if (error) throw error
-  return (data ?? []) as CardSummary[]
-}
+const fetchCards = async () => (await getJson<{ cards: CardSummary[] }>('/api/cards?limit=200&sortBy=popularity')).cards
 
 export function useCards() {
   return useLoad(fetchCards)
 }
 
 export function useCard(id: string) {
-  const load = useCallback(async () => {
-    if (!isConfigured) throw new Error('not configured')
-    const { data, error } = await supabase().from('credit_cards').select(DETAIL).eq('id', id).single()
-    if (error) throw error
-    return data as CardDetail
-  }, [id])
+  const load = useCallback(() => getJson<CardDetail>(`/api/cards/${encodeURIComponent(id)}`), [id])
   return useLoad(load)
 }
 

@@ -61,6 +61,9 @@ function SignIn() {
       <Button block variant="quiet" onPress={() => openWeb('/signup')}>
         Create an account
       </Button>
+      <Button block variant="quiet" onPress={() => openWeb('/forgot-password')}>
+        Forgot password
+      </Button>
     </View>
   )
 }
@@ -79,6 +82,38 @@ function SignedIn({ session }: { session: Session }) {
       <Button block variant="quiet" onPress={() => supabase().auth.signOut()}>
         Sign out
       </Button>
+      {/* App Store 5.1.1(v): deletion starts in the app; the website's Settings asks for typed confirmation. */}
+      <Button block variant="quiet" onPress={() => openWeb('/settings')}>
+        Delete account
+      </Button>
+    </View>
+  )
+}
+
+/** Without the Supabase keys this build signs in on the website instead. */
+function SignInOnWeb() {
+  return (
+    <View style={styles.stack}>
+      <Text accessibilityRole="header" style={styles.title}>Sign in</Text>
+      <Button block onPress={() => openWeb('/login')}>
+        Sign in on CardSense
+      </Button>
+      <Button block variant="quiet" onPress={() => openWeb('/signup')}>
+        Create an account
+      </Button>
+    </View>
+  )
+}
+
+function Legal() {
+  return (
+    <View style={styles.legal}>
+      <Text accessibilityRole="link" onPress={() => openWeb('/privacy')} style={styles.link}>
+        Privacy
+      </Text>
+      <Text accessibilityRole="link" onPress={() => openWeb('/terms')} style={styles.link}>
+        Terms
+      </Text>
     </View>
   )
 }
@@ -90,13 +125,8 @@ export default function Account() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
-        {!isConfigured ? (
-          <Text style={styles.body}>Sign-in arrives once this build is connected to CardSense.</Text>
-        ) : session ? (
-          <SignedIn session={session} />
-        ) : (
-          <SignIn />
-        )}
+        {!isConfigured ? <SignInOnWeb /> : session ? <SignedIn session={session} /> : <SignIn />}
+        <Legal />
       </ScrollView>
     </KeyboardAvoidingView>
   )
@@ -113,4 +143,6 @@ const styles = StyleSheet.create({
   // Errors are ink, as on the web: the four colours have no red.
   error: { fontFamily: font.medium, fontSize: 15, lineHeight: 21, color: colors.pine },
   body: { fontFamily: font.regular, fontSize: 17, lineHeight: 24, color: colors.pine },
+  legal: { flexDirection: 'row', gap: 24, marginTop: 40 },
+  link: { fontFamily: font.regular, fontSize: 15, color: colors.muted, paddingVertical: 12 },
 })

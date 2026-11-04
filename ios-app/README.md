@@ -2,9 +2,9 @@
 
 The CardSense app for iPhone, built with Expo. Same four colours, type and card art as the website.
 
-- **Home:** four everyday spenders, the card that suits each, and what it pays back in a year.
-- **Cards:** the full catalogue from Supabase, with search and a page per card.
-- **Account:** sign in with your CardSense email and password.
+- **Home:** four everyday spenders and the card that suits each. No prices, no inputs.
+- **Cards:** the full catalogue from the website's public API, with search, pull to refresh and a page per card.
+- **Account:** sign in with your CardSense email and password, reset it, sign out, or delete the account. Links to the privacy policy and terms.
 
 "Find my card" opens the website's advisor in an in-app Safari sheet.
 
@@ -22,7 +22,7 @@ The CardSense app for iPhone, built with Expo. Same four colours, type and card 
 
 3. Scan the QR code with the iPhone camera. The app opens in Expo Go.
 
-`.env.local` takes the same public values the website uses: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and `EXPO_PUBLIC_WEB_URL` (your Vercel production URL).
+`.env.local` takes `EXPO_PUBLIC_WEB_URL` (the website's production address, which is all the catalogue needs) and, for native sign-in, the website's public `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`. See `.env.example`.
 
 ## Share a preview (QR code for Expo Go)
 

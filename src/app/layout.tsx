@@ -1,11 +1,21 @@
 import type { Metadata, Viewport } from 'next'
 import { Toaster } from '@/components/ui/sonner'
 import { MotionProvider } from '@/components/shared/motion-provider'
+import { SITE_URL } from '@/lib/site-url'
 import './globals.css'
 
+const description = 'Every major Indian credit card, ranked on fees, rewards and eligibility for the way you spend.'
+
 export const metadata: Metadata = {
-  title: { default: 'CardSense', template: '%s · CardSense' },
-  description: 'Find the right Indian credit card for how you spend.',
+  metadataBase: new URL(SITE_URL),
+  title: { default: 'CardSense: find the card that pays you back', template: '%s · CardSense' },
+  description,
+  applicationName: 'CardSense',
+  // The share image is app/opengraph-image.png; Next adds it to both cards.
+  openGraph: { type: 'website', siteName: 'CardSense', locale: 'en_IN', title: 'Find the card that pays you back.', description },
+  twitter: { card: 'summary_large_image', title: 'Find the card that pays you back.', description },
+  appleWebApp: { title: 'CardSense', statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
 }
 
 // Status bar matches the page in both schemes; the keyboard resizes the layout instead of covering it.

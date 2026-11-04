@@ -8,17 +8,15 @@ import { CardArt } from '@/components/CardArt'
 import { openWeb } from '@/lib/web'
 import { EDGE, colors, font } from '@/theme'
 
-const inr = (value: number) => `₹${Math.max(0, value).toLocaleString('en-IN')}`
-
-/** The same four spenders as the website's examples; figures come from the shared rankCards. */
-const PEOPLE: { who: string; spend: string; category: SpendCategory; monthly: number }[] = [
-  { who: 'Orders food most nights', spend: 'on delivery', category: 'dining', monthly: 12000 },
-  { who: 'Shops online every week', spend: 'online', category: 'online', monthly: 20000 },
-  { who: 'Runs the family groceries', spend: 'on groceries', category: 'groceries', monthly: 15000 },
-  { who: 'Drives to work', spend: 'on fuel', category: 'fuel', monthly: 8000 },
+/** The same four spenders as the website's examples; the card for each comes from the shared rankCards. */
+const PEOPLE: { who: string; category: SpendCategory; monthly: number }[] = [
+  { who: 'Orders food most nights', category: 'dining', monthly: 12000 },
+  { who: 'Shops online every week', category: 'online', monthly: 20000 },
+  { who: 'Runs the family groceries', category: 'groceries', monthly: 15000 },
+  { who: 'Drives to work', category: 'fuel', monthly: 8000 },
 ]
 
-/** The website's landing page, native: the promise, four worked examples, one action. No inputs. */
+/** The website's landing page, native: the promise, four examples, one action. No inputs, no prices. */
 export default function Home() {
   const { width } = useWindowDimensions()
   const cardWidth = Math.min(width - EDGE * 2, 420)
@@ -41,12 +39,8 @@ export default function Home() {
             <View>
               <Text style={styles.who}>{person.who}</Text>
               <Text style={styles.muted}>
-                {inr(person.monthly)} a month {person.spend}
+                {best.card.bank} {best.card.name}
               </Text>
-            </View>
-            <View>
-              <Text style={styles.figure}>{inr(best.yearly)}</Text>
-              <Text style={styles.muted}>a year back, after the fee</Text>
             </View>
           </View>
         )
@@ -65,5 +59,4 @@ const styles = StyleSheet.create({
   art: { alignSelf: 'flex-start', shadowColor: colors.pine, shadowOpacity: 0.16, shadowRadius: 16, shadowOffset: { width: 0, height: 10 } },
   who: { fontFamily: font.medium, fontSize: 18, lineHeight: 24, color: colors.pine },
   muted: { fontFamily: font.regular, fontSize: 16, lineHeight: 22, color: colors.muted },
-  figure: { fontFamily: font.semibold, fontSize: 40, lineHeight: 46, letterSpacing: -1, color: colors.pine, fontVariant: ['tabular-nums'] },
 })

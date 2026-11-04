@@ -1,11 +1,11 @@
 import { Stack, router, useFocusEffect } from 'expo-router'
 import { setStatusBarStyle } from 'expo-status-bar'
 import { useCallback, useMemo, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { CardArt } from '@/components/CardArt'
 import { Empty, Failed, Loading } from '@/components/States'
 import { feeLabel, useCards, type CardSummary } from '@/lib/cards'
-import { isConfigured } from '@/lib/env'
+import { hasWebsite } from '@/lib/env'
 import { EDGE, colors, font } from '@/theme'
 
 function Row({ card }: { card: CardSummary }) {
@@ -28,7 +28,13 @@ function Row({ card }: { card: CardSummary }) {
 
 /** The catalog, most popular first, with the native search field in the large-title header. */
 export default function Cards() {
-  const [result, reload] = useCards()
+  const [result, reload, refresh] = useCards()
+  const [refreshing, setRefreshing] = useState(false)
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await refresh()
+    setRefreshing(false)
+  }, [refresh])
   const [query, setQuery] = useState('')
 
   useFocusEffect(useCallback(() => setStatusBarStyle('dark'), []))
@@ -42,7 +48,7 @@ export default function Cards() {
   return (
     <>
       <Stack.Screen options={{ headerSearchBarOptions: { placeholder: 'Search cards or banks', onChangeText: (e) => setQuery(e.nativeEvent.text), tintColor: colors.pine } }} />
-      {!isConfigured ? (
+      {!hasWebsite ? (
         <Empty title="Cards appear here once this build is connected to CardSense." />
       ) : result.state === 'loading' ? (
         <Loading />
@@ -55,6 +61,7 @@ export default function Cards() {
           renderItem={({ item }) => <Row card={item} />}
           contentInsetAdjustmentBehavior="automatic"
           keyboardDismissMode="on-drag"
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />}
           ListEmptyComponent={<Empty title={query ? `No cards match “${query.trim()}”.` : 'No cards yet.'} />}
           contentContainerStyle={styles.list}
         />

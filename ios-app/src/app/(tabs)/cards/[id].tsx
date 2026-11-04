@@ -27,7 +27,7 @@ export default function CardScreen() {
   if (result.state === 'loading') return <Loading />
   if (result.state === 'error') return <Failed what="this card" onRetry={reload} />
   const card = result.data
-  const applyUrl = card.apply_url
+  const applyUrl = card.apply_url || card.application_url
   const artWidth = Math.min(width - EDGE * 2, 420)
 
   return (
@@ -44,7 +44,7 @@ export default function CardScreen() {
 
       <View style={styles.facts}>
         <Fact label="Annual fee" value={feeLabel(card.annual_fee)} />
-        <Fact label="Joining fee" value={card.joining_fee > 0 ? inr(card.joining_fee) : 'None'} />
+        <Fact label="Joining fee" value={card.joining_fee ? inr(card.joining_fee) : 'None'} />
         {card.annual_fee_waiver_spend ? <Fact label="Fee waived after" value={`${inr(card.annual_fee_waiver_spend)} spent`} /> : null}
         {card.lounge_access && card.lounge_access !== 'none' ? <Fact label="Lounges" value={sentence(card.lounge_access)} /> : null}
         {card.best_for?.length ? <Fact label="Best for" value={sentence(card.best_for.join(', '))} /> : null}
