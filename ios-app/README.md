@@ -2,7 +2,7 @@
 
 The CardSense app for iPhone, built with Expo. Same four colours, type and card art as the website.
 
-- **Home:** pick your biggest spend and the card that pays you most comes to the front.
+- **Home:** four everyday spenders, the card that suits each, and what it pays back in a year.
 - **Cards:** the full catalogue from Supabase, with search and a page per card.
 - **Account:** sign in with your CardSense email and password.
 

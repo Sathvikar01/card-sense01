@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Estimator } from '@/components/landing/estimator'
+import { Examples } from '@/components/landing/examples'
 import { EDGE, Hero } from '@/components/landing/hero'
 import { Logo } from '@/components/shared/logo'
 import { AuthModal } from '@/components/shared/auth-modal'
@@ -17,7 +17,7 @@ const FACTS = [
   'Free, and no bank pays to be ranked.',
 ]
 
-/** Light from top to bottom: hero and card rows, the estimator, what we check, a quiet footer. */
+/** Light from top to bottom: hero and card rows, four worked examples, what we check, a quiet footer. */
 export default function HomePage() {
   const router = useRouter()
   const [authRedirect, setAuthRedirect] = useState<string | null>(null)
@@ -51,7 +51,7 @@ export default function HomePage() {
       <main id="main-content" tabIndex={-1} className="outline-none">
         <Hero onStart={start} onBrowse={browse} />
 
-        <Estimator onStart={start} />
+        <Examples />
 
         <section aria-labelledby="facts-heading" className="grid gap-12 py-20 sm:py-28 lg:grid-cols-12 lg:items-center lg:gap-8" style={{ paddingInline: EDGE }}>
           <div className="lg:col-span-7">
