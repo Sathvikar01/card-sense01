@@ -37,7 +37,7 @@ A quiet ledger for one decision: which credit card. The interface is paper and i
 
 **Colour.** Four colours, mapped to semantic tokens. Components never name a colour, only a role (`bg-accent`, `text-muted-foreground`). See `references/tokens.md`.
 
-**Composition.** Every app page is `PageHeader`, an optional row of figures, then at most three `Section`s. The landing page is the one exception: hero on paper, cards on a full ink field.
+**Composition.** Every app page is `PageHeader`, an optional row of figures, then at most three `Section`s. The landing page is the one exception (`components/landing/hero.tsx`, rates in `hero-cards.ts`): on pine, a one-line headline, then the spend controls opposite a stage holding the two best cards for that spend, winner in front. Changing the spend makes the cards trade places; that is the page's one live thing. Below it on paper: a fanned hand of real card art, four facts in large type, then a pine wordmark footer. Card art is always shown whole, never cropped into tiles.
 
 **Squint test.** Blur your eyes: you should see a title, a few blocks of text, and maybe one gold spot. If you see boxes or lines, remove them.
 

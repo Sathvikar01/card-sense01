@@ -17,6 +17,7 @@ const toggleItemVariants = cva(
         chip: 'h-9 rounded-full bg-muted px-4 text-sm hover:bg-muted-strong',
         option: 'min-h-14 w-full rounded-2xl bg-card px-5 py-4 text-left text-base font-normal hover:bg-card/70 data-[state=on]:font-medium',
         plain: 'h-9 rounded-full px-4 text-sm text-muted-foreground hover:text-foreground',
+        field: 'h-10 rounded-full bg-field-foreground/10 px-3.5 text-sm text-field-foreground hover:bg-field-foreground/20',
       },
     },
     defaultVariants: { variant: 'chip' },

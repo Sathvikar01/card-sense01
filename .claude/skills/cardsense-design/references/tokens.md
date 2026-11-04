@@ -23,7 +23,8 @@ Derived, not extra colours: `--ink-muted` (ink mixed toward the ground: 7.4:1 li
 | `muted-foreground` | Secondary text |
 | `primary` / `primary-foreground` | The one filled button |
 | `accent` / `accent-foreground` | Selected state, gold chip |
-| `inverse` / `inverse-foreground` | The landing field, compare bar, toasts |
+| `inverse` / `inverse-foreground` | Compare bar, toasts (flips with the mode) |
+| `field` / `field-foreground` | The landing hero and footer: pine in both modes, gold reads on it as text (6.5:1) |
 | `ring` | Focus outline, 2px, offset 2px |
 
 Gold fails contrast as text (2.2:1 on white). Never write text in gold; put pine text on gold (6.5:1).
@@ -32,7 +33,7 @@ Gold fails contrast as text (2.2:1 on white). Never write text in gold; put pine
 
 | Role | Size / weight | Line height |
 | --- | --- | --- |
-| Display (landing h1) | 44 → 88px / 600, -0.035em | 1.05 |
+| Display (landing h1) | 56 → 136px / 600, -0.05em, one line from 1024px | 0.9 |
 | Page title | 28px / 600, -0.02em | 1.2 |
 | Section | 18px / 600 | 1.2 |
 | Body | 16px / 400 | 1.5 |

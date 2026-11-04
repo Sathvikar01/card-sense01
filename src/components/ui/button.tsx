@@ -20,6 +20,7 @@ const buttonVariants = cva(
           "hover:bg-muted",
         accent: "bg-accent text-accent-foreground hover:bg-accent/90",
         inverse: "bg-inverse-foreground/10 text-inverse-foreground hover:bg-inverse-foreground/20",
+        field: "bg-field-foreground/10 text-field-foreground hover:bg-field-foreground/20",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

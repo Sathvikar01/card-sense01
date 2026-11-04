@@ -4,23 +4,19 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
+import { EDGE, Hero } from '@/components/landing/hero'
 import { Logo } from '@/components/shared/logo'
 import { AuthModal } from '@/components/shared/auth-modal'
 import { Button } from '@/components/ui/button'
 
-const SHOWCASE_CARDS = [
-  'hdfc-regalia-gold',
-  'sbi-cashback',
-  'icici-amazon-pay',
-  'axis-ace',
-  'hdfc-millennia',
-  'idfc-first-wow',
-  'amex-membership-rewards',
-  'hdfc-diners-club-black',
-  'icici-sapphiro',
-  'indusind-legend',
-  'au-lit',
-  'yes-first-preferred',
+/** A hand of real card art, fanned from the middle. Seven reads as "every card" without a grid. */
+const HAND = ['axis-ace', 'sbi-cashback', 'icici-sapphiro', 'hdfc-infinia', 'hdfc-regalia-gold', 'axis-magnus', 'amex-plat-travel']
+
+const FACTS = [
+  'Fees counted after waivers, not before.',
+  'Rewards worked out on what you actually spend.',
+  'Eligibility checked before you apply.',
+  'Free, and no bank pays to be ranked.',
 ]
 
 export default function HomePage() {
@@ -34,59 +30,82 @@ export default function HomePage() {
   }, [router])
 
   return (
-    <div className="flex min-h-dvh flex-col overflow-x-hidden">
-      <AuthModal
-        open={authRedirect !== null}
-        onClose={() => setAuthRedirect(null)}
-        redirectTo={authRedirect ?? '/dashboard'}
-      />
+    <div className="flex min-h-dvh flex-col">
+      <AuthModal open={authRedirect !== null} onClose={() => setAuthRedirect(null)} redirectTo={authRedirect ?? '/dashboard'} />
 
-      <header className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" aria-label="CardSense home" className="flex">
-          <Logo />
-        </Link>
-        <Button variant="ghost" size="sm" onClick={() => setAuthRedirect('/dashboard')}>
-          Sign in
-        </Button>
-      </header>
+      <div className="relative bg-field text-field-foreground">
+        <header className="absolute inset-x-0 top-0 z-30 flex h-16 items-center justify-between" style={{ paddingInline: EDGE }}>
+          <Link href="/" aria-label="CardSense home" className="flex">
+            <Logo onField />
+          </Link>
+          <Button variant="field" size="sm" onClick={() => setAuthRedirect('/dashboard')}>
+            Sign in
+          </Button>
+        </header>
+        <main id="main-content" tabIndex={-1} className="outline-none">
+          <Hero onStart={() => setAuthRedirect('/advisor')} />
+        </main>
+      </div>
 
-      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col justify-between outline-none">
-        <section className="mx-auto w-full max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-28">
-          <h1 className="max-w-3xl text-[2.75rem] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[5.5rem]">
-            The card that fits how you spend.
-          </h1>
-          <p className="mt-6 max-w-md text-lg text-muted-foreground sm:text-xl">
-            Five questions, then a ranked shortlist of Indian cards with real fees.
-          </p>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" onClick={() => setAuthRedirect('/advisor')}>
-              Find my card
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => setAuthRedirect('/cards')}>
-              Browse cards
-            </Button>
-          </div>
-        </section>
-
-        {/* A still row you can swipe: no autoplay, so nothing moves without a pause control (WCAG 2.2.2). */}
-        <section aria-label="Cards in the catalog" className="bg-inverse py-16 sm:py-24">
-          <ul className="flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-4 pb-2 [scrollbar-width:none] sm:px-[max(1.5rem,calc((100%-72rem)/2+1.5rem))]">
-            {SHOWCASE_CARDS.map((id) => (
-              <li key={id} className="shrink-0 snap-start">
-                <CreditCardVisual cardId={id} size="md" />
-              </li>
-            ))}
+      <section aria-labelledby="details-heading" className="overflow-x-clip py-24 sm:py-32" style={{ paddingInline: EDGE }}>
+        <div className="flex items-baseline justify-between gap-6">
+          <h2 id="details-heading" className="max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
+            Every major Indian card.
+          </h2>
+          <button type="button" onClick={() => setAuthRedirect('/cards')} className="tap hidden shrink-0 text-muted-foreground hover:text-foreground sm:block">
+            Browse all cards
+          </button>
+        </div>
+        {/* Built at 900×300, zoomed to the column. The middle card is upright and on top; each step out turns 6° more and sits lower. */}
+        <div aria-hidden="true" className="mt-12 flex justify-center sm:mt-16">
+          <ul className="relative h-[300px] w-[900px] shrink-0 [zoom:0.5] sm:[zoom:0.8] lg:[zoom:1.15]">
+            {HAND.map((id, i) => {
+              const step = i - (HAND.length - 1) / 2
+              return (
+                <li
+                  key={id}
+                  className="absolute left-0 top-0 origin-bottom drop-shadow-[0_12px_16px_rgb(22_48_43/0.16)]"
+                  style={{ zIndex: 10 - Math.abs(step), transform: `translate(${i * 100}px, ${step * step * 7}px) rotate(${step * 6}deg)` }}
+                >
+                  <CreditCardVisual cardId={id} size="md" />
+                </li>
+              )
+            })}
           </ul>
-        </section>
-      </main>
+        </div>
+      </section>
 
-      <footer className="bg-inverse text-sm text-inverse-foreground">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-8 sm:px-6">
-          <span>Not financial advice.</span>
-          <nav aria-label="Legal" className="flex gap-6">
-            <Link href="/privacy" className="tap hover:underline">Privacy</Link>
-            <Link href="/terms" className="tap hover:underline">Terms</Link>
-          </nav>
+      <section aria-labelledby="facts-heading" className="pb-24 sm:pb-32" style={{ paddingInline: EDGE }}>
+        <h2 id="facts-heading" className="text-3xl font-semibold tracking-tight sm:text-5xl">
+          What we check for you.
+        </h2>
+        <ul className="mt-10 flex max-w-3xl flex-col gap-5 text-[clamp(1.375rem,2.2vw,1.75rem)] leading-snug">
+          {FACTS.map((fact) => (
+            <li key={fact}>{fact}</li>
+          ))}
+        </ul>
+        <div className="mt-12 flex flex-col gap-3 sm:flex-row">
+          <Button size="lg" onClick={() => setAuthRedirect('/advisor')}>
+            Find my card
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => setAuthRedirect('/cards')}>
+            Browse all cards
+          </Button>
+        </div>
+      </section>
+
+      <footer className="mt-auto bg-field text-field-foreground">
+        <div className="pb-8 pt-24 sm:pt-32" style={{ paddingInline: EDGE }}>
+          <p aria-hidden="true" className="text-[clamp(3.5rem,16vw,6rem)] font-semibold leading-none tracking-[-0.04em]">
+            CardSense
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 text-sm">
+            <span>Not financial advice. Estimates use published rates, before caps and offers.</span>
+            <nav aria-label="Legal" className="flex gap-6">
+              <Link href="/privacy" className="tap hover:underline">Privacy</Link>
+              <Link href="/terms" className="tap hover:underline">Terms</Link>
+            </nav>
+          </div>
         </div>
       </footer>
     </div>
