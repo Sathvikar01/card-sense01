@@ -19,6 +19,7 @@ Helps people in India pick a credit card for how they spend. Next.js App Router,
 - `src/app/(dashboard)/*`: the signed-in app. Five destinations, defined once in `src/components/layout/nav-items.ts`: Home, Advisor, Cards, Spending, Learn. Profile, Settings and Chat open from the account menu. One shared `loading.tsx` and `error.tsx`.
 - `src/app/api/*`: route handlers. `ai/recommend` scores cards; `recommendations/latest` stores the last result.
 - `src/lib/recommendations/map-advisor-cards.ts`: the only place API card rows become `SavedAdvisorCard`.
+- `ios-app/`: the Expo iPhone app, with its own `package.json`, lint and typecheck. It reads `hero-cards.ts` and `card-designs.ts` from here, so keep those two free of Next.js and DOM imports. See `ios-app/README.md`.
 
 ## UI rules
 
