@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
+import { BackLink } from '@/components/shared/back-link'
 import { Button } from '@/components/ui/button'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -11,6 +11,7 @@ import { useAnalysisStore } from '@/store/use-analysis-store'
 import type { CreditCard } from '@/types/credit-card'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { trackInteraction } from '@/lib/interactions/client'
+import { cn } from '@/lib/utils'
 
 const fee = (value: number) => (value === 0 ? 'Free' : formatCurrency(value, { showDecimals: false }))
 const lakh = (value: number) => formatCurrency(value, { compact: true, showDecimals: false })
@@ -123,24 +124,7 @@ export default function CardComparePage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <Link
-          href="/cards"
-          className="-ml-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" /> Cards
-        </Link>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            clearComparison()
-            router.push('/cards')
-          }}
-        >
-          Clear
-        </Button>
-      </div>
+      <BackLink href="/cards">All cards</BackLink>
       <h1 className="sr-only">Compare cards</h1>
 
       <div className="-mx-4 overflow-x-auto px-4">
@@ -153,7 +137,18 @@ export default function CardComparePage() {
           </colgroup>
           <thead>
             <tr>
-              <th scope="col" className="sticky left-0 bg-background" />
+              <th scope="col" className="sticky left-0 bg-background pb-6 text-left align-top font-normal">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearComparison()
+                    router.push('/cards')
+                  }}
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Clear
+                </button>
+              </th>
               {cards.map((card) => (
                 <th key={card.id} scope="col" className="px-3 pb-6 text-left align-bottom font-normal">
                   <Link href={`/cards/${card.id}`} className="block">
@@ -181,18 +176,26 @@ export default function CardComparePage() {
                   <th
                     scope="colgroup"
                     colSpan={count + 1}
-                    className="border-b border-border px-0 pb-2 pt-8 text-left text-base font-semibold"
+                    className="px-1 pb-2 pt-8 text-left text-[15px] font-semibold"
                   >
                     {group.title}
                   </th>
                 </tr>
-                {group.rows.map(([label, value]) => (
-                  <tr key={label}>
-                    <th scope="row" className="sticky left-0 border-b border-border bg-background py-3 pr-3 text-left font-normal text-muted-foreground">
+                {group.rows.map(([label, value], i) => (
+                  // Each group reads as one white panel: round its outer corners, no lines inside.
+                  <tr
+                    key={label}
+                    className={cn(
+                      '[&>*]:bg-white',
+                      i === 0 && '[&>:first-child]:rounded-tl-2xl [&>:last-child]:rounded-tr-2xl [&>*]:pt-3.5',
+                      i === group.rows.length - 1 && '[&>:first-child]:rounded-bl-2xl [&>:last-child]:rounded-br-2xl [&>*]:pb-3.5'
+                    )}
+                  >
+                    <th scope="row" className="sticky left-0 py-2 pl-5 pr-3 text-left font-normal text-muted-foreground">
                       {label}
                     </th>
                     {cards.map((card) => (
-                      <td key={card.id} className="border-b border-border px-3 py-3 tabular-nums">
+                      <td key={card.id} className="px-3 py-2 tabular-nums">
                         {value(card)}
                       </td>
                     ))}
@@ -205,7 +208,7 @@ export default function CardComparePage() {
               {cards.map((card) => (
                 <td key={card.id} className="px-3 pt-6">
                   {card.apply_url && (
-                    <Button size="sm" variant="outline" asChild>
+                    <Button size="sm" asChild>
                       <a href={card.apply_url} target="_blank" rel="noopener noreferrer">
                         Apply
                       </a>

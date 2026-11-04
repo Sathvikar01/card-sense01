@@ -1,9 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import { NAV_ITEMS, isActivePath } from './nav-items'
+import { NavLink } from './nav-link'
 
 export function MobileNav() {
   const pathname = usePathname()
@@ -11,27 +10,14 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <div className="flex h-14">
-        {NAV_ITEMS.map((item) => {
-          const active = isActivePath(pathname, item.href)
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors',
-                active ? 'text-primary' : 'text-muted-foreground'
-              )}
-            >
-              <Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-              {item.name}
-            </Link>
-          )
-        })}
+        {NAV_ITEMS.map((item) => (
+          <NavLink key={item.href} href={item.href} active={isActivePath(pathname, item.href)} className="flex-1 text-[13px]">
+            {item.name}
+          </NavLink>
+        ))}
       </div>
     </nav>
   )

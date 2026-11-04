@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { CardDetailLink } from '@/components/cards/card-detail-link'
 import { useRouter } from 'next/navigation'
@@ -41,7 +42,7 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: (rank - 1) * 0.06, ease: [0.23, 1, 0.32, 1] }}
-      className="grid gap-6 py-8 sm:grid-cols-[200px_1fr]"
+      className="surface grid gap-5 p-5 sm:grid-cols-[180px_1fr] sm:p-6"
     >
       <CardDetailLink cardId={card.id} className="block self-start">
         <CreditCardVisual
@@ -51,6 +52,7 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
           cardName={card.name}
           bankName={card.bank}
           imageUrl={card.imageUrl}
+          className="w-full"
         />
       </CardDetailLink>
 
@@ -65,7 +67,13 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
               {card.bank} · {eligibilityLabel(card.eligibilityMatch)}
             </p>
           </div>
-          <p className="shrink-0 text-2xl font-semibold tabular-nums tracking-tight" aria-label={`Match score ${card.score} of 100`}>
+          <p
+            className={cn(
+              'shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold tabular-nums',
+              rank === 1 ? 'bg-gold text-pine' : 'bg-muted'
+            )}
+            aria-label={`Match score ${card.score} of 100`}
+          >
             {card.score}
           </p>
         </div>
@@ -131,7 +139,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold tracking-tight">Your matches</h2>
+        <h2 className="text-[28px] font-semibold tracking-tight">Your matches</h2>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={onStartOver}>
             Start over
@@ -144,15 +152,15 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         </div>
       </div>
 
-      {result.analysis && <p className="max-w-2xl text-[15px] leading-relaxed text-foreground/80">{result.analysis}</p>}
+      {result.analysis && <p className="max-w-2xl px-1 text-[15px] leading-relaxed text-foreground/80">{result.analysis}</p>}
 
-      <ol className="divide-y divide-border">
+      <ol className="mt-6 space-y-3">
         {result.cards.map((card, index) => (
           <RecommendedCardRow key={card.id} card={card} rank={index + 1} />
         ))}
       </ol>
 
-      <p className="mt-6 text-xs text-muted-foreground">Approval, fees and rewards are set by the issuer.</p>
+      <p className="mt-6 px-1 text-xs text-muted-foreground">Approval, fees and rewards are set by the issuer.</p>
     </div>
   )
 }

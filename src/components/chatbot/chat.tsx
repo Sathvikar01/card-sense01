@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { ArrowUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Message = { role: 'user' | 'assistant'; text: string }
@@ -55,13 +54,13 @@ export function Chat() {
       <div role="log" aria-live="polite" className="flex-1 space-y-5 pb-6">
         {messages.length === 0 && (
           <div className="flex flex-col items-start gap-2 pt-[10vh]">
-            <h1 className="mb-4 text-2xl font-semibold">Ask anything about cards</h1>
+            <h1 className="mb-4 text-[28px] font-semibold tracking-tight">Ask anything about cards</h1>
             {SUGGESTIONS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => send(s)}
-                className="rounded-full border border-border bg-card px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="rounded-full bg-white px-4 py-2 text-sm transition-[background-color,transform] duration-150 hover:bg-white/60 active:scale-[0.97]"
               >
                 {s}
               </button>
@@ -72,7 +71,7 @@ export function Chat() {
         {messages.map((m, i) => (
           <div key={i} className={cn('flex', m.role === 'user' && 'justify-end')}>
             {m.role === 'user' ? (
-              <p className="max-w-[85%] rounded-2xl bg-muted px-4 py-2 text-[15px]">{m.text}</p>
+              <p className="max-w-[85%] rounded-3xl bg-gold px-4 py-2 text-[15px] text-pine">{m.text}</p>
             ) : (
               <div className="markdown max-w-none text-[15px]">
                 <ReactMarkdown>{m.text}</ReactMarkdown>
@@ -90,7 +89,7 @@ export function Chat() {
           e.preventDefault()
           send(input)
         }}
-        className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex items-end gap-2 rounded-2xl border border-border bg-card p-2 md:bottom-6"
+        className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex items-end gap-2 rounded-3xl bg-white p-2 shadow-lg md:bottom-6"
       >
         <textarea
           ref={inputRef}
@@ -110,11 +109,10 @@ export function Chat() {
         />
         <button
           type="submit"
-          aria-label="Send"
           disabled={loading || !input.trim()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-30"
+          className="h-9 shrink-0 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 active:scale-[0.97] disabled:opacity-30"
         >
-          <ArrowUp className="h-4 w-4" />
+          Send
         </button>
       </form>
     </div>

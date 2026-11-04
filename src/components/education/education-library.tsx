@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowUpRight, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/shared/page-header'
+import { Section } from '@/components/shared/section'
 import { EDUCATION_RESOURCES } from './education-resources'
 
 export interface EducationLibraryArticle {
@@ -53,17 +53,14 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
     <div>
       <PageHeader title="Learn" />
 
-      <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          aria-label="Search lessons"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search"
-          className="pl-9"
-        />
-      </div>
+      <Input
+        type="search"
+        aria-label="Search lessons"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search lessons"
+        className="mb-4 bg-white"
+      />
 
       <div role="tablist" aria-label="Topics" className="-mx-4 mb-6 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none]">
         {CATEGORIES.map((c) => (
@@ -75,7 +72,7 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
             onClick={() => setCategory(c.value)}
             className={cn(
               'shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors',
-              category === c.value ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'
+              category === c.value ? 'bg-gold font-medium text-pine' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {c.label}
@@ -84,13 +81,10 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
       </div>
 
       {filtered.length > 0 ? (
-        <ul className="surface divide-y divide-border">
+        <ul className="surface p-1.5">
           {filtered.map((article) => (
             <li key={article.id}>
-              <Link
-                href={`/education/${article.slug}`}
-                className="flex items-baseline gap-4 px-5 py-4 transition-colors hover:bg-muted/50"
-              >
+              <Link href={`/education/${article.slug}`} className="row items-baseline">
                 <span className="min-w-0 flex-1 text-[15px]">{article.title}</span>
                 <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{article.read_time_minutes} min</span>
               </Link>
@@ -101,27 +95,18 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
         <p className="py-16 text-center text-sm text-muted-foreground">No lessons match</p>
       )}
 
-      <section className="mt-12">
-        <h2 className="mb-3 text-base font-semibold">Further reading</h2>
-        <ul className="surface divide-y divide-border">
+      <Section title="Further reading" className="mt-10">
+        <ul>
           {EDUCATION_RESOURCES.map((resource) => (
             <li key={resource.url}>
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/50"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[15px]">{resource.title}</span>
-                  <span className="block text-sm text-muted-foreground">{resource.source}</span>
-                </span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <a href={resource.url} target="_blank" rel="noreferrer" className="row">
+                <span className="min-w-0 flex-1 text-[15px]">{resource.title}</span>
+                <span className="shrink-0 text-sm text-muted-foreground">{resource.source}</span>
               </a>
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
     </div>
   )
 }

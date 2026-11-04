@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/shared/page-header'
 import { toast } from 'sonner'
-import { CategoryBreakdown, toCategoryShares } from '@/components/dashboard/category-breakdown'
+import { CategoryBars, toCategoryShares } from '@/components/dashboard/category-breakdown'
+import { Section } from '@/components/shared/section'
 import { SpendingTrendChart } from '@/components/spending/spending-trend-chart'
 
 interface Transaction {
@@ -147,69 +147,59 @@ export default function SpendingPage() {
       </PageHeader>
 
       {!loading && (
-        <div className="space-y-10">
+        <div className="space-y-8">
           {showEntry && (
-            <form
-              className="surface"
-              onSubmit={(e) => {
-                e.preventDefault()
-                void handleSaveSpending()
-              }}
-            >
-              <div className="grid divide-y divide-border sm:grid-cols-2 sm:divide-y-0">
-                {SPENDING_CATEGORIES.map((cat) => (
-                  <label
-                    key={cat.key}
-                    htmlFor={`spend-${cat.key}`}
-                    className="flex items-center justify-between gap-4 px-5 py-2.5 sm:border-b sm:border-border sm:odd:border-r"
-                  >
-                    <span className="text-sm">{cat.label}</span>
-                    <span className="relative w-32">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
-                      <Input
-                        id={`spend-${cat.key}`}
-                        type="number"
-                        inputMode="numeric"
-                        min={0}
-                        step={100}
-                        placeholder="0"
-                        value={amounts[cat.key] ?? ''}
-                        onChange={(e) => setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))}
-                        className="h-9 pl-7 text-right tabular-nums"
-                      />
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex items-center justify-between gap-4 px-5 py-4">
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Per month </span>
-                  <span className="font-semibold tabular-nums">{formatInr(entryTotal)}</span>
-                </p>
-                <Button type="submit" disabled={saving || entryTotal === 0}>
-                  {saving ? 'Saving…' : 'Save'}
-                </Button>
-              </div>
-            </form>
+            <Section title="A typical month">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void handleSaveSpending()
+                }}
+              >
+                <div className="grid sm:grid-cols-2 sm:gap-x-2">
+                  {SPENDING_CATEGORIES.map((cat) => (
+                    <label key={cat.key} htmlFor={`spend-${cat.key}`} className="row py-2">
+                      <span className="flex-1 text-sm">{cat.label}</span>
+                      <span className="relative w-32">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+                        <Input
+                          id={`spend-${cat.key}`}
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          step={100}
+                          placeholder="0"
+                          value={amounts[cat.key] ?? ''}
+                          onChange={(e) => setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))}
+                          className="h-9 pl-7 text-right tabular-nums"
+                        />
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between gap-4 px-4 pb-2.5 pt-4">
+                  <p className="text-xl font-semibold tabular-nums">{formatInr(entryTotal)}</p>
+                  <Button type="submit" disabled={saving || entryTotal === 0}>
+                    {saving ? 'Saving…' : 'Save'}
+                  </Button>
+                </div>
+              </form>
+            </Section>
           )}
 
           {transactions.length > 0 && (
             <>
-              <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="mt-1 text-4xl font-semibold tabular-nums tracking-tight">{formatInr(totalSpend)}</p>
-              </div>
+              <Section title="By category">
+                <p className="px-4 pt-3 text-3xl font-semibold tabular-nums tracking-tight">{formatInr(totalSpend)}</p>
+                <CategoryBars data={toCategoryShares(transactions)} />
+              </Section>
 
-              <div className="grid gap-10 lg:grid-cols-2">
-                <CategoryBreakdown data={toCategoryShares(transactions)} />
-                <SpendingTrendChart transactions={transactions} />
-              </div>
+              <SpendingTrendChart transactions={transactions} />
 
-              <section>
-                <h2 className="mb-3 text-base font-semibold">Transactions</h2>
-                <ul className="surface divide-y divide-border">
+              <Section title="Entries">
+                <ul>
                   {transactions.map((txn) => (
-                    <li key={txn.id} className="group flex items-center gap-4 px-5 py-3">
+                    <li key={txn.id} className="row group">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm">{txn.merchant_name || txn.description || txn.category}</p>
                         <p className="text-xs text-muted-foreground">
@@ -220,15 +210,15 @@ export default function SpendingPage() {
                       <button
                         type="button"
                         onClick={() => deleteTransaction(txn.id)}
-                        aria-label={`Delete ${txn.merchant_name || 'transaction'}`}
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                        aria-label={`Remove ${txn.merchant_name || 'entry'}`}
+                        className="text-sm text-muted-foreground transition-[color,opacity] hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        Remove
                       </button>
                     </li>
                   ))}
                 </ul>
-              </section>
+              </Section>
             </>
           )}
         </div>

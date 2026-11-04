@@ -60,7 +60,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Navbar userName={userName} userEmail={user?.email || ''} />
       <OnboardingTrigger profile={profile} />
       <main id="main-content" tabIndex={-1} className="outline-none">
-        <div className="mx-auto max-w-6xl px-4 pb-28 pt-8 sm:px-6 md:pb-16">
+        <div className="mx-auto max-w-3xl px-4 pb-28 pt-6 sm:px-6 md:pb-20 md:pt-10">
           <DbHealthBanner />
           {children}
         </div>

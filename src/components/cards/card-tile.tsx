@@ -1,6 +1,5 @@
 'use client'
 
-import { Check, Plus } from 'lucide-react'
 import type { CreditCardListItem } from '@/types/credit-card'
 import { useAnalysisStore } from '@/store/use-analysis-store'
 import { cn } from '@/lib/utils'
@@ -53,13 +52,11 @@ export function CardTile({ card }: { card: CreditCardListItem }) {
           aria-label={isCompared ? `Remove ${card.card_name} from compare` : `Compare ${card.card_name}`}
           title={maxReached ? `Compare up to ${MAX_COMPARE}` : 'Compare'}
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors disabled:opacity-30',
-            isCompared
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+            'h-8 shrink-0 rounded-full px-3 text-[13px] font-medium transition-[background-color,transform] duration-150 active:scale-[0.97] disabled:opacity-30',
+            isCompared ? 'bg-gold text-pine' : 'bg-muted text-foreground hover:bg-pine/10'
           )}
         >
-          {isCompared ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {isCompared ? 'Comparing' : 'Compare'}
         </button>
       </div>
     </div>

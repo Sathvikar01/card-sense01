@@ -277,7 +277,7 @@ export function OnboardingWizard({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
+        <div className="flex justify-end gap-2 px-6 pb-6">
           <Button type="button" variant="ghost" onClick={onClose}>
             Later
           </Button>

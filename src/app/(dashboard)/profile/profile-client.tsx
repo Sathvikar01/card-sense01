@@ -6,6 +6,7 @@ import { FinancialInfoForm } from '@/components/profile/financial-info-form'
 import { CibilHistoryChart } from '@/components/profile/cibil-history-chart'
 import { UserCardsManager } from '@/components/profile/user-cards-manager'
 import { PageHeader } from '@/components/shared/page-header'
+import { Section } from '@/components/shared/section'
 
 interface ProfilePageClientProps {
   profile: {
@@ -39,10 +40,10 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
   const handleUpdate = () => router.refresh()
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <PageHeader title={profile.full_name || 'Profile'} />
 
-      <div className="space-y-12">
+      <div className="space-y-8">
         <ProfileSection title="Personal">
           <PersonalInfoForm
             initialData={{
@@ -83,9 +84,8 @@ export function ProfilePageClient({ profile, cibilHistory }: ProfilePageClientPr
 
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
-      <h2 className="mb-3 text-base font-semibold">{title}</h2>
-      <div className="surface p-5">{children}</div>
-    </section>
+    <Section title={title}>
+      <div className="p-3.5">{children}</div>
+    </Section>
   )
 }

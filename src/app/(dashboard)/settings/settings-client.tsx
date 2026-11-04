@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageHeader } from '@/components/shared/page-header'
+import { Section } from '@/components/shared/section'
 import { clearPrivateClientData, readPrivateClientData } from '@/lib/privacy/client-data'
 import {
   AlertDialog,
@@ -27,18 +28,9 @@ interface SettingsClientProps {
   provider: string
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section>
-      <h2 className="mb-3 text-base font-semibold">{title}</h2>
-      <div className="surface divide-y divide-border">{children}</div>
-    </section>
-  )
-}
-
 function Row({ label, children }: { label: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 px-5 py-3">
+    <div className="row min-h-14 flex-wrap justify-between">
       <div className="text-sm">{label}</div>
       {children}
     </div>
@@ -159,16 +151,16 @@ export function SettingsClient({
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <PageHeader title="Settings" />
 
-      <div className="space-y-10">
+      <div className="space-y-8">
         <Section title="Account">
           <Row label="Email">
             <span className="text-sm text-muted-foreground">{email}</span>
           </Row>
           <form
-            className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-end"
+            className="flex flex-col gap-2 px-4 pb-3 pt-2 sm:flex-row sm:items-end"
             onSubmit={(e) => {
               e.preventDefault()
               void handleSaveName()
@@ -189,7 +181,7 @@ export function SettingsClient({
             <Row label={<span className="capitalize">Signed in with {provider}</span>} />
           ) : (
             <form
-              className="space-y-3 px-5 py-4"
+              className="space-y-3 px-4 py-3"
               onSubmit={(e) => {
                 e.preventDefault()
                 void handleChangePassword()
@@ -243,10 +235,10 @@ export function SettingsClient({
               Sign out
             </Button>
           </Row>
-          <Row label={<span className="text-destructive">Delete account</span>}>
+          <Row label="Delete account">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                <Button variant="outline" size="sm">
                   Delete
                 </Button>
               </AlertDialogTrigger>
@@ -262,7 +254,7 @@ export function SettingsClient({
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
                     disabled={deleting}
-                    className="bg-destructive text-white hover:bg-destructive/90"
+                    
                   >
                     {deleting ? 'Deleting…' : 'Delete'}
                   </AlertDialogAction>

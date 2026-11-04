@@ -1,7 +1,8 @@
 'use client'
 
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { BRAND, MUTED_FOREGROUND } from '@/lib/theme'
+import { GOLD, PINE, PINE_70 } from '@/lib/theme'
+import { Section } from '@/components/shared/section'
 
 interface Transaction {
   id: string
@@ -24,7 +25,7 @@ interface TrendTooltipPayloadItem {
 function TrendTooltip({ active, payload }: { active?: boolean; payload?: TrendTooltipPayloadItem[] }) {
   if (active && payload && payload.length > 0) {
     return (
-      <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+      <div className="rounded-xl bg-card px-3 py-2 shadow-lg">
         <p className="text-sm font-medium text-foreground">{payload[0].payload.month}</p>
         <p className="text-sm text-muted-foreground">
           {'\u20B9'}{payload[0].value.toLocaleString('en-IN')}
@@ -59,26 +60,25 @@ export function SpendingTrendChart({ transactions }: SpendingTrendChartProps) {
   }
 
   return (
-    <div>
-      <h2 className="mb-3 text-base font-semibold">By month</h2>
-      <div className="surface p-4">
-        <div className="h-[220px] w-full">
+    <Section title="By month">
+      <div className="px-2 py-3">
+        <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={BRAND} stopOpacity={0.15} />
-                  <stop offset="95%" stopColor={BRAND} stopOpacity={0} />
+                  <stop offset="5%" stopColor={GOLD} stopOpacity={0.45} />
+                  <stop offset="95%" stopColor={GOLD} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
               <XAxis
                 dataKey="month"
-                tick={{ fill: MUTED_FOREGROUND, fontSize: 11 }}
+                tick={{ fill: PINE_70, fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                tick={{ fill: MUTED_FOREGROUND, fontSize: 11 }}
+                tick={{ fill: PINE_70, fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={formatCurrency}
@@ -88,16 +88,16 @@ export function SpendingTrendChart({ transactions }: SpendingTrendChartProps) {
               <Area
                 type="monotone"
                 dataKey="amount"
-                stroke={BRAND}
-                strokeWidth={2}
+                stroke={PINE}
+                strokeWidth={1.5}
                 fill="url(#spendGradient)"
                 dot={false}
-                activeDot={{ r: 4, fill: BRAND, strokeWidth: 0 }}
+                activeDot={{ r: 4, fill: PINE, strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
-    </div>
+    </Section>
   )
 }

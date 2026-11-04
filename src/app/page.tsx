@@ -50,9 +50,9 @@ export default function HomePage() {
         </Button>
       </header>
 
-      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col justify-center outline-none">
-        <section className="mx-auto w-full max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24">
-          <h1 className="max-w-3xl text-[2.75rem] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-7xl">
+      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col justify-between outline-none">
+        <section className="mx-auto w-full max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-28">
+          <h1 className="max-w-3xl text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.04em] sm:text-[5.5rem]">
             The right credit card for how you spend.
           </h1>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -67,7 +67,7 @@ export default function HomePage() {
 
         <section
           aria-label="Cards in the catalog"
-          className="relative overflow-hidden py-4 [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]"
+          className="overflow-hidden bg-pine py-16 sm:py-24"
         >
           <div className="marquee-track gap-5">
             {[...SHOWCASE_CARDS, ...SHOWCASE_CARDS].map((id, i) => (
@@ -79,12 +79,14 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-8 text-xs text-muted-foreground sm:px-6">
+      <footer className="bg-pine text-xs text-paper/70">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-8 sm:px-6">
         <span>Not financial advice.</span>
         <nav className="flex gap-5">
-          <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-          <Link href="/terms" className="hover:text-foreground">Terms</Link>
+          <Link href="/privacy" className="hover:text-paper">Privacy</Link>
+          <Link href="/terms" className="hover:text-paper">Terms</Link>
         </nav>
+        </div>
       </footer>
     </div>
   )

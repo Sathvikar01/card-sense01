@@ -4,7 +4,7 @@ import { CardTile } from './card-tile'
 import { EmptyState } from '@/components/shared/empty-state'
 import type { CreditCardListItem } from '@/types/credit-card'
 
-const GRID = 'grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3'
+const GRID = 'grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2'
 
 export function CardGrid({ cards, loading }: { cards: CreditCardListItem[]; loading: boolean }) {
   if (loading) {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Trash2, ChevronsUpDown } from 'lucide-react'
+import { Chevron } from '@/components/shared/glyph'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -167,17 +167,17 @@ export function UserCardsManager() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={comboboxOpen}
-                    className="h-10 justify-between font-normal"
+                    className="h-10 justify-between rounded-xl font-normal"
                   >
                     <span className={cardName ? 'text-foreground' : 'text-muted-foreground'}>
-                      {cardName || 'Search for a card...'}
+                      {cardName || 'Choose a card'}
                     </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <Chevron className="ml-2 text-muted-foreground" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search cards..." />
+                    <CommandInput placeholder="Search cards" />
                     <CommandList>
                       <CommandEmpty>No card found.</CommandEmpty>
                       <CommandGroup>
@@ -309,25 +309,24 @@ export function UserCardsManager() {
 
   return (
     <div className="space-y-4">
-      <ul className="-my-2 divide-y divide-border">
+      <ul className="-mx-3.5 -mt-2">
         {cards.map((card) => (
-          <li key={card.id} className="flex items-center justify-between py-2">
+          <li key={card.id} className="row justify-between px-3.5 py-2.5">
             <div className="flex items-center gap-3 min-w-0">
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate text-foreground">{card.card_name}</p>
                 <p className="text-xs text-muted-foreground">{card.bank_name}</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              type="button"
               aria-label={`Remove ${card.card_name}`}
-              className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
               onClick={() => handleDelete(card.id)}
               disabled={deletingId === card.id}
             >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+              Remove
+            </button>
           </li>
         ))}
       </ul>

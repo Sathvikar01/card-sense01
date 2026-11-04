@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
+import { Button } from '@/components/ui/button'
+import { Empty, Section } from '@/components/shared/section'
 
 export interface DashboardTopPick {
   cardId: string
@@ -38,31 +40,27 @@ export function DashboardTopPicks({ cards: initialCards }: { cards: DashboardTop
   }, [initialCards.length])
 
   return (
-    <section>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-semibold">Your matches</h2>
-        {cards.length > 0 && (
-          <Link href="/recommendations" className="text-sm text-muted-foreground hover:text-foreground">
-            View all
-          </Link>
-        )}
-      </div>
-
+    <Section title="Your matches" action={cards.length > 0 ? { label: 'View all', href: '/recommendations' } : undefined}>
       {cards.length === 0 ? (
-        <div className="surface px-5 py-10 text-center text-sm text-muted-foreground">No matches yet</div>
+        <Empty>
+          No matches yet
+          <Button asChild size="sm">
+            <Link href="/advisor">Find my card</Link>
+          </Button>
+        </Empty>
       ) : (
-        <ol className="surface divide-y divide-border">
+        <ol>
           {cards.map((card, index) => (
             <li key={card.cardId || `${card.cardName}-${index}`}>
-              <Link href="/recommendations" className="flex items-center gap-4 px-5 py-3 text-sm transition-colors hover:bg-muted/50">
+              <Link href="/recommendations" className="row">
                 <span className="w-4 tabular-nums text-muted-foreground">{index + 1}</span>
                 <span className="min-w-0 flex-1 truncate font-medium">{card.cardName}</span>
-                <span className="truncate text-muted-foreground">{card.bank}</span>
+                <span className="truncate text-sm text-muted-foreground">{card.bank}</span>
               </Link>
             </li>
           ))}
         </ol>
       )}
-    </section>
+    </Section>
   )
 }

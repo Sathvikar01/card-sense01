@@ -15,7 +15,7 @@ export function PageHeader({
 }) {
   return (
     <div className={cn('mb-8 flex min-h-9 flex-wrap items-center justify-between gap-3', className)}>
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{title}</h1>
       {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
   )

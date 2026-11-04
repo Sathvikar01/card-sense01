@@ -21,14 +21,14 @@ export function CompareBar() {
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
           className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 md:bottom-6"
         >
-          <div className="flex items-center gap-1 rounded-full border border-border bg-card py-1.5 pl-4 pr-1.5 shadow-xl">
+          <div className="flex items-center gap-1 rounded-full bg-pine py-1.5 pl-5 pr-1.5 text-paper shadow-xl">
             <span className="mr-2 text-sm tabular-nums">{count} of 3</span>
-            <Button variant="ghost" size="sm" className="rounded-full" onClick={clearComparison}>
+            <Button variant="ghost" size="sm" className="text-paper/70 hover:bg-paper/10 hover:text-paper" onClick={clearComparison}>
               Clear
             </Button>
             <Button
               size="sm"
-              className="rounded-full"
+              className="bg-gold text-pine hover:bg-gold/90"
               disabled={count < 2}
               onClick={() => {
                 void trackInteraction('compare_started', {

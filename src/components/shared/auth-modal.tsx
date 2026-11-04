@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { GoogleIcon } from '@/components/shared/google-icon'
@@ -267,19 +266,18 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
               role="dialog"
               aria-modal="true"
               aria-labelledby="auth-dialog-title"
-              className="relative h-[480px] max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-hidden overscroll-contain rounded-2xl border border-border bg-card text-card-foreground shadow-2xl"
+              className="relative h-[480px] max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-hidden overscroll-contain rounded-3xl bg-card text-card-foreground shadow-2xl"
               onClick={(event) => event.stopPropagation()}
             >
               {/* Close button */}
               <button
                 ref={closeButtonRef}
                 type="button"
-                aria-label="Close authentication dialog"
                 onClick={handleClose}
-                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <X aria-hidden="true" className="h-4 w-4" />
-              </button>
+                className="absolute right-4 top-4 z-10 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                Close
+                </button>
 
               <AnimatePresence mode="wait">
                 {/* ── FORM STEP ── */}
@@ -295,7 +293,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     <h2 id="auth-dialog-title" className="sr-only">
                       {tab === 'login' ? 'Sign in' : 'Create account'}
                     </h2>
-                    <div role="tablist" className="mx-8 mt-14 grid grid-cols-2 rounded-lg bg-muted p-1">
+                    <div role="tablist" className="mx-8 mt-16 grid grid-cols-2 rounded-full bg-muted p-1">
                       {(['login', 'signup'] as const).map((value) => (
                         <button
                           key={value}
@@ -303,8 +301,8 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           role="tab"
                           aria-selected={tab === value}
                           onClick={() => switchTab(value)}
-                          className={`rounded-md py-1.5 text-sm font-medium transition-colors ${
-                            tab === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                          className={`rounded-full py-1.5 text-sm font-medium transition-colors ${
+                            tab === value ? 'bg-gold text-pine' : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
                           {value === 'login' ? 'Sign in' : 'Create account'}
@@ -393,14 +391,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                       </Form>
 
                       {/* Divider */}
-                      <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-border" />
-                        </div>
-                        <div className="relative flex justify-center text-xs">
-                          <span className="bg-card px-2 text-muted-foreground">or</span>
-                        </div>
-                      </div>
+                      <p className="my-1 text-center text-xs text-muted-foreground">or</p>
 
                       <Button
                         variant="outline"
@@ -429,12 +420,11 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     {/* Back button */}
                     <button
                       type="button"
-                      aria-label="Back to account form"
                       onClick={() => setStep('form')}
-                      className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-                    </button>
+                      className="absolute left-4 top-4 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                      Back
+                      </button>
 
                     <h2 className="mt-10 text-xl font-semibold text-foreground">Check your email</h2>
                     <p className="mt-2 text-center text-sm text-muted-foreground">{pendingEmail}</p>
@@ -454,7 +444,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                           value={digit}
                           onChange={(e) => handleOtpChange(i, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                          className="h-14 w-11 rounded-lg border border-border bg-muted/30 text-center text-xl font-semibold text-foreground transition-[border-color,background-color] focus:border-primary focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/40"
+                          className="h-14 w-11 rounded-xl bg-muted text-center text-xl font-semibold text-foreground"
                         />
                       ))}
                     </div>

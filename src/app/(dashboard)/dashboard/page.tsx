@@ -1,9 +1,8 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
-import { CategoryBreakdown } from '@/components/dashboard/category-breakdown'
+import { CategoryBars } from '@/components/dashboard/category-breakdown'
+import { Section } from '@/components/shared/section'
 import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
 import { DashboardTopPicks, type DashboardTopPick } from '@/components/dashboard/dashboard-top-picks'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import { getCibilScoreRating, getLatestRecordedCreditScore } from '@/lib/credit-score'
@@ -221,49 +220,32 @@ export default async function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0]
   const topCards = recommendations[0]?.recommended_cards.slice(0, 3) || []
 
-  const stats = [
-    {
-      label: 'CIBIL score',
-      value: cibilScore ? String(cibilScore) : '—',
-      note: cibilScore ? getCibilScoreRating(cibilScore) : undefined,
-      href: '/profile',
-    },
-    {
-      label: 'This month',
-      value: formatCurrency(currentMonthTotal, { showDecimals: false }),
-      href: '/spending',
-    },
-    {
-      label: 'Cards',
-      value: String(userCards.length),
-      href: '/profile',
-    },
-  ]
-
   return (
-    <div className="space-y-10">
-      <PageHeader title={firstName ? `Hi, ${firstName}` : 'Home'}>
-        <Button asChild>
-          <Link href="/advisor">Find my card</Link>
-        </Button>
-      </PageHeader>
+    <div className="space-y-8">
+      <PageHeader title={firstName ? `Hi, ${firstName}` : 'Home'} />
 
-      <dl className="surface grid grid-cols-3 divide-x divide-border">
-        {stats.map((stat) => (
-          <Link key={stat.label} href={stat.href} className="px-4 py-4 transition-colors hover:bg-muted/50 sm:px-6 sm:py-5">
-            <dt className="text-xs text-muted-foreground sm:text-sm">{stat.label}</dt>
-            <dd className="mt-1 flex items-baseline gap-2">
-              <span className="text-xl font-semibold tabular-nums tracking-tight sm:text-3xl">{stat.value}</span>
-              {stat.note && <span className="hidden text-sm text-muted-foreground sm:inline">{stat.note}</span>}
-            </dd>
-          </Link>
-        ))}
-      </dl>
+      <DashboardTopPicks cards={topCards} />
 
-      <div className="grid gap-10 lg:grid-cols-2">
-        <DashboardTopPicks cards={topCards} />
-        <CategoryBreakdown data={monthlySpending} linkToSpending />
-      </div>
+      <Section title="Spending" action={{ label: monthlySpending.length ? 'View all' : 'Add', href: '/spending' }}>
+        <p className="px-4 pt-3 text-3xl font-semibold tabular-nums tracking-tight">
+          {formatCurrency(currentMonthTotal, { showDecimals: false })}
+          <span className="ml-2 text-sm font-normal tracking-normal text-muted-foreground">this month</span>
+        </p>
+        {monthlySpending.length > 0 ? <CategoryBars data={monthlySpending} /> : <div className="h-3" />}
+      </Section>
+
+      <Section title="Credit" action={{ label: 'Edit', href: '/profile' }}>
+        <div className="flex gap-10 px-4 py-3">
+          <p>
+            <span className="block text-3xl font-semibold tabular-nums tracking-tight">{cibilScore ?? '—'}</span>
+            <span className="text-sm text-muted-foreground">{cibilScore ? getCibilScoreRating(cibilScore) : 'CIBIL score'}</span>
+          </p>
+          <p>
+            <span className="block text-3xl font-semibold tabular-nums tracking-tight">{userCards.length}</span>
+            <span className="text-sm text-muted-foreground">{userCards.length === 1 ? 'card' : 'cards'}</span>
+          </p>
+        </div>
+      </Section>
     </div>
   )
 }

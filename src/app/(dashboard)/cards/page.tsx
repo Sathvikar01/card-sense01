@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CardFilters } from '@/components/cards/card-filters'
 import { CompareBar } from '@/components/cards/compare-bar'
-import { Search, SlidersHorizontal } from 'lucide-react'
 import { PageHeader } from '@/components/shared/page-header'
 import {
   Sheet,
@@ -162,11 +161,10 @@ export default function CardsPage() {
       <PageHeader title="Cards">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <SlidersHorizontal className="h-4 w-4" />
+            <Button variant="outline" size="sm">
               Filter
               {activeFiltersCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-xs text-background">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-xs font-semibold text-pine">
                   {activeFiltersCount}
                 </span>
               )}
@@ -202,17 +200,16 @@ export default function CardsPage() {
         </Sheet>
       </PageHeader>
 
-      <div className="relative mb-8">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="mb-8">
         <Input
           type="search"
           name="card-search"
           aria-label="Search cards"
           autoComplete="off"
-          placeholder="Search"
+          placeholder="Search cards or banks"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
+          className="bg-white"
         />
       </div>
 

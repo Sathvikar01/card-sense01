@@ -22,12 +22,16 @@ Helps people in India pick a credit card for how they spend. Next.js App Router,
 
 ## UI rules
 
-The bar is Linear / Apple Notes: one purpose per screen, nothing decorative.
+The bar is Linear / Apple Notes: one purpose per screen, nothing decorative. These come from the Impeccable, Taste v2, Interface Design and Emil Kowalski skills.
 
-- No taglines, eyebrows, subtitles or helper text. If a screen needs one to make sense, change the layout. `PageHeader` has no description prop on purpose.
-- Colors come from tokens in `src/app/globals.css` (`foreground`, `muted-foreground`, `border`, `muted`, `card`, `primary`, `accent`, `destructive`). No hex values or Tailwind palette colors (`gray-*`, `blue-*`) in components. SVG and Recharts need literal colors: import them from `src/lib/theme.ts`.
-- Bordered panels use `.surface`. Lists inside one use `divide-y divide-border`. Loading placeholders use `.shimmer`. Rendered Markdown uses `.markdown`.
-- Labels and buttons use sentence case and short verbs: "Save", "Add card", "Compare". Toasts report failures; skip success toasts when the UI already shows the change.
+- **Four colours, no more** (`src/app/globals.css`): `paper` ground, `white` panels, `pine` text and primary actions, `gold` accent. Muted text, fills and the rare line are pine at lower strength. Gold is a fill only (selection, data, the active-nav chip), always with pine on top; it fails contrast as text. SVG/Recharts literals: `src/lib/theme.ts`.
+- **No lines.** Panels are white on paper with no border; rows inside are separated by space (`.row`), not dividers. Inputs are tinted fills, not outlines. Shadows only on things that float (menus, dialogs, toasts, the compare bar).
+- **No icon library.** Say it in words ("Remove", "Back", "Close", "Send"). The only drawn marks are `Chevron` and `Tick` in `src/components/shared/glyph.tsx`, plus the logo.
+- **One layout.** Every app page is `PageHeader` then a column of `Section` blocks (`src/components/shared/section.tsx`) inside a 768px column. Totals sit inside the section they explain; no KPI strips.
+- **No taglines, eyebrows, subtitles or helper text.** `PageHeader` has no description prop on purpose.
+- **Type:** Hanken Grotesk only, self-hosted from Fontsource. Page titles 28px/600, section titles 15px/600, body 15px, money uses tabular figures.
+- **Motion:** under 300ms, custom ease-out (`--ease-out`), `scale(0.97)` on press, nothing on keyboard-driven actions.
+- Labels and buttons use sentence case and short verbs. Toasts report failures; skip success toasts when the UI already shows the change.
 - Page titles: set `metadata.title` to the bare page name. The root layout adds "· CardSense".
 
 ## Commands

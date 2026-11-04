@@ -68,7 +68,7 @@ export function RecommendationExplanationDialog({
           {triggerLabel}
         </AccordionTrigger>
         <AccordionContent className="w-full pt-4">
-          <div className="max-w-2xl space-y-5 border-l border-border pl-4">
+          <div className="max-w-2xl space-y-5 rounded-xl bg-muted p-4">
             {(card.whyThisCard?.summary || card.finalDecisionReason) && (
               <div>
                 {card.whyThisCard?.summary && <p className=" text-sm leading-6 text-foreground/80">{card.whyThisCard.summary}</p>}

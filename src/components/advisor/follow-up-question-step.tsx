@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import type { ResearchedQuestion } from './researched-questions'
@@ -54,10 +53,9 @@ export function FollowUpQuestionStep({
           type="button"
           onClick={() => setIndex((i) => Math.max(i - 1, 0))}
           disabled={index === 0}
-          aria-label="Previous question"
-          className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:invisible"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground disabled:invisible"
         >
-          <ArrowLeft className="h-4 w-4" />
+          Back
         </button>
         <div
           role="progressbar"
@@ -65,10 +63,10 @@ export function FollowUpQuestionStep({
           aria-valuemax={total}
           aria-valuenow={index + 1}
           aria-label={`Question ${index + 1} of ${total}`}
-          className="h-1 flex-1 overflow-hidden rounded-full bg-muted"
+          className="h-[3px] flex-1 overflow-hidden rounded-full bg-muted"
         >
           <div
-            className="h-full rounded-full bg-primary transition-[width] duration-300 ease-[var(--ease-out)]"
+            className="h-full rounded-full bg-gold transition-[width] duration-300 ease-[var(--ease-out)]"
             style={{ width: `${((index + 1) / total) * 100}%` }}
           />
         </div>
@@ -104,7 +102,7 @@ export function FollowUpQuestionStep({
                   value={monthlySpend}
                   onChange={(e) => onMonthlySpendChange(e.target.value)}
                   placeholder="30,000"
-                  className="h-14 w-full rounded-xl border border-border bg-card pl-9 pr-4 text-lg tabular-nums outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/60 focus:border-ring focus:ring-[3px] focus:ring-ring/15"
+                  className="h-14 w-full rounded-2xl bg-white pl-9 pr-4 text-lg tabular-nums placeholder:text-muted-foreground/60"
                 />
               </div>
               <Button type="submit" size="lg" className="mt-6 w-full" disabled={!canSubmit || isSubmitting}>
@@ -124,12 +122,11 @@ export function FollowUpQuestionStep({
                       aria-pressed={selected}
                       onClick={() => choose(option.value)}
                       className={cn(
-                        'flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-[15px] transition-[border-color,background-color,transform] duration-150 active:scale-[0.99]',
-                        selected ? 'border-primary bg-accent' : 'border-border bg-card hover:border-foreground/20'
+                        'flex w-full items-center rounded-2xl px-5 py-4 text-left text-[15px] transition-[background-color,transform] duration-150 active:scale-[0.99]',
+                        selected ? 'bg-gold font-medium text-pine' : 'bg-white hover:bg-white/60'
                       )}
                     >
                       {option.label}
-                      {selected && <Check className="h-4 w-4 text-primary" aria-hidden="true" />}
                     </button>
                   )
                 })}

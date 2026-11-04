@@ -105,10 +105,8 @@ export function CardFilters({
                 key={type.value}
                 onClick={() => onCardTypeChange(isActive ? 'all' : type.value)}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
-                  isActive
-                    ? 'bg-foreground text-background border-foreground'
-                    : 'bg-background text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground'
+                  'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  isActive ? 'bg-gold text-pine' : 'bg-muted text-foreground hover:bg-pine/10'
                 )}
               >
                 {type.label}
@@ -129,10 +127,8 @@ export function CardFilters({
                 key={option.value}
                 onClick={() => onNetworkChange(isActive ? 'all' : option.value)}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
-                  isActive
-                    ? 'bg-foreground text-background border-foreground'
-                    : 'bg-background text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground'
+                  'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  isActive ? 'bg-gold text-pine' : 'bg-muted text-foreground hover:bg-pine/10'
                 )}
               >
                 {option.label}

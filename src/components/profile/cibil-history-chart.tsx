@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { getCibilScoreRating } from '@/lib/credit-score'
-import { BRAND, MUTED_FOREGROUND } from '@/lib/theme'
+import { GOLD, PINE_70 } from '@/lib/theme'
 
 interface CibilHistoryEntry {
   id: string
@@ -244,7 +244,7 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
           <LineChart data={chartData}>
             <XAxis
               dataKey="xKey"
-              stroke={MUTED_FOREGROUND}
+              stroke={PINE_70}
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -252,7 +252,7 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
             />
             <YAxis
               domain={[300, 900]}
-              stroke={MUTED_FOREGROUND}
+              stroke={PINE_70}
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -267,7 +267,6 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
               formatter={(value) => [`${value}`, 'Score']}
               contentStyle={{
                 backgroundColor: 'var(--card)',
-                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 fontSize: '12px',
@@ -277,10 +276,10 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
             <Line
               type="monotone"
               dataKey="score"
-              stroke={BRAND}
+              stroke={GOLD}
               strokeWidth={2}
-              dot={{ fill: BRAND, r: 3, strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: BRAND, strokeWidth: 0 }}
+              dot={{ fill: GOLD, r: 3, strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: GOLD, strokeWidth: 0 }}
             />
           </LineChart>
         </ResponsiveContainer>

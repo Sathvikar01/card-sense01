@@ -1,8 +1,8 @@
 import { createPublicServerClient } from '@/lib/supabase/public-server'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, ChevronLeft } from 'lucide-react'
+import { BackLink } from '@/components/shared/back-link'
+import { Section } from '@/components/shared/section'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
 import { formatCurrency } from '@/lib/utils/format-currency'
 import type { CreditCard } from '@/types/credit-card'
@@ -41,31 +41,29 @@ function SpecGroup({ title, rows }: { title: string; rows: Array<SpecRow | false
   const visible = rows.filter(Boolean) as SpecRow[]
   if (visible.length === 0) return null
   return (
-    <section>
-      <h2 className="mb-3 text-base font-semibold">{title}</h2>
-      <dl className="surface divide-y divide-border">
+    <Section title={title}>
+      <dl>
         {visible.map(([label, value]) => (
-          <div key={label} className="flex items-baseline justify-between gap-6 px-5 py-3 text-sm">
+          <div key={label} className="row justify-between py-2.5 text-sm">
             <dt className="text-muted-foreground">{label}</dt>
             <dd className="text-right font-medium">{value}</dd>
           </div>
         ))}
       </dl>
-    </section>
+    </Section>
   )
 }
 
 function ListGroup({ title, items }: { title: string; items?: string[] | null }) {
   if (!items?.length) return null
   return (
-    <section>
-      <h2 className="mb-3 text-base font-semibold">{title}</h2>
-      <ul className="surface divide-y divide-border">
+    <Section title={title}>
+      <ul>
         {items.map((item, i) => (
-          <li key={i} className="px-5 py-3 text-sm leading-relaxed">{item}</li>
+          <li key={i} className="row py-2.5 text-sm leading-relaxed">{item}</li>
         ))}
       </ul>
-    </section>
+    </Section>
   )
 }
 
@@ -93,12 +91,7 @@ function CardDetailContent({ cardData: c }: { cardData: CreditCard }) {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link
-        href="/cards"
-        className="-ml-2 mb-8 inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="h-4 w-4" /> Cards
-      </Link>
+      <BackLink href="/cards">All cards</BackLink>
 
       <header className="grid gap-8 sm:grid-cols-[minmax(0,320px)_1fr] sm:items-center">
         <CreditCardVisual
@@ -126,7 +119,7 @@ function CardDetailContent({ cardData: c }: { cardData: CreditCard }) {
           {c.apply_url && (
             <Button asChild className="mt-6">
               <a href={c.apply_url} target="_blank" rel="noopener noreferrer">
-                Apply <ArrowUpRight className="h-4 w-4" />
+                Apply on bank site
               </a>
             </Button>
           )}
@@ -135,7 +128,7 @@ function CardDetailContent({ cardData: c }: { cardData: CreditCard }) {
 
       {c.description && <p className="mt-10 text-[15px] leading-relaxed text-foreground/80">{c.description}</p>}
 
-      <div className="mt-10 space-y-10">
+      <div className="mt-10 space-y-8">
         <ListGroup title="Good" items={c.pros} />
         <ListGroup title="Watch out" items={c.cons} />
 
