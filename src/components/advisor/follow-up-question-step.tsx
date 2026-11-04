@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { ResearchedQuestion } from './researched-questions'
 
 interface FollowUpQuestionStepProps {
@@ -18,7 +18,7 @@ interface FollowUpQuestionStepProps {
 
 const ADVANCE_DELAY_MS = 180
 
-/** One question per screen. Picking an option moves on; the last screen asks for monthly spend. */
+/** One question per screen. Picking an answer moves on; the last screen asks for monthly spend. */
 export function FollowUpQuestionStep({
   questions,
   answers,
@@ -30,20 +30,37 @@ export function FollowUpQuestionStep({
 }: FollowUpQuestionStepProps) {
   const firstUnanswered = questions.findIndex((q) => !answers[q.id])
   const [index, setIndex] = useState(firstUnanswered === -1 ? questions.length : firstUnanswered)
+  const [spendError, setSpendError] = useState('')
   const spendRef = useRef<HTMLInputElement>(null)
 
   const total = questions.length + 1
   const isSpendStep = index === questions.length
   const question = questions[index]
-  const canSubmit = questions.every((q) => answers[q.id]) && Number(monthlySpend) > 0
 
   useEffect(() => {
     if (isSpendStep) spendRef.current?.focus()
   }, [isSpendStep])
 
   const choose = (value: string) => {
+    if (!value) return
     onAnswer(question.id, value)
     window.setTimeout(() => setIndex((i) => Math.min(i + 1, questions.length)), ADVANCE_DELAY_MS)
+  }
+
+  // Validate on submit, never by disabling the button (WCAG 3.3.1).
+  const submit = () => {
+    const missing = questions.findIndex((q) => !answers[q.id])
+    if (missing !== -1) {
+      setIndex(missing)
+      return
+    }
+    if (!(Number(monthlySpend) > 0)) {
+      setSpendError('Enter what you spend on cards in a typical month, for example 30000.')
+      spendRef.current?.focus()
+      return
+    }
+    setSpendError('')
+    onSubmit()
   }
 
   return (
@@ -53,11 +70,11 @@ export function FollowUpQuestionStep({
           type="button"
           onClick={() => setIndex((i) => Math.max(i - 1, 0))}
           disabled={index === 0}
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground disabled:invisible"
+          className="tap text-sm text-muted-foreground transition-colors hover:text-foreground disabled:invisible"
         >
           Back
         </button>
-        <p className="ml-auto text-sm tabular-nums text-muted-foreground" aria-live="polite">
+        <p className="ml-auto text-sm text-muted-foreground" aria-live="polite">
           {index + 1} of {total}
         </p>
       </div>
@@ -68,13 +85,14 @@ export function FollowUpQuestionStep({
           initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -12 }}
-          transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
         >
           {isSpendStep ? (
             <form
+              noValidate
               onSubmit={(e) => {
                 e.preventDefault()
-                if (canSubmit && !isSubmitting) onSubmit()
+                if (!isSubmitting) submit()
               }}
             >
               <label htmlFor="advisor-monthly-spend" className="block text-2xl font-semibold tracking-tight">
@@ -85,43 +103,51 @@ export function FollowUpQuestionStep({
                 <input
                   ref={spendRef}
                   id="advisor-monthly-spend"
+                  name="monthly-spend"
                   type="number"
                   inputMode="numeric"
                   min={0}
                   step={500}
                   value={monthlySpend}
-                  onChange={(e) => onMonthlySpendChange(e.target.value)}
-                  placeholder="30,000"
-                  className="h-14 w-full rounded-2xl bg-white pl-9 pr-4 text-lg tabular-nums placeholder:text-muted-foreground/60"
+                  onChange={(e) => {
+                    onMonthlySpendChange(e.target.value)
+                    if (spendError) setSpendError('')
+                  }}
+                  placeholder="30000"
+                  aria-invalid={Boolean(spendError)}
+                  aria-describedby={spendError ? 'advisor-spend-error' : undefined}
+                  className="h-14 w-full rounded-2xl bg-card pl-9 pr-4 text-lg tabular-nums placeholder:text-muted-foreground aria-invalid:outline-2 aria-invalid:outline-ring"
                 />
               </div>
-              <Button type="submit" size="lg" className="mt-6 w-full" disabled={!canSubmit || isSubmitting}>
+              {spendError && (
+                <p id="advisor-spend-error" role="alert" className="mt-3 text-sm">
+                  {spendError}
+                </p>
+              )}
+              <Button type="submit" size="lg" className="mt-6 w-full" disabled={isSubmitting}>
                 {isSubmitting ? 'Finding matches…' : 'See matches'}
               </Button>
             </form>
           ) : (
-            <fieldset>
-              <legend className="text-2xl font-semibold tracking-tight">{question.question}</legend>
-              <div className="mt-6 space-y-2">
-                {question.options.map((option) => {
-                  const selected = answers[question.id] === option.value
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => choose(option.value)}
-                      className={cn(
-                        'flex w-full items-center rounded-2xl px-5 py-4 text-left text-[15px] transition-[background-color,transform] duration-150 active:scale-[0.99]',
-                        selected ? 'bg-gold font-medium text-pine' : 'bg-white hover:bg-white/60'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </fieldset>
+            <div role="group" aria-labelledby="advisor-question">
+              <h2 id="advisor-question" className="text-2xl font-semibold tracking-tight">
+                {question.question}
+              </h2>
+              <ToggleGroup
+                type="single"
+                variant="option"
+                aria-labelledby="advisor-question"
+                value={answers[question.id] ?? ''}
+                onValueChange={choose}
+                className="mt-6"
+              >
+                {question.options.map((option) => (
+                  <ToggleGroupItem key={option.value} value={option.value}>
+                    {option.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
           )}
         </motion.div>
       </AnimatePresence>

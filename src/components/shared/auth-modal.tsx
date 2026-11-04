@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { GoogleIcon } from '@/components/shared/google-icon'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Form,
   FormControl,
@@ -23,7 +24,7 @@ import { toast } from 'sonner'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
+  email: z.string().email('Enter an email like name@example.com'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -171,7 +172,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
         toast.success('Code sent')
       }
     } catch {
-      toast.error('An unexpected error occurred')
+      toast.error('Unable to sign in. Check your connection and try again.')
     } finally {
       setIsLoading(false)
     }
@@ -205,7 +206,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
       router.push(redirectTo || '/dashboard')
       router.refresh()
     } catch {
-      toast.error('An unexpected error occurred')
+      toast.error('Unable to sign in. Check your connection and try again.')
     } finally {
       setIsVerifying(false)
     }
@@ -231,7 +232,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
       })
       if (error) { toast.error(error.message); setIsGoogleLoading(false) }
     } catch {
-      toast.error('An unexpected error occurred')
+      toast.error('Unable to sign in. Check your connection and try again.')
       setIsGoogleLoading(false)
     }
   }
@@ -293,22 +294,16 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     <h2 id="auth-dialog-title" className="sr-only">
                       {tab === 'login' ? 'Sign in' : 'Create account'}
                     </h2>
-                    <div role="tablist" className="mx-8 mt-16 grid grid-cols-2 rounded-full bg-muted p-1">
-                      {(['login', 'signup'] as const).map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          role="tab"
-                          aria-selected={tab === value}
-                          onClick={() => switchTab(value)}
-                          className={`rounded-full py-1.5 text-sm font-medium transition-colors ${
-                            tab === value ? 'bg-gold text-pine' : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {value === 'login' ? 'Sign in' : 'Create account'}
-                        </button>
-                      ))}
-                    </div>
+                    <ToggleGroup
+                      type="single"
+                      aria-label="Account"
+                      value={tab}
+                      onValueChange={(value) => value && switchTab(value as 'login' | 'signup')}
+                      className="mx-8 mt-16 grid grid-cols-2 gap-0 rounded-full bg-muted p-1"
+                    >
+                      <ToggleGroupItem value="login" className="justify-center bg-transparent">Sign in</ToggleGroupItem>
+                      <ToggleGroupItem value="signup" className="justify-center bg-transparent">Create account</ToggleGroupItem>
+                    </ToggleGroup>
 
                     {/* Form */}
                     <div className="px-8 pt-5 flex-1">
@@ -371,7 +366,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                               <Link
                                 href="/forgot-password"
                                 onClick={handleClose}
-                                className="text-xs text-muted-foreground hover:text-foreground"
+                                className="tap text-sm text-muted-foreground hover:text-foreground"
                               >
                                 Forgot password?
                               </Link>
@@ -460,7 +455,7 @@ export function AuthModal({ open, onClose, redirectTo }: AuthModalProps) {
                     <button
                       type="button"
                       onClick={handleResendOtp}
-                      className="mt-5 text-sm text-muted-foreground hover:text-foreground"
+                      className="tap mt-5 text-sm text-muted-foreground hover:text-foreground"
                     >
                       Resend code
                     </button>

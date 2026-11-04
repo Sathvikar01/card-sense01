@@ -58,6 +58,8 @@ export function SettingsClient({
   /* Deleting */
   const [deleting, setDeleting] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState('')
 
   const isOAuthUser = provider !== 'email'
 
@@ -79,14 +81,15 @@ export function SettingsClient({
 
   /* ── Change password ── */
   const handleChangePassword = async () => {
-    if (!newPassword || newPassword !== confirmPassword) {
-      toast.error('Passwords don’t match')
-      return
-    }
     if (newPassword.length < 8) {
-      toast.error('Use at least 8 characters')
+      setPasswordError('Use at least 8 characters.')
       return
     }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Enter the same password in both fields.')
+      return
+    }
+    setPasswordError('')
     setSavingPassword(true)
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     setSavingPassword(false)
@@ -106,7 +109,7 @@ export function SettingsClient({
       const response = await fetch('/api/account/export', { cache: 'no-store' })
       const serverData = await response.json()
       if (!response.ok) {
-        throw new Error(serverData.error || 'Unable to export your data')
+        throw new Error(serverData.error || 'Unable to export your data. Check your connection and try again.')
       }
 
       const exportData = { ...serverData, browserData: readPrivateClientData() }
@@ -121,7 +124,7 @@ export function SettingsClient({
       URL.revokeObjectURL(url)
       toast.success('Downloaded')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to export your data')
+      toast.error(error instanceof Error ? error.message : 'Unable to export your data. Check your connection and try again.')
     } finally {
       setExporting(false)
     }
@@ -140,12 +143,12 @@ export function SettingsClient({
     try {
       const res = await fetch('/api/account/delete', { method: 'DELETE' })
       const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body.error || 'Failed to delete account')
+      if (!res.ok) throw new Error(body.error || 'Unable to delete your account. Check your connection and try again.')
       await supabase.auth.signOut()
       clearPrivateClientData()
       router.push('/')
     } catch (err: unknown) {
-      toast.error((err as Error).message || 'Failed to delete account')
+      toast.error((err as Error).message || 'Unable to delete your account. Check your connection and try again.')
       setDeleting(false)
     }
   }
@@ -180,13 +183,14 @@ export function SettingsClient({
             </Row>
           ) : (
             <form
-              className="space-y-3 py-3"
+              noValidate
+              className="flex flex-col gap-3 py-3"
               onSubmit={(e) => {
                 e.preventDefault()
                 void handleChangePassword()
               }}
             >
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="new-password">New password</Label>
                 <Input
                   id="new-password"
@@ -195,10 +199,11 @@ export function SettingsClient({
                   onChange={(e) => setNewPassword(e.target.value)}
                   name="new-password"
                   autoComplete="new-password"
-                  minLength={8}
+                  aria-invalid={Boolean(passwordError)}
+                  aria-describedby={passwordError ? 'password-error' : undefined}
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="confirm-password">Confirm</Label>
                 <Input
                   id="confirm-password"
@@ -207,15 +212,17 @@ export function SettingsClient({
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   name="confirm-password"
                   autoComplete="new-password"
-                  aria-invalid={Boolean(confirmPassword) && newPassword !== confirmPassword}
+                  aria-invalid={Boolean(passwordError)}
+                  aria-describedby={passwordError ? 'password-error' : undefined}
                 />
               </div>
+              {passwordError && (
+                <p id="password-error" role="alert" className="text-sm">
+                  {passwordError}
+                </p>
+              )}
               <div className="flex justify-end pt-1">
-                <Button
-                  type="submit"
-                  variant="outline"
-                  disabled={savingPassword || newPassword.length < 8 || newPassword !== confirmPassword}
-                >
+                <Button type="submit" variant="outline" disabled={savingPassword}>
                   {savingPassword ? 'Updating…' : 'Update'}
                 </Button>
               </div>
@@ -243,19 +250,27 @@ export function SettingsClient({
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete account?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete your CardSense account?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Your profile, cards, spending and recommendations will be erased. This can’t be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="delete-confirm">Type delete to confirm</Label>
+                  <Input
+                    id="delete-confirm"
+                    autoComplete="off"
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                  />
+                </div>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel onClick={() => setDeleteConfirm('')}>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
-                    disabled={deleting}
-                    
+                    disabled={deleting || deleteConfirm.trim().toLowerCase() !== 'delete'}
                   >
-                    {deleting ? 'Deleting…' : 'Delete'}
+                    {deleting ? 'Deleting…' : 'Delete account'}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

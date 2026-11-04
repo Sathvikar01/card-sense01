@@ -26,7 +26,7 @@ export function DbHealthBannerClient({ missingTables }: DbHealthBannerClientProp
   }
 
   return (
-    <div className="mb-6 rounded-2xl bg-gold px-4 py-3 text-pine">
+    <div className="mb-6 rounded-2xl bg-accent px-4 py-3 text-accent-foreground">
       <div className="flex items-start gap-3">
                 <div className="flex-1">
           <p className="text-sm font-medium">Database setup incomplete</p>

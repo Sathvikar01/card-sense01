@@ -21,7 +21,7 @@ const personalInfoSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z
     .string()
-    .regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit Indian mobile number')
+    .regex(/^[6-9]\d{9}$/, 'Enter a 10-digit mobile number starting with 6–9')
     .optional()
     .or(z.literal('')),
   city: z.string().min(2, 'City is required').max(100).optional().or(z.literal('')),
@@ -81,7 +81,7 @@ export function PersonalInfoForm({ initialData, onUpdate }: PersonalInfoFormProp
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update profile. Please try again.'
+        error instanceof Error ? error.message : 'Unable to save your profile. Check your connection and try again.'
       )
     } finally {
       setIsSaving(false)

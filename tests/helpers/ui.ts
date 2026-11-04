@@ -31,7 +31,7 @@ export async function fillByPlaceholder(
 /** Walks the one-question-per-screen advisor: picks one option per question, then enters monthly spend. */
 export async function answerAdvisor(page: Page, options: RegExp[], monthlySpend: string): Promise<void> {
   for (const option of options) {
-    await clickByRole(page, 'button', option, `Advisor option ${option}`)
+    await clickByRole(page, 'radio', option, `Advisor option ${option}`)
   }
   const spend = page.getByLabel('Monthly card spend')
   await expectVisible(spend, 'Advisor monthly spend input')

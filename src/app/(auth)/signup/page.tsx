@@ -27,7 +27,7 @@ const signupSchema = z.object({
     .string()
     .min(2, 'Full name must be at least 2 characters')
     .max(100, 'Full name must be less than 100 characters'),
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Enter an email like name@example.com'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -78,7 +78,7 @@ export default function SignupPage() {
         toast.error(
           typeof payload.error === 'string'
             ? payload.error
-            : 'Could not create your account right now. Please try again.'
+            : 'Unable to create your account. Check your connection and try again.'
         )
         return
       }
@@ -90,7 +90,7 @@ export default function SignupPage() {
       })
       router.push('/login')
     } catch (error) {
-      toast.error('Something went wrong. Try again.')
+      toast.error('Unable to create your account. Check your connection and try again.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -99,7 +99,7 @@ export default function SignupPage() {
 
   const handleGoogleSignUp = async () => {
     if (!form.getValues('acceptTerms')) {
-      toast.error('You must accept the terms and conditions to continue')
+      toast.error('Accept the terms to create your account')
       return
     }
 
@@ -118,7 +118,7 @@ export default function SignupPage() {
         setIsGoogleLoading(false)
       }
     } catch (error) {
-      toast.error('Something went wrong. Try again.')
+      toast.error('Unable to create your account. Check your connection and try again.')
       console.error(error)
       setIsGoogleLoading(false)
     }
@@ -247,7 +247,7 @@ export default function SignupPage() {
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        <Link href="/login" className="font-medium text-foreground hover:underline">
+        <Link href="/login" className="tap font-medium text-foreground hover:underline">
           Sign in
         </Link>
       </p>

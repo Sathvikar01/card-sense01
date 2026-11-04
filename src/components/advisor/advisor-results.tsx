@@ -41,7 +41,7 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
     <motion.li
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: (rank - 1) * 0.06, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ duration: 0.3, delay: (rank - 1) * 0.06, ease: [0.2, 0, 0, 1] }}
       className="grid gap-5 sm:grid-cols-[180px_1fr]"
     >
       <CardDetailLink cardId={card.id} className="block max-w-[260px] self-start">
@@ -63,14 +63,15 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
               <span className="mr-2 tabular-nums text-muted-foreground">{rank}</span>
               {card.name}
             </h3>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {card.bank} · {eligibilityLabel(card.eligibilityMatch)}
+            <p className="mt-0.5 flex flex-wrap gap-x-4 text-sm text-muted-foreground">
+              <span>{card.bank}</span>
+              <span>{eligibilityLabel(card.eligibilityMatch)}</span>
             </p>
           </div>
           <p
             className={cn(
               'shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold tabular-nums',
-              rank === 1 ? 'bg-gold text-pine' : 'bg-muted'
+              rank === 1 ? 'bg-accent text-accent-foreground' : 'bg-muted'
             )}
             aria-label={`Match score ${card.score} of 100`}
           >
@@ -78,7 +79,7 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
           </p>
         </div>
 
-        {card.reason && <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-foreground/80">{card.reason}</p>}
+        {card.reason && <p className="mt-3 max-w-xl text-base leading-relaxed text-foreground">{card.reason}</p>}
 
         <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
           {stats.map(([label, value]) => (
@@ -90,7 +91,7 @@ function RecommendedCardRow({ card, rank }: { card: AdvisorCardResult; rank: num
         </dl>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <CardDetailLink cardId={card.id} className="font-medium text-foreground hover:text-muted-foreground">
+          <CardDetailLink cardId={card.id} className="tap font-medium text-foreground hover:text-muted-foreground">
             Details
           </CardDetailLink>
           {hasExplanation && (
@@ -152,7 +153,7 @@ export function AdvisorResults({ result, onStartOver }: Props) {
         </div>
       </div>
 
-      {result.analysis && <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">{result.analysis}</p>}
+      {result.analysis && <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">{result.analysis}</p>}
 
       <ol className="mt-10 space-y-12">
         {result.cards.map((card, index) => (

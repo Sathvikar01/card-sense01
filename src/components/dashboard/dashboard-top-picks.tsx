@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
-import { Button } from '@/components/ui/button'
-import { Empty, Section } from '@/components/shared/section'
+import { Section } from '@/components/shared/section'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export interface DashboardTopPick {
   cardId: string
@@ -42,12 +42,7 @@ export function DashboardTopPicks({ cards: initialCards }: { cards: DashboardTop
   return (
     <Section title="Your matches" action={cards.length > 0 ? { label: 'View all', href: '/recommendations' } : undefined}>
       {cards.length === 0 ? (
-        <Empty>
-          <span className="flex-1">No matches yet</span>
-          <Button asChild size="sm">
-            <Link href="/advisor">Find my card</Link>
-          </Button>
-        </Empty>
+        <EmptyState title="No matches yet" actionLabel="Find my card" actionHref="/advisor" primary />
       ) : (
         <ol>
           {cards.map((card, index) => (

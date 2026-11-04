@@ -18,10 +18,10 @@ export function Section({
 }) {
   return (
     <section className={className}>
-      <div className="mb-1 flex items-baseline justify-between">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold">{title}</h2>
         {action && (
-          <Link href={action.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <Link href={action.href} className="tap text-sm text-muted-foreground transition-colors hover:text-foreground">
             {action.label}
           </Link>
         )}
@@ -29,9 +29,4 @@ export function Section({
       {children}
     </section>
   )
-}
-
-/** One quiet line for an empty section. */
-export function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-center gap-4 py-3 text-sm text-muted-foreground">{children}</div>
 }

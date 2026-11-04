@@ -415,7 +415,7 @@ test('Advisor spending step is prefilled from spending tracker data', async ({ p
   await page.goto('/advisor?new=1')
 
   for (const option of [/^25–30$/, /^Up to ₹6L a year$/, /^No$/, /^Groceries & essentials$/, /^Cashback$/]) {
-    await clickByRole(page, 'button', option, `Advisor option ${option}`)
+    await clickByRole(page, 'radio', option, `Advisor option ${option}`)
   }
 
   await expect(

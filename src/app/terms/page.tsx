@@ -6,7 +6,7 @@ export default function TermsPage() {
         Last updated: February 26, 2026
       </p>
 
-      <div className="mt-8 space-y-6 text-sm leading-relaxed text-foreground/90">
+      <div className="mt-8 space-y-6 text-sm leading-relaxed text-foreground">
         <section>
           <h2 className="text-lg font-semibold text-foreground">1. Use of CardSense</h2>
           <p className="mt-2">

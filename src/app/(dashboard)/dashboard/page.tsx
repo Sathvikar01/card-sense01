@@ -1,11 +1,13 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getProfileWithFallback } from '@/lib/profile/profile-compat'
 import { CategoryList } from '@/components/dashboard/category-breakdown'
-import { Empty, Section } from '@/components/shared/section'
+import { Section } from '@/components/shared/section'
+import { EmptyState } from '@/components/shared/empty-state'
 import { PageHeader } from '@/components/shared/page-header'
 import { DashboardTopPicks, type DashboardTopPick } from '@/components/dashboard/dashboard-top-picks'
 import { formatCurrency } from '@/lib/utils/format-currency'
-import { getCibilScoreRating, getLatestRecordedCreditScore } from '@/lib/credit-score'
+import { getLatestRecordedCreditScore } from '@/lib/credit-score'
 import { getCreditScoreHistoryWithFallback } from '@/lib/profile/profile-compat'
 
 export const dynamic = 'force-dynamic'
@@ -220,23 +222,30 @@ export default async function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0]
   const topCards = recommendations[0]?.recommended_cards.slice(0, 3) || []
 
-  const summary = [
-    cibilScore ? `CIBIL ${cibilScore}, ${getCibilScoreRating(cibilScore).toLowerCase()}` : null,
-    `${userCards.length} ${userCards.length === 1 ? 'card' : 'cards'}`,
-    `${formatCurrency(currentMonthTotal, { showDecimals: false })} this month`,
-  ].filter(Boolean)
+  const stats = [
+    { label: 'CIBIL score', value: cibilScore ? String(cibilScore) : '—', href: '/profile' },
+    { label: 'Cards', value: String(userCards.length), href: '/profile' },
+    { label: 'This month', value: formatCurrency(currentMonthTotal, { showDecimals: false }), href: '/spending' },
+  ]
 
   return (
-    <div className="space-y-10">
+    <div className="flex flex-col gap-12">
       <div>
-        <PageHeader title={firstName ? `Hi, ${firstName}` : 'Home'} className="mb-2" />
-        <p className="text-muted-foreground">{summary.join(' · ')}</p>
+        <PageHeader title={firstName ? `Hi, ${firstName}` : 'Home'} className="mb-5" />
+        <dl className="flex flex-wrap gap-x-10 gap-y-4">
+          {stats.map((stat) => (
+            <Link key={stat.label} href={stat.href} className="group flex flex-col-reverse">
+              <dt className="text-sm text-muted-foreground">{stat.label}</dt>
+              <dd className="text-2xl font-semibold tracking-tight transition-opacity group-hover:opacity-70">{stat.value}</dd>
+            </Link>
+          ))}
+        </dl>
       </div>
 
       <DashboardTopPicks cards={topCards} />
 
-      <Section title="Spending" action={{ label: monthlySpending.length ? 'View all' : 'Add', href: '/spending' }}>
-        {monthlySpending.length > 0 ? <CategoryList data={monthlySpending} /> : <Empty>Nothing logged yet</Empty>}
+      <Section title="Spending" action={monthlySpending.length ? { label: 'View all', href: '/spending' } : undefined}>
+        {monthlySpending.length > 0 ? <CategoryList data={monthlySpending} /> : <EmptyState title="No spending yet" actionLabel="Add spending" actionHref="/spending" />}
       </Section>
     </div>
   )

@@ -23,6 +23,7 @@ export default function CardsPage() {
 
   const [cards, setCards] = useState<CreditCardListItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [bank, setBank] = useState(searchParams.get('bank') || '')
   const [cardType, setCardType] = useState(searchParams.get('type') || '')
@@ -71,6 +72,7 @@ export default function CardsPage() {
       abortRef.current = controller
 
       setLoading(true)
+      setFailed(false)
       try {
         const params = new URLSearchParams()
         if (normalizedFilters.search) params.set('search', normalizedFilters.search)
@@ -101,6 +103,7 @@ export default function CardsPage() {
         } else {
           console.error('Failed to fetch cards:', data.error)
           setCards([])
+          setFailed(true)
         }
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
@@ -108,6 +111,7 @@ export default function CardsPage() {
         }
         console.error('Error fetching cards:', error)
         setCards([])
+        setFailed(true)
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false)
@@ -164,7 +168,7 @@ export default function CardsPage() {
             <Button variant="outline" size="sm">
               Filter
               {activeFiltersCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-xs font-semibold text-pine">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-accent-foreground">
                   {activeFiltersCount}
                 </span>
               )}
@@ -209,11 +213,18 @@ export default function CardsPage() {
           placeholder="Search cards or banks"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white"
+          className="bg-card"
         />
       </div>
 
-      <CardGrid cards={cards} loading={loading} />
+      <CardGrid
+        cards={cards}
+        loading={loading}
+        failed={failed}
+        query={debouncedSearch}
+        hasFilters={activeFiltersCount > 0}
+        onClear={handleClearFilters}
+      />
       <CompareBar />
     </div>
   )

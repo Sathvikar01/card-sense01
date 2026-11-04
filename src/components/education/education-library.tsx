@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/shared/page-header'
 import { Section } from '@/components/shared/section'
 import { EDUCATION_RESOURCES } from './education-resources'
@@ -59,40 +60,51 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search lessons"
-        className="mb-4 bg-white"
+        className="mb-4 bg-card"
       />
 
-      <div role="tablist" aria-label="Topics" className="-mx-4 mb-6 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none]">
+      <ToggleGroup
+        type="single"
+        variant="plain"
+        aria-label="Topic"
+        value={category}
+        onValueChange={(value) => setCategory(value || 'all')}
+        className="-mx-4 mb-6 flex-nowrap overflow-x-auto px-4 [scrollbar-width:none]"
+      >
         {CATEGORIES.map((c) => (
-          <button
-            key={c.value}
-            type="button"
-            role="tab"
-            aria-selected={category === c.value}
-            onClick={() => setCategory(c.value)}
-            className={cn(
-              'shrink-0 rounded-full px-3 py-1.5 text-sm transition-colors',
-              category === c.value ? 'bg-gold font-medium text-pine' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
+          <ToggleGroupItem key={c.value} value={c.value} className="shrink-0">
             {c.label}
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
+      </ToggleGroup>
 
       {filtered.length > 0 ? (
         <ul>
           {filtered.map((article) => (
             <li key={article.id}>
               <Link href={`/education/${article.slug}`} className="row items-baseline">
-                <span className="min-w-0 flex-1 text-[15px]">{article.title}</span>
+                <span className="min-w-0 flex-1 text-base">{article.title}</span>
                 <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{article.read_time_minutes} min</span>
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="py-16 text-center text-sm text-muted-foreground">No lessons match</p>
+        <div className="flex flex-col items-start gap-3 py-6">
+          <p className="text-muted-foreground">
+            {query ? `No lessons match “${query.trim()}”.` : 'No lessons in this topic yet.'}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setQuery('')
+              setCategory('all')
+            }}
+          >
+            Show all lessons
+          </Button>
+        </div>
       )}
 
       <Section title="Further reading" className="mt-12">
@@ -100,7 +112,7 @@ export function EducationLibrary({ articles }: { articles: EducationLibraryArtic
           {EDUCATION_RESOURCES.map((resource) => (
             <li key={resource.url}>
               <a href={resource.url} target="_blank" rel="noreferrer" className="row">
-                <span className="min-w-0 flex-1 text-[15px]">{resource.title}</span>
+                <span className="min-w-0 flex-1 text-base">{resource.title}</span>
                 <span className="shrink-0 text-sm text-muted-foreground">{resource.source}</span>
               </a>
             </li>

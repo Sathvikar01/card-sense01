@@ -66,12 +66,12 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
     const score = parseInt(newScore)
 
     if (!score || score < 300 || score > 900) {
-      toast.error('Score must be 300–900')
+      toast.error('Enter a score between 300 and 900')
       return
     }
 
     if (!scoreDate) {
-      toast.error('Pick a date')
+      toast.error('Choose the date of the score')
       return
     }
 
@@ -106,7 +106,7 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
     } catch (error) {
       console.error('Error adding CIBIL score:', error)
       toast.error(
-        error instanceof Error ? error.message : 'Could not add score. Try again.'
+        error instanceof Error ? error.message : 'Unable to add the score. Check your connection and try again.'
       )
     } finally {
       setIsSubmitting(false)
@@ -187,9 +187,9 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
         {rows.map((entry, i) => (
           <li key={entry.xKey} className="row py-2.5">
             <span className={i === 0 ? 'text-2xl font-semibold tabular-nums' : 'tabular-nums'}>{entry.score}</span>
-            <span className="flex-1 text-sm text-muted-foreground">
-              {i === 0 ? `${getCibilScoreRating(entry.score)} · ` : ''}
-              {entry.fullDateLabel}
+            <span className="flex flex-1 flex-wrap gap-x-4 text-sm text-muted-foreground">
+              {i === 0 && <span>{getCibilScoreRating(entry.score)}</span>}
+              <span>{entry.fullDateLabel}</span>
             </span>
           </li>
         ))}

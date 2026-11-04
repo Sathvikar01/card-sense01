@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Message = { role: 'user' | 'assistant'; text: string }
 
@@ -42,7 +43,7 @@ export function Chat() {
       if (!res.ok) throw new Error()
       setMessages((prev) => [...prev, { role: 'assistant', text: data.reply ?? 'No answer.' }])
     } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', text: 'Something went wrong. Try again.' }])
+      setMessages((prev) => [...prev, { role: 'assistant', text: 'Unable to reach the assistant. Check your connection and try again.' }])
     } finally {
       setLoading(false)
       inputRef.current?.focus()
@@ -60,7 +61,7 @@ export function Chat() {
                 key={s}
                 type="button"
                 onClick={() => send(s)}
-                className="rounded-full bg-white px-4 py-2 text-sm transition-[background-color,transform] duration-150 hover:bg-white/60 active:scale-[0.97]"
+                className="rounded-full bg-card px-4 py-2 text-sm transition-[background-color,transform] duration-(--duration-quick) hover:bg-card/70 enabled:active:scale-[0.96]"
               >
                 {s}
               </button>
@@ -71,16 +72,16 @@ export function Chat() {
         {messages.map((m, i) => (
           <div key={i} className={cn('flex', m.role === 'user' && 'justify-end')}>
             {m.role === 'user' ? (
-              <p className="max-w-[85%] rounded-3xl bg-gold px-4 py-2 text-[15px] text-pine">{m.text}</p>
+              <p className="max-w-[85%] rounded-3xl bg-accent px-4 py-2 text-base text-accent-foreground">{m.text}</p>
             ) : (
-              <div className="markdown max-w-none text-[15px]">
+              <div className="markdown max-w-none text-base">
                 <ReactMarkdown>{m.text}</ReactMarkdown>
               </div>
             )}
           </div>
         ))}
 
-        {loading && <div className="h-4 w-16 shimmer" aria-label="Thinking" />}
+        {loading && <Skeleton className="h-4 w-16" aria-label="Thinking" />}
         <div ref={endRef} />
       </div>
 
@@ -89,7 +90,7 @@ export function Chat() {
           e.preventDefault()
           send(input)
         }}
-        className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex items-end gap-2 rounded-3xl bg-white p-2 shadow-lg md:bottom-6"
+        className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex items-end gap-2 rounded-3xl bg-card p-2 shadow-lg md:bottom-6"
       >
         <textarea
           ref={inputRef}
@@ -110,7 +111,7 @@ export function Chat() {
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="h-9 shrink-0 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 active:scale-[0.97] disabled:opacity-30"
+          className="h-9 shrink-0 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-(--duration-quick) enabled:active:scale-[0.96] disabled:opacity-30"
         >
           Send
         </button>

@@ -42,7 +42,7 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
       router.push('/')
       router.refresh()
     } catch {
-      toast.error('Could not log out')
+      toast.error('Unable to log out. Check your connection and try again.')
     }
   }
 
@@ -64,10 +64,10 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Account"
-            className="ml-auto rounded-full"
+            className="tap ml-auto rounded-full"
           >
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-gold text-xs font-semibold text-pine">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">{initials}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

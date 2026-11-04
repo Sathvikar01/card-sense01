@@ -22,7 +22,7 @@ import { toast } from 'sonner'
 import { trackInteraction } from '@/lib/interactions/client'
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Enter an email like name@example.com'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -48,12 +48,12 @@ function LoginForm() {
     if (!error) return
 
     if (error === 'auth-temporary-unavailable') {
-      toast.error('Google sign-in is unavailable. Try again shortly.')
+      toast.error('Google sign-in is unavailable right now. Use email instead, or try again in a minute.')
       return
     }
 
     if (error === 'auth-code-error') {
-      toast.error('Sign-in didn’t finish. Try again.')
+      toast.error('Google sign-in didn’t finish. Try again.')
     }
   }, [searchParams])
 
@@ -78,7 +78,7 @@ function LoginForm() {
       const next = searchParams.get('next')
       router.push(next || '/dashboard')
     } catch (error) {
-      toast.error('Something went wrong. Try again.')
+      toast.error('Unable to sign in. Check your connection and try again.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -106,7 +106,7 @@ function LoginForm() {
         setIsGoogleLoading(false)
       }
     } catch (error) {
-      toast.error('Something went wrong. Try again.')
+      toast.error('Unable to sign in. Check your connection and try again.')
       console.error(error)
       setIsGoogleLoading(false)
     }
@@ -160,7 +160,7 @@ function LoginForm() {
           <div className="text-right">
             <Link
               href="/forgot-password"
-              className="text-sm text-foreground hover:underline"
+              className="tap text-sm text-muted-foreground hover:text-foreground"
             >
               Forgot password?
             </Link>
@@ -190,7 +190,7 @@ function LoginForm() {
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        <Link href="/signup" className="font-medium text-foreground hover:underline">
+        <Link href="/signup" className="tap font-medium text-foreground hover:underline">
           Create account
         </Link>
       </p>

@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
 
       toast.success('Check your email')
     } catch {
-      toast.error('Couldn’t send the link. Try again.')
+      toast.error('Unable to send the link. Check your connection and try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        <Link href="/login" className="font-medium text-foreground hover:underline">
+        <Link href="/login" className="tap font-medium text-foreground hover:underline">
           Sign in
         </Link>
       </p>

@@ -47,12 +47,12 @@ export default function ResetPasswordPage() {
     if (isSubmitting) return
 
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters.')
+      toast.error('Use at least 8 characters.')
       return
     }
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match.')
+      toast.error('Enter the same password in both fields.')
       return
     }
 
@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
       await supabase.auth.signOut()
       router.push('/login')
     } catch {
-      toast.error('Couldn’t update password. Try again.')
+      toast.error('Unable to update your password. Check your connection and try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        <Link href="/login" className="font-medium text-foreground hover:underline">
+        <Link href="/login" className="tap font-medium text-foreground hover:underline">
           Sign in
         </Link>
       </p>

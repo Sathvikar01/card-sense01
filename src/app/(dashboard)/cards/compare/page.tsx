@@ -1,5 +1,6 @@
 'use client'
 
+import { Skeleton } from '@/components/ui/skeleton'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -99,7 +100,7 @@ export default function CardComparePage() {
   const count = cards.length
 
   if (loading) {
-    return <div className="h-96 shimmer rounded-xl" aria-busy="true" />
+    return <Skeleton className="h-96 rounded-xl" />
   }
 
   if (count < 2) {
@@ -128,7 +129,7 @@ export default function CardComparePage() {
                     clearComparison()
                     router.push('/cards')
                   }}
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  className="tap text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Clear
                 </button>

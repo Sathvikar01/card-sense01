@@ -22,18 +22,12 @@ Helps people in India pick a credit card for how they spend. Next.js App Router,
 
 ## UI rules
 
-The bar is Linear / Apple Notes: one purpose per screen, nothing decorative. These come from the Impeccable, Taste v2, Interface Design and Emil Kowalski skills.
+The full design language (principles, tokens, components, patterns) is the project skill at `.claude/skills/cardsense-design/`. Read it before any UI change. The short version:
 
-- **Four colours, no more** (`src/app/globals.css`): `paper` ground, `white` for controls and floating layers only, `pine` text and primary actions, `gold` accent. Muted text and fills are pine at lower strength. Gold is a fill only (selected answers, the top match score, the avatar, the logo chip), always with pine on top; it fails contrast as text.
-- **No lines, no panels.** Content sits straight on the paper. Sections are a heading plus content (`Section` in `src/components/shared/section.tsx`), separated by space. Lists use `.row`: space between rows, a faint tint on hover. No borders, dividers, separators, chart axes, bar tracks or progress bars. Shadows only on things that float (menus, dialogs, toasts, the compare bar).
-- **No charts.** Numbers and short lists say it; figures use tabular numerals.
-- **No icon library.** Say it in words ("Remove", "Back", "Close", "Send"). The only drawn marks are `Chevron` and `Tick` in `src/components/shared/glyph.tsx`, plus the logo.
-- **One layout.** Every app page is `PageHeader`, an optional one-line summary, then `Section`s, in a 768px column. Keep sections few: a page that needs more than three is doing too much.
-- **No taglines, eyebrows, subtitles or helper text.** `PageHeader` has no description prop on purpose.
-- **Type:** Hanken Grotesk only, self-hosted from Fontsource. Page titles 28px/600, section titles 15px/600, body 15px, money uses tabular figures.
-- **Motion:** under 300ms, custom ease-out (`--ease-out`), `scale(0.97)` on press, nothing on keyboard-driven actions.
-- Labels and buttons use sentence case and short verbs. Toasts report failures; skip success toasts when the UI already shows the change.
-- Page titles: set `metadata.title` to the bare page name. The root layout adds "· CardSense".
+- Four colours (paper, white, pine, gold) through semantic tokens only; light and dark follow the OS.
+- No lines, no panels, no icon library, no charts, no helper text.
+- Every page: `PageHeader`, then a few `Section`s in a 768px column.
+- Validate on submit, offer Undo on removal, four states for every data region.
 
 ## Commands
 

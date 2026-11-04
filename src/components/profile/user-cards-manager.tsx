@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Command,
   CommandEmpty,
@@ -94,7 +95,7 @@ export function UserCardsManager() {
 
   const handleAdd = async () => {
     if (!cardName.trim() || !bankName.trim()) {
-      toast.error('Add a card name and bank')
+      toast.error('Choose a card, or enter its name and bank')
       return
     }
 
@@ -113,7 +114,7 @@ export function UserCardsManager() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || 'Failed to add card')
+        throw new Error((err as { message?: string }).message || 'Unable to add the card. Check your connection and try again.')
       }
 
       setDialogOpen(false)
@@ -121,24 +122,36 @@ export function UserCardsManager() {
       await fetchCards()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to add card')
+      toast.error(error instanceof Error ? error.message : 'Unable to add the card. Check your connection and try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id)
+  // Remove at once and offer Undo, instead of asking first.
+  const handleDelete = async (card: UserCard) => {
+    setDeletingId(card.id)
     try {
-      const res = await fetch(`/api/cards/user?id=${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        await fetchCards()
-        router.refresh()
-      } else {
-        toast.error('Could not remove card')
-      }
+      const res = await fetch(`/api/cards/user?id=${card.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await fetchCards()
+      router.refresh()
+      toast(`${card.card_name} removed`, {
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            await fetch('/api/cards/user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ card_name: card.card_name, bank_name: card.bank_name, card_type: 'credit', notes: card.notes || '' }),
+            })
+            await fetchCards()
+            router.refresh()
+          },
+        },
+      })
     } catch {
-      toast.error('Could not remove card')
+      toast.error('Unable to remove the card. Check your connection and try again.')
     } finally {
       setDeletingId(null)
     }
@@ -280,8 +293,8 @@ export function UserCardsManager() {
   if (loading) {
     return (
       <div className="space-y-2 py-2">
-        <div className="h-4 w-1/2 shimmer" />
-        <div className="h-4 w-1/3 shimmer" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-1/3" />
       </div>
     )
   }
@@ -309,8 +322,8 @@ export function UserCardsManager() {
             <button
               type="button"
               aria-label={`Remove ${card.card_name}`}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-              onClick={() => handleDelete(card.id)}
+              className="tap text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+              onClick={() => handleDelete(card)}
               disabled={deletingId === card.id}
             >
               Remove

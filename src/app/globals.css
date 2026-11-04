@@ -7,33 +7,28 @@
   --font-sans: "Hanken Grotesk Variable", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* The four colours. Everything else is derived from them. */
-  --color-paper: var(--paper);
-  --color-white: var(--white);
-  --color-pine: var(--pine);
-  --color-gold: var(--gold);
-
-  /* shadcn roles, mapped onto the four */
-  --color-background: var(--paper);
-  --color-foreground: var(--pine);
-  --color-card: var(--white);
-  --color-card-foreground: var(--pine);
-  --color-popover: var(--white);
-  --color-popover-foreground: var(--pine);
-  --color-primary: var(--pine);
-  --color-primary-foreground: var(--paper);
+  /* Semantic roles. Components use only these, never the primitives below. */
+  --color-background: var(--ground);
+  --color-foreground: var(--ink);
+  --color-card: var(--raised);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--raised);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--ground);
   --color-secondary: var(--tint);
-  --color-secondary-foreground: var(--pine);
+  --color-secondary-foreground: var(--ink);
   --color-muted: var(--tint);
-  --color-muted-foreground: var(--pine-70);
+  --color-muted-strong: var(--tint-strong);
+  --color-muted-foreground: var(--ink-muted);
   --color-accent: var(--gold);
   --color-accent-foreground: var(--pine);
-  --color-destructive: var(--pine);
-  --color-border: var(--line);
-  --color-input: var(--line);
-  --color-ring: var(--pine);
-  --color-chart-1: var(--gold);
-  --color-chart-2: var(--pine);
+  --color-inverse: var(--ink);
+  --color-inverse-foreground: var(--ground);
+  --color-destructive: var(--ink);
+  --color-border: var(--tint-strong);
+  --color-input: var(--tint-strong);
+  --color-ring: var(--ink);
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -42,28 +37,47 @@
   --radius-2xl: 1rem;
   --radius-3xl: 1.25rem;
   --radius-4xl: 1.5rem;
+
+  /* One motion language: a single curve and three durations. */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --duration-quick: 150ms;
+  --duration-standard: 250ms;
+  --duration-slow: 350ms;
 }
 
 /*
- * Palette: four colours, no more.
- *   paper  the ground
- *   white  raised panels
- *   pine   text and primary actions
- *   gold   the one accent: selection and data, always with pine on top
- * Muted text, fills and the rare line are pine at lower strength.
+ * Palette: four colours. Light and dark use the same four, in their bright and dim variants.
+ *   paper  the ground                         (dark: deep pine)
+ *   white  controls and floating layers        (dark: raised pine)
+ *   pine   text and primary actions            (dark: paper)
+ *   gold   the one accent, a fill under pine text, in both modes
+ * Muted text is ink mixed toward the ground at 7:1 or better (Apple HIG for small text).
  */
 :root {
-  --paper: #f4f3ef;
-  --white: #ffffff;
   --pine: #16302b;
   --gold: #d9a93a;
 
-  --pine-70: color-mix(in srgb, var(--pine) 70%, var(--paper));
-  --tint: color-mix(in srgb, var(--pine) 6%, transparent);
-  --line: color-mix(in srgb, var(--pine) 10%, transparent);
+  --ground: #f4f3ef;
+  --raised: #ffffff;
+  --ink: var(--pine);
+  --ink-muted: color-mix(in srgb, var(--ink) 82%, var(--ground));
+  --tint: color-mix(in srgb, var(--ink) 6%, transparent);
+  --tint-strong: color-mix(in srgb, var(--ink) 11%, transparent);
 
   --radius: 0.625rem;
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #0e1714;
+    --raised: #16221e;
+    --ink: #ecebe6;
+    --ink-muted: color-mix(in srgb, var(--ink) 70%, var(--ground));
+    --tint: color-mix(in srgb, var(--ink) 8%, transparent);
+    --tint-strong: color-mix(in srgb, var(--ink) 14%, transparent);
+    color-scheme: dark;
+  }
 }
 
 @layer base {
@@ -71,20 +85,29 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Mobile baseline (Emil, mobile-native): no font inflation, no tap flash, no page rubber-band. */
   html {
-    color-scheme: light;
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    scroll-padding-block-start: 4.5rem;
+  }
+
+  /* Hallmark floor: clip, never hidden, so sticky elements keep working. */
+  html,
+  body {
+    overflow-x: clip;
   }
 
   body {
     @apply bg-background text-foreground;
-    min-height: 100vh;
-    overflow-x: hidden;
+    min-height: 100dvh;
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: 1rem;
     line-height: 1.5;
+    font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
@@ -92,9 +115,25 @@
     color: var(--pine);
   }
 
+  /* Instant, 2px, 3:1 or better against every surface (WCAG 1.4.11). */
   :focus-visible {
-    outline: 2px solid var(--pine);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
+  }
+
+  /* Controls are not text: no long-press selection or callout on touch. */
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="radio"] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  a {
+    text-underline-offset: 3px;
+    text-decoration-thickness: from-font;
   }
 
   h1,
@@ -102,8 +141,10 @@
   h3,
   h4 {
     font-weight: 600;
+    line-height: 1.2;
     letter-spacing: -0.02em;
     text-wrap: balance;
+    overflow-wrap: break-word;
   }
 
   p {
@@ -138,7 +179,7 @@
     margin-inline: -0.75rem;
     padding: 0.75rem;
     border-radius: 0.75rem;
-    transition: background-color 150ms ease;
+    transition: background-color var(--duration-quick) var(--ease-out);
   }
   a.row:hover,
   button.row:hover {
@@ -175,9 +216,8 @@
     font-weight: 600;
   }
   .markdown a {
-    color: var(--primary);
+    font-weight: 500;
     text-decoration: underline;
-    text-underline-offset: 2px;
   }
   .markdown code {
     font-family: var(--font-code);
@@ -194,28 +234,27 @@
   }
 
 
+  /* Extends a small text control's hit area to 44px tall without changing its look (HIG, WCAG 2.5.8). */
+  .tap {
+    position: relative;
+  }
+  .tap::after {
+    content: "";
+    position: absolute;
+    inset: -12px -8px;
+  }
+
   .shimmer {
     border-radius: var(--radius-md);
     background: var(--tint);
-    animation: pulse 1.6s ease-in-out infinite;
   }
-
-
-  .marquee-track {
-    display: flex;
-    width: max-content;
-    animation: marquee 60s linear infinite;
-  }
-
-  .marquee-track:hover {
-    animation-play-state: paused;
-  }
-
-  @keyframes marquee {
-    to {
-      transform: translateX(-50%);
+  @media (prefers-reduced-motion: no-preference) {
+    .shimmer {
+      animation: pulse 1.6s ease-in-out infinite;
     }
   }
+
+
 }
 
 @media (max-width: 640px) {

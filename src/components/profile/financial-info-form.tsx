@@ -40,7 +40,7 @@ const financialInfoSchema = z.object({
   annual_income: z
     .number()
     .min(0, 'Annual income must be positive')
-    .max(100000000, 'Please enter a valid income')
+    .max(100000000, 'Enter your yearly income in rupees')
     .optional()
     .or(z.literal(0)),
   primary_bank: z.string().max(100).optional().or(z.literal('')),
@@ -48,7 +48,7 @@ const financialInfoSchema = z.object({
   fd_amount: z
     .number()
     .min(0, 'FD amount must be positive')
-    .max(100000000, 'Please enter a valid amount')
+    .max(100000000, 'Enter the amount in rupees')
     .optional()
     .or(z.literal(0)),
 })
@@ -149,7 +149,7 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update profile. Please try again.'
+        error instanceof Error ? error.message : 'Unable to save your profile. Check your connection and try again.'
       )
     } finally {
       setIsSaving(false)

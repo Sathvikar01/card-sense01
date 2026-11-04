@@ -152,7 +152,7 @@ export function OnboardingWizard({
 
       onCompleted()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to complete onboarding')
+      toast.error(error instanceof Error ? error.message : 'Unable to save your details. Check your connection and try again.')
     } finally {
       setSaving(false)
     }

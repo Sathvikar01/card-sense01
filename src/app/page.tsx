@@ -52,9 +52,12 @@ export default function HomePage() {
 
       <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col justify-between outline-none">
         <section className="mx-auto w-full max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-28">
-          <h1 className="max-w-3xl text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.04em] sm:text-[5.5rem]">
-            The right credit card for how you spend.
+          <h1 className="max-w-3xl text-[2.75rem] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[5.5rem]">
+            The card that fits how you spend.
           </h1>
+          <p className="mt-6 max-w-md text-lg text-muted-foreground sm:text-xl">
+            Five questions, then a ranked shortlist of Indian cards with real fees.
+          </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Button size="lg" onClick={() => setAuthRedirect('/advisor')}>
               Find my card
@@ -65,27 +68,25 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section
-          aria-label="Cards in the catalog"
-          className="overflow-hidden bg-pine py-16 sm:py-24"
-        >
-          <div className="marquee-track gap-5">
-            {[...SHOWCASE_CARDS, ...SHOWCASE_CARDS].map((id, i) => (
-              <div key={`${id}-${i}`} aria-hidden={i >= SHOWCASE_CARDS.length} className="shrink-0">
+        {/* A still row you can swipe: no autoplay, so nothing moves without a pause control (WCAG 2.2.2). */}
+        <section aria-label="Cards in the catalog" className="bg-inverse py-16 sm:py-24">
+          <ul className="flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-4 pb-2 [scrollbar-width:none] sm:px-[max(1.5rem,calc((100%-72rem)/2+1.5rem))]">
+            {SHOWCASE_CARDS.map((id) => (
+              <li key={id} className="shrink-0 snap-start">
                 <CreditCardVisual cardId={id} size="md" />
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       </main>
 
-      <footer className="bg-pine text-xs text-paper/70">
+      <footer className="bg-inverse text-sm text-inverse-foreground">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pb-8 sm:px-6">
-        <span>Not financial advice.</span>
-        <nav className="flex gap-5">
-          <Link href="/privacy" className="hover:text-paper">Privacy</Link>
-          <Link href="/terms" className="hover:text-paper">Terms</Link>
-        </nav>
+          <span>Not financial advice.</span>
+          <nav aria-label="Legal" className="flex gap-6">
+            <Link href="/privacy" className="tap hover:underline">Privacy</Link>
+            <Link href="/terms" className="tap hover:underline">Terms</Link>
+          </nav>
         </div>
       </footer>
     </div>

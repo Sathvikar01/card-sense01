@@ -39,6 +39,7 @@ export default function SpendingPage() {
   const [showEntry, setShowEntry] = useState(false)
   const [amounts, setAmounts] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [entryError, setEntryError] = useState('')
 
   useEffect(() => {
     fetchTransactions()
@@ -66,16 +67,33 @@ export default function SpendingPage() {
     }
   }
 
-  const deleteTransaction = async (id: string) => {
+  // Remove at once and offer Undo, instead of asking first (undo beats confirmation).
+  const deleteTransaction = async (txn: Transaction) => {
     try {
-      const response = await fetch(`/api/spending?id=${id}`, { method: 'DELETE' })
-      if (response.ok) {
-        fetchTransactions()
-      } else {
-        toast.error('Could not delete')
-      }
+      const response = await fetch(`/api/spending?id=${txn.id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error()
+      await fetchTransactions()
+      toast('Entry removed', {
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            await fetch('/api/spending', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                category: txn.category,
+                amount: txn.amount,
+                merchant_name: txn.merchant_name,
+                transaction_date: txn.transaction_date,
+                description: txn.description,
+              }),
+            })
+            fetchTransactions()
+          },
+        },
+      })
     } catch {
-      toast.error('Could not delete')
+      toast.error('Unable to remove the entry. Check your connection and try again.')
     }
   }
 
@@ -94,9 +112,10 @@ export default function SpendingPage() {
   const handleSaveSpending = async () => {
     const entries = buildEntries()
     if (entries.length === 0) {
-      toast.error('Enter an amount')
+      setEntryError('Enter an amount for at least one category.')
       return
     }
+    setEntryError('')
 
     setSaving(true)
     try {
@@ -122,10 +141,10 @@ export default function SpendingPage() {
         setShowEntry(false)
         fetchTransactions()
       } else {
-        toast.error('Could not save. Try again.')
+        toast.error('Unable to save. Check your connection and try again.')
       }
     } catch {
-      toast.error('Could not save. Try again.')
+      toast.error('Unable to save. Check your connection and try again.')
     } finally {
       setSaving(false)
     }
@@ -170,7 +189,10 @@ export default function SpendingPage() {
                         step={100}
                         placeholder="0"
                         value={amounts[cat.key] ?? ''}
-                        onChange={(e) => setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))}
+                        onChange={(e) => {
+                          setAmounts((prev) => ({ ...prev, [cat.key]: e.target.value }))
+                          if (entryError) setEntryError('')
+                        }}
                         className="h-9 pl-7 text-right tabular-nums"
                       />
                     </span>
@@ -178,10 +200,15 @@ export default function SpendingPage() {
                 ))}
                 <div className="flex items-center justify-between gap-4 pt-5">
                   <p className="text-xl font-semibold tabular-nums">{formatInr(entryTotal)}</p>
-                  <Button type="submit" disabled={saving || entryTotal === 0}>
+                  <Button type="submit" disabled={saving}>
                     {saving ? 'Saving…' : 'Save'}
                   </Button>
                 </div>
+                {entryError && (
+                  <p role="alert" className="pt-3 text-sm">
+                    {entryError}
+                  </p>
+                )}
               </form>
             </Section>
           )}
@@ -205,9 +232,9 @@ export default function SpendingPage() {
                       <span className="text-sm tabular-nums">{formatInr(Number(txn.amount))}</span>
                       <button
                         type="button"
-                        onClick={() => deleteTransaction(txn.id)}
+                        onClick={() => deleteTransaction(txn)}
                         aria-label={`Remove ${txn.merchant_name || 'entry'}`}
-                        className="text-sm text-muted-foreground transition-[color,opacity] hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                        className="tap text-sm text-muted-foreground transition-[color,opacity] hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                       >
                         Remove
                       </button>

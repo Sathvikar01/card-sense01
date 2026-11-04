@@ -41,7 +41,7 @@ function AccordionTrigger({
         {...props}
       >
         {children}
-        <Chevron className="text-muted-foreground pointer-events-none translate-y-0.5 transition-transform duration-200" />
+        <Chevron className="text-muted-foreground pointer-events-none translate-y-0.5 transition-transform duration-(--duration-standard)" />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )

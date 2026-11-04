@@ -6,7 +6,7 @@ export default function PrivacyPage() {
         Last updated: August 12, 2026
       </p>
 
-      <div className="mt-8 space-y-8 text-sm leading-relaxed text-foreground/90">
+      <div className="mt-8 space-y-8 text-sm leading-relaxed text-foreground">
         <section>
           <h2 className="text-lg font-semibold text-foreground">1. Information we collect</h2>
           <p className="mt-2">

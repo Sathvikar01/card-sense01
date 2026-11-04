@@ -1,5 +1,6 @@
 'use client'
 
+import { Skeleton } from '@/components/ui/skeleton'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
@@ -78,10 +79,10 @@ export default function RecommendationsPage() {
     router.push('/advisor?new=1')
   }
 
-  if (loading) return <div className="h-96 shimmer rounded-xl" aria-busy="true" />
+  if (loading) return <Skeleton className="h-96 rounded-xl" />
 
   if (!recommendation) {
-    return <EmptyState title="No matches yet" actionLabel="Find my card" actionHref="/advisor" />
+    return <EmptyState title="No matches yet" actionLabel="Find my card" actionHref="/advisor" primary />
   }
 
   return <AdvisorResults result={recommendation} onStartOver={handleStartOver} />

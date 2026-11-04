@@ -126,7 +126,7 @@ function CardDetailContent({ cardData: c }: { cardData: CreditCard }) {
         </div>
       </header>
 
-      {c.description && <p className="mt-10 text-[15px] leading-relaxed text-foreground/80">{c.description}</p>}
+      {c.description && <p className="mt-10 text-base leading-relaxed text-foreground">{c.description}</p>}
 
       <div className="mt-10 space-y-10">
         <ListGroup title="Good" items={[...(c.pros || []), ...benefits]} />

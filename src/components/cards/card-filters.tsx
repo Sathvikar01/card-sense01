@@ -1,3 +1,4 @@
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Select,
   SelectContent,
@@ -7,7 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { INDIAN_BANKS } from '@/lib/constants/banks'
-import { cn } from '@/lib/utils'
 
 const CARD_TYPES = [
   { value: 'entry_level', label: 'Entry level' },
@@ -97,45 +97,35 @@ export function CardFilters({
       {/* Card Type */}
       <div className="space-y-2.5">
         <p className="text-sm font-medium">Type</p>
-        <div className="flex flex-wrap gap-2">
-          {CARD_TYPES.map((type) => {
-            const isActive = cardType === type.value
-            return (
-              <button
-                key={type.value}
-                onClick={() => onCardTypeChange(isActive ? 'all' : type.value)}
-                className={cn(
-                  'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
-                  isActive ? 'bg-gold text-pine' : 'bg-muted text-foreground hover:bg-pine/10'
-                )}
-              >
-                {type.label}
-              </button>
-            )
-          })}
-        </div>
+        <ToggleGroup
+          type="single"
+          aria-label="Type"
+          value={cardType || ''}
+          onValueChange={(value) => onCardTypeChange(value || 'all')}
+        >
+          {CARD_TYPES.map((type) => (
+            <ToggleGroupItem key={type.value} value={type.value}>
+              {type.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       {/* Card Network */}
       <div className="space-y-2.5">
         <p className="text-sm font-medium">Network</p>
-        <div className="flex flex-wrap gap-2">
-          {NETWORK_OPTIONS.map((option) => {
-            const isActive = network === option.value
-            return (
-              <button
-                key={option.value}
-                onClick={() => onNetworkChange(isActive ? 'all' : option.value)}
-                className={cn(
-                  'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
-                  isActive ? 'bg-gold text-pine' : 'bg-muted text-foreground hover:bg-pine/10'
-                )}
-              >
-                {option.label}
-              </button>
-            )
-          })}
-        </div>
+        <ToggleGroup
+          type="single"
+          aria-label="Network"
+          value={network || ''}
+          onValueChange={(value) => onNetworkChange(value || 'all')}
+        >
+          {NETWORK_OPTIONS.map((option) => (
+            <ToggleGroupItem key={option.value} value={option.value}>
+              {option.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       {/* Max Annual Fee */}

@@ -71,7 +71,7 @@ export function RecommendationExplanationDialog({
           <div className="max-w-2xl space-y-5 rounded-xl bg-muted p-4">
             {(card.whyThisCard?.summary || card.finalDecisionReason) && (
               <div>
-                {card.whyThisCard?.summary && <p className=" text-sm leading-6 text-foreground/80">{card.whyThisCard.summary}</p>}
+                {card.whyThisCard?.summary && <p className=" text-sm leading-6 text-foreground">{card.whyThisCard.summary}</p>}
                 {card.finalDecisionReason && <p className="mt-2 text-sm leading-6 text-muted-foreground">{card.finalDecisionReason}</p>}
               </div>
             )}
@@ -97,8 +97,8 @@ export function RecommendationExplanationDialog({
 
             {topRules.length > 0 && (
               <div>
-                <ul className="space-y-2 text-sm leading-6 text-foreground/75">
-                  {topRules.map((rule, index) => <li key={`${rule.ruleId}-${index}`}><span className="mr-2 text-primary">·</span>{rule.detail || rule.label}</li>)}
+                <ul className="flex flex-col gap-2 text-sm leading-6">
+                  {topRules.map((rule, index) => <li key={`${rule.ruleId}-${index}`}>{rule.detail || rule.label}</li>)}
                 </ul>
               </div>
             )}

@@ -5,12 +5,12 @@ import { Toaster as Sonner, type ToasterProps } from "sonner"
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
-      theme="light"
+      theme="system"
       className="toaster group"
       style={
         {
-          "--normal-bg": "var(--pine)",
-          "--normal-text": "var(--paper)",
+          "--normal-bg": "var(--ink)",
+          "--normal-text": "var(--ground)",
           "--normal-border": "transparent",
           "--border-radius": "999px",
         } as React.CSSProperties

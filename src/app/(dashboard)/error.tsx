@@ -9,8 +9,8 @@ export default function DashboardError({ error, reset }: { error: Error & { dige
   }, [error])
 
   return (
-    <div role="alert" className="flex flex-col items-center gap-4 py-32 text-center">
-      <p className="text-base font-medium">Something went wrong</p>
+    <div role="alert" className="flex flex-col items-start gap-3 py-16">
+      <p>Unable to load this page. Check your connection and try again.</p>
       <Button variant="outline" onClick={reset}>
         Try again
       </Button>
