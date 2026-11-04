@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 import { AdvisorLoading } from '@/components/advisor/advisor-loading'
-import { AdvisorResults, type AdvisorCardResult, type AdvisorResult } from '@/components/advisor/advisor-results'
+import { AdvisorResults, type AdvisorResult } from '@/components/advisor/advisor-results'
+import { mapAdvisorCards } from '@/lib/recommendations/map-advisor-cards'
 import { toast } from 'sonner'
 import { trackInteraction } from '@/lib/interactions/client'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
@@ -32,34 +33,6 @@ async function fetchWithTimeout(input: string, init?: RequestInit, timeoutMs = F
   } finally {
     clearTimeout(timeoutId)
   }
-}
-
-function mapCards(cards: Record<string, unknown>[] = []): AdvisorCardResult[] {
-  return cards.map((card) => ({
-    id: String((card.id || card.cardId) || ''),
-    name: String((card.name || card.cardName) || ''),
-    bank: String(card.bank || ''),
-    score: Number(card.score || 0),
-    reason: String((card.reason || card.reasoning) || ''),
-    annualFee: Number((card.annualFee || card.annualValue) || 0),
-    rewardRate: Number(card.rewardRate || 0),
-    estimatedAnnualValue: Number((card.estimatedAnnualValue || card.annualValue) || 0),
-    pros: ((card.pros || card.keyPerks || []) as string[]),
-    cons: ((card.cons || []) as string[]),
-      bestCategories: ((card.bestCategories || card.bestFor || []) as string[]),
-    eligibilityMatch: ((card.eligibilityMatch || 'moderate') as 'high' | 'moderate' | 'uncertain'),
-    usageStrategy: String(card.usageStrategy || ''),
-    finalDecisionReason: card.finalDecisionReason ? String(card.finalDecisionReason) : undefined,
-    rulesEvaluated: Array.isArray(card.rulesEvaluated)
-      ? (card.rulesEvaluated as AdvisorCardResult['rulesEvaluated'])
-      : undefined,
-    ruleScores: card.ruleScores && typeof card.ruleScores === 'object'
-      ? (card.ruleScores as AdvisorCardResult['ruleScores'])
-      : undefined,
-    whyThisCard: card.whyThisCard && typeof card.whyThisCard === 'object'
-      ? (card.whyThisCard as AdvisorCardResult['whyThisCard'])
-      : undefined,
-  }))
 }
 
 export default function AdvisorPage() {
@@ -140,6 +113,8 @@ export default function AdvisorPage() {
           const spendingData = await spendingRes.json()
           const byCategory = (spendingData?.aggregates?.by_category || {}) as Record<string, number>
           store.prefillFromSpending({ byCategory })
+          const trackedTotal = Object.values(byCategory).reduce((sum, value) => sum + (Number(value) || 0), 0)
+          if (trackedTotal > 0) setMonthlySpend((current) => current || String(Math.round(trackedTotal)))
         }
       } catch {
         // Non-fatal, user can still fill advisor manually
@@ -175,7 +150,7 @@ export default function AdvisorPage() {
 
         const mapped: AdvisorResult = {
           analysis: data.recommendation.analysis || '',
-          cards: mapCards(data.recommendation.cards as Record<string, unknown>[]),
+          cards: mapAdvisorCards(data.recommendation.cards as Record<string, unknown>[]),
         }
         if (cancelled) {
           return
@@ -196,7 +171,7 @@ export default function AdvisorPage() {
 
   const handleComplete = async (answers: Record<string, string>) => {
     if (TURNSTILE_ENABLED && !turnstileToken) {
-      const message = 'Please complete the security check before requesting recommendations'
+      const message = 'Complete the security check first'
       setError(message)
       toast.error(message)
       return
@@ -253,9 +228,8 @@ export default function AdvisorPage() {
 
       persistResult({
         analysis: data.analysis || '',
-        cards: mapCards((data.cards || []) as Record<string, unknown>[]),
+        cards: mapAdvisorCards((data.cards || []) as Record<string, unknown>[]),
       })
-      toast.success('Recommendations ready')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to get recommendations'
       setError(message)
@@ -286,18 +260,13 @@ export default function AdvisorPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Advisor</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Answer key eligibility, spending, and goal questions to get tailored credit card matches.
-        </p>
-      </div>
+    <div>
+      <h1 className="sr-only">Advisor</h1>
 
       {error && step === 'follow-up' && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <p role="alert" className="mx-auto mb-6 max-w-lg rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
-        </div>
+        </p>
       )}
 
       {step === 'follow-up' && (
@@ -314,27 +283,20 @@ export default function AdvisorPage() {
             isSubmitting={isLoading}
           />
           {TURNSTILE_ENABLED && (
-            <div className="pt-2">
-              <p className="mb-2 text-xs text-muted-foreground">
-                Complete this quick security check to enable recommendation requests.
-              </p>
+            <div className="mx-auto mt-6 max-w-lg">
               <TurnstileWidget
                 key={turnstileWidgetNonce}
                 siteKey={TURNSTILE_SITE_KEY}
                 action="ai_recommendation"
                 onToken={setTurnstileToken}
-                onError={() => toast.error('Unable to load security check. Please refresh.')}
+                onError={() => toast.error('Security check failed to load. Refresh and try again.')}
               />
             </div>
           )}
         </>
       )}
 
-      {step === 'loading' && (
-        <div>
-          <AdvisorLoading />
-        </div>
-      )}
+      {step === 'loading' && <AdvisorLoading />}
 
       {step === 'results' && result && <AdvisorResults result={result} onStartOver={handleStartOver} />}
     </div>

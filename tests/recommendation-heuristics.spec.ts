@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { clickByRole, expectVisible } from './helpers/ui'
+import { answerAdvisor, expectVisible } from './helpers/ui'
 
 test('Advisor recommendations respond to primary goal', async ({ page }) => {
   let recommendCalled = false
@@ -71,20 +71,11 @@ test('Advisor recommendations respond to primary goal', async ({ page }) => {
   await page.goto('/advisor?new=1')
 
   await expectVisible(page.getByRole('heading', { name: /Advisor/i }), 'Advisor page heading')
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 1)')
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 2)')
-
-  await expectVisible(
-    page.getByText(/Select your top spending categories/i),
-    'Advisor spending category prompt'
+  await answerAdvisor(
+    page,
+    [/^25–30$/, /^Above ₹6L a year$/, /^No$/, /^Travel & commute$/, /^Travel and lounges$/],
+    '40000'
   )
-  const travelCard = page.getByRole('button', { name: /Travel\s+Flights|Travel\b/i }).first()
-  await expectVisible(travelCard, 'Advisor travel category button')
-  await travelCard.click()
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 3)')
-
-  await clickByRole(page, 'button', /Travel benefits/i, 'Advisor travel goal button')
-  await clickByRole(page, 'button', /Get recommendations/i, 'Advisor get recommendations button')
 
   await expect
     .poll(() => recommendCalled, {
@@ -92,10 +83,10 @@ test('Advisor recommendations respond to primary goal', async ({ page }) => {
     })
     .toBeTruthy()
 
-  expect(capturedPayload?.['primaryGoal'] as string | undefined).toBe('travel_perks')
+  expect((capturedPayload?.['followUpAnswers'] as Record<string, string> | undefined)?.value_priority).toBe('travel_perks')
 
   await expectVisible(
-    page.getByRole('heading', { name: /Recommended Cards/i }),
+    page.getByRole('heading', { name: /Your matches/i }),
     'Advisor recommendations heading'
   )
 })

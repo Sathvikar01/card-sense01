@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { getCardDesign, type CardDesign } from '@/data/card-designs'
 import { NetworkLogo, ContactlessIcon } from './network-logos'
-import { useRef, useState, useCallback, useMemo } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import Image from 'next/image'
 
@@ -128,9 +128,9 @@ export function CreditCardVisual({
     setImageFailed(true)
   }, [])
 
-  const textColor = design.textColor === 'white' ? 'text-white' : 'text-gray-900'
-  const textMuted = design.textColor === 'white' ? 'text-white/60' : 'text-gray-500'
-  const textSubtle = design.textColor === 'white' ? 'text-white/40' : 'text-gray-400'
+  const textColor = design.textColor === 'white' ? 'text-white' : 'text-foreground'
+  const textMuted = design.textColor === 'white' ? 'text-white/60' : 'text-muted-foreground'
+  const textSubtle = design.textColor === 'white' ? 'text-white/40' : 'text-muted-foreground'
 
   const chipGradient =
     design.chipStyle === 'gold'
@@ -139,19 +139,10 @@ export function CreditCardVisual({
 
   const chipContactLines = design.chipStyle === 'gold' ? 'rgba(180, 140, 50, 0.4)' : 'rgba(140, 145, 150, 0.4)'
 
-  const isPremium = useMemo(() => {
-    const premiumKeywords = ['black', 'platinum', 'gold', 'regalia', 'sapphiro', 'legend', 'diners']
-    const id = cardId.toLowerCase()
-    return premiumKeywords.some((k) => id.includes(k))
-  }, [cardId])
-
   const cardFront = (
     <div
       style={{ background: design.gradient }}
-      className={cn(
-        'credit-card-visual relative h-full w-full select-none overflow-hidden rounded-xl',
-        isPremium && 'card-holographic'
-      )}
+      className="credit-card-visual relative h-full w-full select-none overflow-hidden rounded-xl"
     >
       {hasCardArtwork ? (
         <Image
@@ -351,7 +342,7 @@ export function CreditCardVisual({
             }}
           />
         </div>
-        <div className="ml-2 rounded bg-white/90 px-2 py-1 text-[8px] font-bold text-gray-800">
+        <div className="ml-2 rounded bg-card px-2 py-1 text-[8px] font-bold text-foreground">
           CVV
         </div>
       </div>

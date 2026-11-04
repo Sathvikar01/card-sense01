@@ -1,51 +1,52 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import {
-  ArrowLeft,
-  CheckCircle2,
-  ExternalLink,
-  GitCompare,
-  TrendingUp,
-  XCircle,
-} from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { CreditCardVisual } from '@/components/cards/credit-card-visual'
+import { EmptyState } from '@/components/shared/empty-state'
 import { useAnalysisStore } from '@/store/use-analysis-store'
 import type { CreditCard } from '@/types/credit-card'
 import { formatCurrency } from '@/lib/utils/format-currency'
-import { cn } from '@/lib/utils'
 import { trackInteraction } from '@/lib/interactions/client'
 
-function BoolCell({ value }: { value: boolean | null }) {
-  if (value === null) {
-    return <span className="text-xs text-muted-foreground">Not published</span>
-  }
-  return value ? (
-    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-  ) : (
-    <XCircle className="h-4 w-4 text-muted-foreground/50" />
-  )
-}
+const fee = (value: number) => (value === 0 ? 'Free' : formatCurrency(value, { showDecimals: false }))
+const lakh = (value: number) => formatCurrency(value, { compact: true, showDecimals: false })
+const yesNo = (value: boolean | null) => (value === null ? '—' : value ? 'Yes' : 'No')
 
-function formatFee(value: number) {
-  return value === 0 ? 'Free' : formatCurrency(value, { showDecimals: false })
-}
+type Row = [label: string, value: (card: CreditCard) => React.ReactNode]
 
-function formatCardType(value: string) {
-  return value
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
-function withKey(value: string, index: number) {
-  return `${value}-${index}`
-}
+const GROUPS: Array<{ title: string; rows: Row[] }> = [
+  {
+    title: 'Fees',
+    rows: [
+      ['Joining', (c) => fee(c.joining_fee)],
+      ['Annual', (c) => fee(c.annual_fee)],
+      ['Waived at', (c) => (c.annual_fee_waiver_spend ? `${lakh(c.annual_fee_waiver_spend)} spend` : '—')],
+      ['Forex markup', (c) => (c.forex_markup !== null ? `${c.forex_markup}%` : '—')],
+    ],
+  },
+  {
+    title: 'Rewards',
+    rows: [
+      ['Base', (c) => (c.reward_rate_default > 0 ? `${c.reward_rate_default}%` : '—')],
+      ['Lounge', (c) => (c.lounge_access === 'none' ? '—' : <span className="capitalize">{c.lounge_access.replace(/_/g, ' ')}</span>)],
+      ['Fuel waiver', (c) => yesNo(c.fuel_surcharge_waiver)],
+      ['Golf', (c) => yesNo(c.golf_access)],
+    ],
+  },
+  {
+    title: 'Eligibility',
+    rows: [
+      ['CIBIL score', (c) => (c.min_cibil_score > 0 ? c.min_cibil_score : '—')],
+      ['Income, salaried', (c) => (c.min_income_salaried ? lakh(c.min_income_salaried) : '—')],
+      ['Age', (c) => `${c.min_age}–${c.max_age}`],
+      ['ITR required', (c) => yesNo(c.requires_itr)],
+    ],
+  },
+]
 
 export default function CardComparePage() {
   const router = useRouter()
@@ -111,358 +112,110 @@ export default function CardComparePage() {
   }, [comparedCardIds, comparedCards, hasHydrated])
 
   const count = cards.length
-  const gridTemplate = useMemo(
-    () => ({ gridTemplateColumns: `180px repeat(${count}, minmax(240px, 1fr))` }),
-    [count]
-  )
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-72 shimmer rounded-lg" />
-        <div className="h-96 shimmer rounded-2xl" />
-      </div>
-    )
+    return <div className="h-96 shimmer rounded-xl" aria-busy="true" />
   }
 
   if (count < 2) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <GitCompare className="h-12 w-12 text-muted-foreground/35" />
-        <p className="text-muted-foreground">Select at least 2 cards to compare.</p>
-        <Button asChild className="cardsense-btn-primary">
-          <Link href="/cards">Browse Cards</Link>
-        </Button>
-      </div>
-    )
+    return <EmptyState title="Pick two or more cards" actionLabel="Browse cards" actionHref="/cards" />
   }
 
   return (
-    <div className="max-w-6xl space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm" className="gap-2">
-            <Link href="/cards">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Card Comparison</h1>
-            <p className="text-sm text-muted-foreground">
-              Comparing {count} cards side-by-side
-            </p>
-          </div>
-        </div>
+    <div>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <Link
+          href="/cards"
+          className="-ml-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ChevronLeft className="h-4 w-4" /> Cards
+        </Link>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="gap-1.5 text-xs"
           onClick={() => {
             clearComparison()
             router.push('/cards')
           }}
         >
-          <GitCompare className="h-3.5 w-3.5" />
-          Change Cards
+          Clear
         </Button>
       </div>
+      <h1 className="sr-only">Compare cards</h1>
 
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="stat-card-premium"
-      >
-        <div className="overflow-x-auto">
-          <div className="min-w-max">
-        <div className="grid border-b border-border/30 bg-gradient-to-b from-[#fdf3d7]/20 to-transparent" style={gridTemplate}>
-          <div className="flex items-end px-4 pb-4 pt-5">
-            <span className="text-xs text-muted-foreground">Cards</span>
-          </div>
-          {cards.map((card) => (
-            <div key={card.id} className="flex flex-col items-center gap-2 border-l border-border/20 px-4 pb-4 pt-5">
-              <CreditCardVisual
-                cardId={card.id}
-                cardSlug={card.card_slug}
-                size="sm"
-                bankName={card.bank_name}
-                cardName={card.card_name}
-                network={card.card_network}
-                imageUrl={card.image_url}
-                interactive
-              />
-              <div className="text-center">
-                <p className="text-[0.6rem] font-medium uppercase tracking-wider text-muted-foreground">
-                  {card.bank_name}
-                </p>
-                <p className="text-sm font-semibold text-foreground leading-tight">{card.card_name}</p>
-                <div className="mt-1.5 flex flex-wrap justify-center gap-1">
-                  <Badge variant="outline" className="border-[#d4a017]/40 text-[0.55rem] text-[#b8860b]">
-                    {formatCardType(card.card_type)}
-                  </Badge>
-                  <Badge variant="secondary" className="text-[0.55rem]">
-                    {card.card_network.toUpperCase()}
-                  </Badge>
-                </div>
-              </div>
-              {card.apply_url && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-[0.65rem]" asChild>
-                  <a href={card.apply_url} target="_blank" rel="noopener noreferrer">
-                    Apply
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid border-b border-border/20 bg-[#fdf3d7]/35" style={gridTemplate}>
-          <div className="px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[#b8860b]">
-            Fees
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 0)} className="border-l border-border/20" />
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Joining Fee
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 1)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <span className="font-semibold">{formatFee(card.joining_fee)}</span>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Annual Fee
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 2)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5 text-center">
-              <div>
-                <span className="font-semibold">{formatFee(card.annual_fee)}</span>
-                {card.annual_fee_waiver_spend && card.annual_fee_waiver_spend > 0 && (
-                  <p className="mt-0.5 text-[0.6rem] text-muted-foreground">
-                    Waiver @ {formatCurrency(card.annual_fee_waiver_spend, { compact: true, showDecimals: false })}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Forex Markup
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 3)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              {card.forex_markup !== null ? (
-                <span className={cn('font-semibold', card.forex_markup === 0 ? 'text-emerald-600' : '')}>
-                  {card.forex_markup}%
-                </span>
-              ) : (
-                <span className="text-muted-foreground">-</span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid border-b border-border/20 bg-[#fdf3d7]/35" style={gridTemplate}>
-          <div className="px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[#b8860b]">
-            Rewards & Benefits
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 4)} className="border-l border-border/20" />
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Estimated Base Return
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 5)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-[#b8860b]" />
-                <span className="font-semibold">
-                  {card.reward_rate_default > 0 ? `${card.reward_rate_default}%` : 'Not published'}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Lounge Access
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 6)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5 text-center">
-              <span className={cn('font-medium capitalize', card.lounge_access === 'none' ? 'text-muted-foreground' : 'text-[#b8860b]')}>
-                {card.lounge_access === 'none' ? '—' : card.lounge_access.replace(/_/g, ' ')}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Fuel Waiver
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 7)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <BoolCell value={card.fuel_surcharge_waiver} />
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Golf Access
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 8)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <BoolCell value={card.golf_access} />
-            </div>
-          ))}
-        </div>
-
-        <div className="grid border-b border-border/20 bg-[#fdf3d7]/35" style={gridTemplate}>
-          <div className="px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[#b8860b]">
-            Eligibility
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 9)} className="border-l border-border/20" />
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Min CIBIL Score
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 10)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <span className="font-semibold">
-                {card.min_cibil_score > 0 ? card.min_cibil_score : 'Not published'}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Min Income (Salaried)
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 11)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              {card.min_income_salaried ? (
-                <span className="font-semibold">
-                  {formatCurrency(card.min_income_salaried, { compact: true, showDecimals: false })}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">-</span>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Age Requirement
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 12)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <span className="font-semibold">
-                {card.min_age}-{card.max_age} yrs
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-center bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            ITR Required
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 13)} className="flex items-center justify-center border-l border-border/20 px-4 py-3.5">
-              <BoolCell value={card.requires_itr} />
-            </div>
-          ))}
-        </div>
-
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-start bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Pros
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 14)} className="border-l border-border/20 px-4 py-3.5">
-              <ul className="space-y-1">
-                {(card.pros || []).slice(0, 4).map((point, index) => (
-                  <li key={withKey(card.id, index)} className="flex items-start gap-1.5 text-xs">
-                    <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-emerald-600" />
-                    <span className="text-foreground">{point}</span>
-                  </li>
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="w-full min-w-[640px] table-fixed border-separate border-spacing-0 text-sm">
+          <colgroup>
+            <col className="w-36 sm:w-44" />
+            {cards.map((card) => (
+              <col key={card.id} />
+            ))}
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" className="sticky left-0 bg-background" />
+              {cards.map((card) => (
+                <th key={card.id} scope="col" className="px-3 pb-6 text-left align-bottom font-normal">
+                  <Link href={`/cards/${card.id}`} className="block">
+                    <CreditCardVisual
+                      cardId={card.id}
+                      cardSlug={card.card_slug}
+                      size="sm"
+                      bankName={card.bank_name}
+                      cardName={card.card_name}
+                      network={card.card_network}
+                      imageUrl={card.image_url}
+                      className="w-full max-w-[220px]"
+                    />
+                    <span className="mt-3 block font-medium">{card.card_name}</span>
+                    <span className="block text-muted-foreground">{card.bank_name}</span>
+                  </Link>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {GROUPS.map((group) => (
+              <Fragment key={group.title}>
+                <tr>
+                  <th
+                    scope="colgroup"
+                    colSpan={count + 1}
+                    className="border-b border-border px-0 pb-2 pt-8 text-left text-base font-semibold"
+                  >
+                    {group.title}
+                  </th>
+                </tr>
+                {group.rows.map(([label, value]) => (
+                  <tr key={label}>
+                    <th scope="row" className="sticky left-0 border-b border-border bg-background py-3 pr-3 text-left font-normal text-muted-foreground">
+                      {label}
+                    </th>
+                    {cards.map((card) => (
+                      <td key={card.id} className="border-b border-border px-3 py-3 tabular-nums">
+                        {value(card)}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="grid border-b border-border/20" style={gridTemplate}>
-          <div className="flex items-start bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Cons
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 15)} className="border-l border-border/20 px-4 py-3.5">
-              <ul className="space-y-1">
-                {(card.cons || []).slice(0, 4).map((point, index) => (
-                  <li key={withKey(card.id, index + 20)} className="flex items-start gap-1.5 text-xs">
-                    <XCircle className="mt-0.5 h-3 w-3 shrink-0 text-red-500" />
-                    <span className="text-foreground">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="grid" style={gridTemplate}>
-          <div className="flex items-start bg-muted/20 px-4 py-3.5 text-xs font-medium text-muted-foreground">
-            Best For
-          </div>
-          {cards.map((card) => (
-            <div key={withKey(card.id, 16)} className="border-l border-border/20 px-4 py-3.5">
-              <div className="flex flex-wrap gap-1">
-                {(card.best_for || []).map((tag, index) => (
-                  <Badge key={withKey(card.id, index + 40)} variant="secondary" className="rounded-full text-[0.55rem]">
-                    {tag.replace(/_/g, ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-          </div>
-        </div>
-      </motion.div>
-
-      <div className={cn('grid gap-4', count === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3')}>
-        {cards.map((card) => (
-          <div key={card.id} className="stat-card-premium space-y-3 p-4">
-            <p className="truncate text-xs font-medium text-muted-foreground">
-              {card.bank_name} · {card.card_name}
-            </p>
-            <p className="text-2xl font-bold text-foreground">
-              {formatFee(card.annual_fee)}
-              <span className="ml-1 text-xs font-normal text-muted-foreground">/ year</span>
-            </p>
-            <div className="flex gap-2">
-              {card.apply_url && (
-                <Button size="sm" className="cardsense-btn-primary flex-1 gap-1.5" asChild>
-                  <a href={card.apply_url} target="_blank" rel="noopener noreferrer">
-                    Apply
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </Button>
-              )}
-              <Button size="sm" variant="outline" className="flex-1" asChild>
-                <Link href={`/cards/${card.id}`}>Details</Link>
-              </Button>
-            </div>
-          </div>
-        ))}
+              </Fragment>
+            ))}
+            <tr>
+              <td className="sticky left-0 bg-background" />
+              {cards.map((card) => (
+                <td key={card.id} className="px-3 pt-6">
+                  {card.apply_url && (
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={card.apply_url} target="_blank" rel="noopener noreferrer">
+                        Apply
+                      </a>
+                    </Button>
+                  )}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   )

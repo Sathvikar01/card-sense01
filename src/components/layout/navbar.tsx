@@ -1,13 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
-import { CardSenseIcon } from '@/components/shared/logo'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Logo } from '@/components/shared/logo'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,39 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from '@/components/ui/sheet'
-import { Settings as SettingsIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
 import { clearPrivateClientData } from '@/lib/privacy/client-data'
-
-/* ===== Navigation data ===== */
-
-const mainNav = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Browse Cards', href: '/cards' },
-  { name: 'Spending', href: '/spending' },
-  { name: 'Education', href: '/education' },
-]
-
-const mobileNav = [
-  { name: 'Dashboard', href: '/dashboard', icon: DashboardSVG },
-  { name: 'Advisor', href: '/advisor', icon: BrainNavSVG },
-  { name: 'Browse Cards', href: '/cards', icon: CardNavSVG },
-  { name: 'Spending', href: '/spending', icon: ChartNavSVG },
-  { name: 'Education', href: '/education', icon: BookNavSVG },
-  { name: 'AI Chat', href: '/chat', icon: ChatNavSVG },
-  { name: 'Profile', href: '/profile', icon: PersonNavSVG },
-  { name: 'Settings', href: '/settings', icon: GearNavSVG },
-]
-
-/* ===== Main Navbar Component ===== */
+import { NAV_ITEMS, isActivePath } from './nav-items'
 
 interface NavbarProps {
   userName?: string
@@ -59,299 +28,80 @@ export function Navbar({ userName = 'User', userEmail = '' }: NavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
-  const [mobileOpen, setMobileOpen] = useState(false)
 
-  const displayName = userName || 'User'
-  const initials = displayName
+  const initials = userName
     .split(' ')
     .map((n) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
 
-  const isAdvisorActive = pathname?.startsWith('/advisor')
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
       clearPrivateClientData()
-      toast.success('Logged out successfully')
       router.push('/')
       router.refresh()
     } catch {
-      toast.error('Failed to log out')
+      toast.error('Could not log out')
     }
   }
 
-  const profileTriggerButton = (
-    <Button
-      variant="ghost"
-      className="h-10 gap-2 rounded-full px-1.5 sm:h-11 sm:px-2"
-      aria-label="Open profile menu"
-    >
-      <Avatar className="h-8 w-8 border-2 border-[#d4a017]/40 ring-2 ring-[#d4a017]/15">
-        <AvatarImage src="" alt={displayName} />
-        <AvatarFallback className="bg-[#b8860b] text-xs font-semibold text-white">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <span className="hidden text-sm font-medium text-foreground sm:inline">{displayName.split(' ')[0]}</span>
-    </Button>
-  )
-
   return (
-    <header className="sticky top-0 z-50 w-full">
-      <div className="border-b border-border bg-card">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-8 px-4 sm:px-6">
+        <Link href="/dashboard" aria-label="CardSense home" className="flex">
+          <Logo />
+        </Link>
 
-          {/* Brand */}
-          <Link href="/dashboard" className="flex shrink-0 items-center gap-2.5">
-            <CardSenseIcon size={34} />
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Card<span className="text-gradient-gold">Sense</span>
-            </span>
-          </Link>
-
-          {/* Desktop nav links */}
-          <nav className="hidden items-center gap-1 lg:flex">
-            {mainNav.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  data-active={isActive ? 'true' : 'false'}
-                  className={cn(
-                    'cardsense-navbar-link relative px-3 py-2',
-                    isActive && 'text-[#b8860b]'
-                  )}
-                >
-                  {item.name}
-                  {isActive && (
-                    <motion.div
-                      layoutId="navbar-active-indicator"
-                      className="absolute inset-x-1 -bottom-[13px] h-0.5 bg-[#b8860b]"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </Link>
-              )
-            })}
-
-            {/* Advisor link */}
-            <Link
-              href="/advisor"
-              data-active={isAdvisorActive ? 'true' : 'false'}
-              className={cn(
-                'cardsense-navbar-link relative px-3 py-2',
-                isAdvisorActive && 'text-[#b8860b]'
-              )}
-            >
-              Advisor
-              {isAdvisorActive && (
-                <motion.div
-                  layoutId="navbar-active-indicator"
-                  className="absolute inset-x-1 -bottom-[13px] h-0.5 bg-[#b8860b]"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                />
-              )}
-            </Link>
-          </nav>
-
-          {/* Right section */}
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            {/* User avatar dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                {profileTriggerButton}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-60 rounded-xl border-border bg-card" align="end">
-                <DropdownMenuLabel>
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium">{displayName}</p>
-                    <p className="text-xs text-muted-foreground">{userEmail}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
-                  <PersonNavSVG />
-                  <span className="ml-2">Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
-                  <SettingsNavSVG />
-                  <span className="ml-2">Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
-                  <LogoutSVG />
-                  <span className="ml-2">Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Mobile hamburger */}
-            <Button aria-label="Open navigation menu" variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
-              <MenuSVG />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile sheet menu */}
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-80 overflow-y-auto border-r-border/30 bg-card p-0">
-          <SheetHeader className="border-b border-border/30 px-5 py-4">
-            <SheetTitle asChild>
-              <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-                <CardSenseIcon size={34} />
-                <span className="text-lg font-bold tracking-tight text-foreground">
-                  Card<span className="text-gradient-gold">Sense</span>
-                </span>
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+          {NAV_ITEMS.map((item) => {
+            const active = isActivePath(pathname, item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm transition-colors',
+                  active ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {item.name}
               </Link>
-            </SheetTitle>
-          </SheetHeader>
+            )
+          })}
+        </nav>
 
-          <nav className="flex flex-col gap-1 px-3 py-4">
-            {mobileNav.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-              const IconComp = item.icon
-              return (
-                <SheetClose asChild key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-[#fdf3d7]/70 text-[#b8860b]'
-                        : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
-                    )}
-                  >
-                    <span className={cn('shrink-0', isActive ? 'text-[#b8860b]' : 'text-muted-foreground')}>
-                      <IconComp active={isActive} />
-                    </span>
-                    {item.name}
-                  </Link>
-                </SheetClose>
-              )
-            })}
-          </nav>
-
-          {/* Bottom tip */}
-          <div className="mt-auto border-t border-border/30 p-4">
-              <div className="overflow-hidden rounded-xl border border-[#d4a017]/20 bg-[#fdf3d7]/45 px-4 py-3.5">
-              <div className="flex items-start gap-3">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0 text-[#b8860b]">
-                  <path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" stroke="currentColor" strokeWidth="1.2" fill="none" />
-                  <path d="M5 8h6M5 5.5h6M5 10.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.8" />
-                </svg>
-                <div>
-                  <p className="text-xs font-semibold text-foreground">Sharper matches</p>
-                  <p className="mt-0.5 text-[0.68rem] leading-relaxed text-muted-foreground">
-                    Use current spending data for a more relevant match.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Account"
+            className="ml-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-muted text-xs font-medium text-foreground">{initials}</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="font-normal">
+              <p className="truncate text-sm font-medium">{userName}</p>
+              {userEmail && <p className="truncate text-xs text-muted-foreground">{userEmail}</p>}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/profile">Profile</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">Settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/chat">Ask AI</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleLogout}>Log out</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
-  )
-}
-
-/* ===== Custom SVG icons (ported from sidebar + topbar) ===== */
-
-function DashboardSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <rect x="1" y="1" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-      <rect x="10" y="1" width="7" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-      <rect x="10" y="7" width="7" height="10" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-      <rect x="1" y="10" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-    </svg>
-  )
-}
-
-function BrainNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M9 3C7.3 3 5.8 3.9 5.1 5.3 3.4 5.6 2 7.1 2 9c0 1.5.8 2.8 2 3.5 0 .3-.1.6-.1.9C3.9 15.3 5.4 17 7.4 17h3.2c2 0 3.5-1.7 3.5-3.6 0-.3 0-.6-.1-.9 1.2-.7 2-2 2-3.5 0-1.9-1.4-3.4-3.1-3.7C12.2 3.9 10.7 3 9 3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
-      <path d="M9 6.5v6M7 9h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.45" />
-    </svg>
-  )
-}
-
-function CardNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <rect x="1.5" y="4" width="15" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.4" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
-      <line x1="1.5" y1="7.5" x2="16.5" y2="7.5" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="4" y="10" width="4" height="1.5" rx="0.75" fill="currentColor" opacity="0.35" />
-    </svg>
-  )
-}
-
-function ChartNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M2 15h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <rect x="3" y="8" width="3" height="7" rx="1" stroke="currentColor" strokeWidth="1.2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-      <rect x="7.5" y="4" width="3" height="11" rx="1" stroke="currentColor" strokeWidth="1.2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-      <rect x="12" y="6" width="3" height="9" rx="1" stroke="currentColor" strokeWidth="1.2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.15 : 1} />
-    </svg>
-  )
-}
-
-function BookNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M2 3h5.5c.8 0 1.5.7 1.5 1.5V15l-.1-.1C8.1 14.3 7 14 6 14H2V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
-      <path d="M16 3h-5.5c-.8 0-1.5.7-1.5 1.5V15l.1-.1c.8-.6 1.9-.9 2.9-.9H16V3z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
-    </svg>
-  )
-}
-
-function ChatNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M15 2H3a1.5 1.5 0 00-1.5 1.5v8.5A1.5 1.5 0 003 13.5h2v2.5l3.5-2.5H15a1.5 1.5 0 001.5-1.5V3.5A1.5 1.5 0 0015 2z" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} strokeLinejoin="round" />
-      <path d="M5.5 7h7M5.5 9.5h4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function PersonNavSVG({ active }: { active?: boolean }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <circle cx="9" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.12 : 1} />
-      <path d="M2.5 16.5c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function MenuSVG() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <line x1="3" y1="6" x2="19" y2="6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="3" y1="11" x2="15" y2="11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="3" y1="16" x2="19" y2="16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function GearNavSVG({ active }: { active?: boolean }) {
-  return <SettingsIcon aria-hidden="true" className={cn('h-[18px] w-[18px]', active && 'fill-[#b8860b]/10')} />
-}
-
-function SettingsNavSVG() {
-  return <SettingsIcon aria-hidden="true" className="h-4 w-4" />
-}
-
-function LogoutSVG() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M6 2H4a2 2 0 00-2 2v8a2 2 0 002 2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M10.5 11.5L14 8l-3.5-3.5M5.5 8h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }

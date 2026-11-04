@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { CardGrid } from '@/components/cards/card-grid'
 import { CardFilters } from '@/components/cards/card-filters'
 import { CompareBar } from '@/components/cards/compare-bar'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal } from 'lucide-react'
+import { PageHeader } from '@/components/shared/page-header'
 import {
   Sheet,
   SheetContent,
@@ -157,57 +158,31 @@ export default function CardsPage() {
     .length
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Browse Credit Cards
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Explore and compare credit cards from top Indian banks
-        </p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            name="card-search"
-            aria-label="Search credit cards"
-            autoComplete="off"
-            placeholder="Search by card name, bank, or description…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
+    <div>
+      <PageHeader title="Cards">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="relative shrink-0 gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
               <SlidersHorizontal className="h-4 w-4" />
-              Filters
+              Filter
               {activeFiltersCount > 0 && (
-                <span className="bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-xs text-background">
                   {activeFiltersCount}
                 </span>
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:w-[400px] p-0 flex flex-col">
-            <SheetHeader className="px-5 pt-5 pb-0">
-              <div className="flex items-center justify-between">
-                <SheetTitle className="text-base font-semibold">Filter &amp; Sort</SheetTitle>
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={handleClearFilters}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                    Clear all ({activeFiltersCount})
-                  </button>
-                )}
-              </div>
+          <SheetContent side="right" className="flex w-full flex-col p-0 sm:w-[380px]">
+            <SheetHeader className="flex-row items-center justify-between px-5 pb-0 pt-5">
+              <SheetTitle className="text-base font-semibold">Filter</SheetTitle>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={handleClearFilters}
+                  className="mr-8 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Reset
+                </button>
+              )}
             </SheetHeader>
             <div className="flex-1 overflow-y-auto">
               <CardFilters
@@ -225,24 +200,23 @@ export default function CardsPage() {
             </div>
           </SheetContent>
         </Sheet>
+      </PageHeader>
+
+      <div className="relative mb-8">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          name="card-search"
+          aria-label="Search cards"
+          autoComplete="off"
+          placeholder="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {loading ? 'Loading cards…' : (
-            <>
-              Showing <span className="font-semibold text-foreground">{cards.length}</span> card{cards.length !== 1 ? 's' : ''}
-              {activeFiltersCount > 0 && ' (filtered)'}
-            </>
-          )}
-        </p>
-      </div>
-
-      <div>
-        <CardGrid cards={cards} loading={loading} />
-      </div>
-
-      {/* Floating comparison bar */}
+      <CardGrid cards={cards} loading={loading} />
       <CompareBar />
     </div>
   )

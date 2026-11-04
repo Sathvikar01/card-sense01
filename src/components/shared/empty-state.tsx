@@ -1,30 +1,21 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 interface EmptyStateProps {
-  title: string;
-  description: string;
-  actionLabel?: string;
-  actionHref?: string;
+  title: string
+  actionLabel?: string
+  actionHref?: string
 }
 
-export function EmptyState({
-  title,
-  description,
-  actionLabel,
-  actionHref,
-}: EmptyStateProps) {
+export function EmptyState({ title, actionLabel, actionHref }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground max-w-md">
-        {description}
-      </p>
+    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+      <p className="text-sm text-muted-foreground">{title}</p>
       {actionLabel && actionHref && (
-        <Button asChild className="mt-6">
+        <Button asChild size="sm">
           <Link href={actionHref}>{actionLabel}</Link>
         </Button>
       )}
     </div>
-  );
+  )
 }

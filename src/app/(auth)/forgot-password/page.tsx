@@ -28,9 +28,9 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      toast.success('Password reset link sent. Check your email.')
+      toast.success('Check your email')
     } catch {
-      toast.error('Could not send reset link right now. Please try again.')
+      toast.error('Couldn’t send the link. Try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -38,12 +38,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight">Reset password</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Enter your account email and we&apos;ll send you a secure reset link.
-        </p>
-      </div>
+      <h1 className="text-center text-xl font-semibold tracking-tight">Reset password</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
@@ -60,14 +55,13 @@ export default function ForgotPasswordPage() {
           />
         </div>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Sending...' : 'Send reset link'}
+          {isSubmitting ? 'Sending…' : 'Send reset link'}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-        Remembered it?{' '}
-        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-          Back to sign in
+      <p className="text-center text-sm text-muted-foreground">
+        <Link href="/login" className="font-medium text-foreground hover:underline">
+          Sign in
         </Link>
       </p>
     </div>

@@ -28,9 +28,9 @@ export default async function EducationPage() {
   const topSlugs = (articles || []).slice(0, 6).map((article) => article.slug)
 
   return (
-    <div className="space-y-8">
+    <>
       <EducationRoutePrefetch slugs={topSlugs} />
       <EducationLibrary articles={articles || []} />
-    </div>
+    </>
   )
 }

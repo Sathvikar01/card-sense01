@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 import { AdvisorResults, type AdvisorResult } from '@/components/advisor/advisor-results'
-import { Button } from '@/components/ui/button'
+import { mapAdvisorCards } from '@/lib/recommendations/map-advisor-cards'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export default function RecommendationsPage() {
   const router = useRouter()
@@ -32,33 +33,7 @@ export default function RecommendationsPage() {
               persona: null,
               profileSummary: '',
               analysis: saved.analysis || '',
-              cards: (saved.cards as Record<string, unknown>[]).map((card) => ({
-                id: ((card.id || card.cardId) || '') as string,
-                cardSlug: card.cardSlug ? String(card.cardSlug) : undefined,
-                imageUrl: card.imageUrl ? String(card.imageUrl) : null,
-                name: ((card.name || card.cardName) || '') as string,
-                bank: (card.bank || '') as string,
-                score: (card.score || 0) as number,
-                reason: ((card.reason || card.reasoning) || '') as string,
-                annualFee: (card.annualFee ?? 0) as number,
-                rewardRate: (card.rewardRate || 0) as number,
-                estimatedAnnualValue: (card.estimatedAnnualValue || 0) as number,
-                pros: ((card.pros || card.keyPerks || []) as string[]),
-                cons: (card.cons || []) as string[],
-                bestCategories: (card.bestCategories || []) as string[],
-                eligibilityMatch: ((card.eligibilityMatch || 'moderate') as string) as 'high' | 'moderate' | 'uncertain',
-                usageStrategy: (card.usageStrategy || '') as string,
-                finalDecisionReason: card.finalDecisionReason ? String(card.finalDecisionReason) : undefined,
-                rulesEvaluated: Array.isArray(card.rulesEvaluated)
-                  ? (card.rulesEvaluated as AdvisorResult['cards'][number]['rulesEvaluated'])
-                  : undefined,
-                ruleScores: card.ruleScores && typeof card.ruleScores === 'object'
-                  ? (card.ruleScores as AdvisorResult['cards'][number]['ruleScores'])
-                  : undefined,
-                whyThisCard: card.whyThisCard && typeof card.whyThisCard === 'object'
-                  ? (card.whyThisCard as AdvisorResult['cards'][number]['whyThisCard'])
-                  : undefined,
-              })),
+              cards: mapAdvisorCards(saved.cards as Record<string, unknown>[]),
             }
             store.setSavedResult({
               ...mapped,
@@ -103,29 +78,11 @@ export default function RecommendationsPage() {
     router.push('/advisor?new=1')
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center space-y-2">
-          <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading your recommendations...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <div className="h-96 shimmer rounded-xl" aria-busy="true" />
 
   if (!recommendation) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-muted-foreground">No recommendations found.</p>
-        <Button onClick={() => router.push('/advisor')}>Go to Advisor</Button>
-      </div>
-    )
+    return <EmptyState title="No matches yet" actionLabel="Find my card" actionHref="/advisor" />
   }
 
-  return (
-    <div className="mx-auto max-w-5xl">
-      <AdvisorResults result={recommendation} onStartOver={handleStartOver} />
-    </div>
-  )
+  return <AdvisorResults result={recommendation} onStartOver={handleStartOver} />
 }

@@ -5,12 +5,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -146,7 +144,7 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
         throw new Error(message)
       }
 
-      toast.success('Financial information updated')
+      toast.success('Saved')
       onUpdate?.()
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -168,9 +166,7 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
             name="employment_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  Employment Type
-                </FormLabel>
+                <FormLabel>Employment</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="h-10">
@@ -196,11 +192,9 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
             name="employer_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  Employer / Business
-                </FormLabel>
+                <FormLabel>Employer</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., TCS, Infosys" className="h-10" {...field} />
+                  <Input placeholder="TCS, Infosys" className="h-10" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -213,15 +207,13 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
             name="annual_income"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  Annual Income ({'\u20B9'})
-                </FormLabel>
+                <FormLabel>Annual income ({'\u20B9'})</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground select-none">{'\u20B9'}</span>
                     <Input
                       type="number"
-                      placeholder="e.g., 600000"
+                      placeholder="600000"
                       className="h-10 pl-8"
                       {...field}
                       onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -229,7 +221,6 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
                     />
                   </div>
                 </FormControl>
-                <FormDescription className="text-[0.7rem]">Gross annual income for card eligibility</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -241,9 +232,7 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
             name="primary_bank"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground">
-                  Primary Bank
-                </FormLabel>
+                <FormLabel>Primary bank</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="h-10">
@@ -258,7 +247,6 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription className="text-[0.7rem]">Pre-approved cards may be available</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -270,12 +258,9 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
           control={form.control}
           name="has_fixed_deposit"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/60 bg-muted/30 p-4">
+            <FormItem className="flex flex-row items-center justify-between">
               <div className="space-y-0.5">
-                <FormLabel className="text-sm font-medium text-foreground">Fixed Deposit (FD)</FormLabel>
-                <FormDescription className="text-[0.7rem]">
-                  FD-backed credit cards are easier to get approved
-                </FormDescription>
+                <FormLabel>Fixed deposit</FormLabel>
               </div>
               <FormControl>
                 <Switch
@@ -295,15 +280,13 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
               name="fd_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-medium text-muted-foreground">
-                    FD Amount ({'\u20B9'})
-                  </FormLabel>
+                  <FormLabel>FD amount ({'\u20B9'})</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground select-none">{'\u20B9'}</span>
                       <Input
                         type="number"
-                        placeholder="e.g., 100000"
+                        placeholder="100000"
                         className="h-10 pl-8"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -320,18 +303,8 @@ export function FinancialInfoForm({ initialData, onUpdate }: FinancialInfoFormPr
 
         {/* Submit */}
         <div className="flex justify-end pt-2">
-          <Button
-            type="submit"
-            disabled={isSaving}
-            size="sm"
-            className="gap-2 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-sm hover:shadow-md"
-          >
-            {isSaving ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Check className="h-3.5 w-3.5" />
-            )}
-            {isSaving ? 'Saving...' : 'Save Changes'}
+          <Button type="submit" disabled={isSaving} size="sm">
+            {isSaving ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </form>

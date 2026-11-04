@@ -64,11 +64,11 @@ export default function ResetPasswordPage() {
         return
       }
 
-      toast.success('Password updated successfully. Please sign in.')
+      toast.success('Password updated')
       await supabase.auth.signOut()
       router.push('/login')
     } catch {
-      toast.error('Could not update password right now. Please try again.')
+      toast.error('Couldn’t update password. Try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -76,21 +76,15 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight">Set new password</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Create a new password for your CardSense account.
-        </p>
-      </div>
+      <h1 className="text-center text-xl font-semibold tracking-tight">New password</h1>
 
       {!hasRecoverySession && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          This reset link may be expired. Request a new one from{' '}
-          <Link href="/forgot-password" className="font-semibold underline">
-            forgot password
+        <p className="rounded-lg bg-muted px-4 py-3 text-center text-sm">
+          Link expired.{' '}
+          <Link href="/forgot-password" className="font-medium underline underline-offset-2">
+            Get a new one
           </Link>
-          .
-        </div>
+        </p>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,7 +93,6 @@ export default function ResetPasswordPage() {
           <Input
             id="new-password"
             type="password"
-            placeholder="At least 8 characters"
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -112,7 +105,6 @@ export default function ResetPasswordPage() {
           <Input
             id="confirm-password"
             type="password"
-            placeholder="Re-enter your password"
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
@@ -125,14 +117,13 @@ export default function ResetPasswordPage() {
           className="w-full"
           disabled={isSubmitting || !hasRecoverySession}
         >
-          {isSubmitting ? 'Updating...' : 'Update password'}
+          {isSubmitting ? 'Updating…' : 'Update password'}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-        Back to{' '}
-        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-          sign in
+      <p className="text-center text-sm text-muted-foreground">
+        <Link href="/login" className="font-medium text-foreground hover:underline">
+          Sign in
         </Link>
       </p>
     </div>

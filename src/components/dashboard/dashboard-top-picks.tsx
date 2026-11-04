@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useAdvisorStore } from '@/lib/store/advisor-store'
 
 export interface DashboardTopPick {
@@ -14,20 +13,16 @@ export interface DashboardTopPick {
   score?: number
 }
 
-interface DashboardTopPicksProps {
-  cards: DashboardTopPick[]
-}
-
-export function DashboardTopPicks({ cards: initialCards }: DashboardTopPicksProps) {
+export function DashboardTopPicks({ cards: initialCards }: { cards: DashboardTopPick[] }) {
   const [cards, setCards] = useState(initialCards)
 
+  // Fall back to the advisor result kept in local storage when nothing is saved server-side.
   useEffect(() => {
     if (initialCards.length > 0) return
 
     const hydrateFromSavedResult = () => {
       const saved = useAdvisorStore.getState().savedResult
       if (!saved?.cards?.length) return
-
       setCards(
         saved.cards.slice(0, 3).map((card) => ({
           cardId: card.id,
@@ -38,36 +33,36 @@ export function DashboardTopPicks({ cards: initialCards }: DashboardTopPicksProp
       )
     }
 
-    if (useAdvisorStore.persist.hasHydrated()) {
-      hydrateFromSavedResult()
-    } else {
-      return useAdvisorStore.persist.onFinishHydration(hydrateFromSavedResult)
-    }
+    if (useAdvisorStore.persist.hasHydrated()) hydrateFromSavedResult()
+    else return useAdvisorStore.persist.onFinishHydration(hydrateFromSavedResult)
   }, [initialCards.length])
 
   return (
-    <div className="px-1 py-2 lg:border-r lg:border-border/50 lg:pr-5">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Top Picks</p>
-        <CheckCircle2 className="h-4 w-4 text-[#b8860b]" strokeWidth={1.7} />
-      </div>
-      <div className="mt-3 space-y-2">
-        {cards.length > 0 ? (
-          cards.map((card, index) => (
-            <Link key={card.cardId || `${card.cardName}-${index}`} href="/recommendations" className="group block truncate text-xs font-medium text-foreground hover:text-[#b8860b]">
-              <span className="mr-1.5 text-muted-foreground">{index + 1}.</span>{card.cardName}
-              {card.bank && <span className="ml-1 text-[0.65rem] font-normal text-muted-foreground">· {card.bank}</span>}
-            </Link>
-          ))
-        ) : (
-          <div>
-            <p className="text-xs text-muted-foreground">No recommendations yet</p>
-            <Link href="/advisor" className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#b8860b] hover:text-[#8d6500]">
-              Take the advisor <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
+    <section>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-base font-semibold">Your matches</h2>
+        {cards.length > 0 && (
+          <Link href="/recommendations" className="text-sm text-muted-foreground hover:text-foreground">
+            View all
+          </Link>
         )}
       </div>
-    </div>
+
+      {cards.length === 0 ? (
+        <div className="surface px-5 py-10 text-center text-sm text-muted-foreground">No matches yet</div>
+      ) : (
+        <ol className="surface divide-y divide-border">
+          {cards.map((card, index) => (
+            <li key={card.cardId || `${card.cardName}-${index}`}>
+              <Link href="/recommendations" className="flex items-center gap-4 px-5 py-3 text-sm transition-colors hover:bg-muted/50">
+                <span className="w-4 tabular-nums text-muted-foreground">{index + 1}</span>
+                <span className="min-w-0 flex-1 truncate font-medium">{card.cardName}</span>
+                <span className="truncate text-muted-foreground">{card.bank}</span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
   )
 }

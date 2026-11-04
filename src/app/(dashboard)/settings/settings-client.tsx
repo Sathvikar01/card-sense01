@@ -4,11 +4,10 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { motion } from 'framer-motion'
+import { PageHeader } from '@/components/shared/page-header'
 import { clearPrivateClientData, readPrivateClientData } from '@/lib/privacy/client-data'
 import {
   AlertDialog,
@@ -21,71 +20,36 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  User,
-  Lock,
-  Shield,
-  Trash2,
-  LogOut,
-  Download,
-  Eye,
-  EyeOff,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-} from 'lucide-react'
 
 interface SettingsClientProps {
-  userId: string
   email: string
   displayName: string
   provider: string
-  createdAt: string
 }
 
-/* ─────────────────── Section wrapper ─────────────────── */
-function Section({
-  title,
-  description,
-  icon: Icon,
-  children,
-}: {
-  title: string
-  description?: string
-  icon: React.ElementType
-  children: React.ReactNode
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="stat-card-premium overflow-hidden"
-    >
-      <div className="border-b border-border/30 bg-gradient-to-r from-transparent via-[#fdf3d7]/20 to-transparent px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#b8860b] to-[#d4a017]">
-            <Icon className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            {description && (
-              <p className="text-xs text-muted-foreground">{description}</p>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="space-y-5 p-4 sm:p-6">{children}</div>
-    </motion.div>
+    <section>
+      <h2 className="mb-3 text-base font-semibold">{title}</h2>
+      <div className="surface divide-y divide-border">{children}</div>
+    </section>
+  )
+}
+
+function Row({ label, children }: { label: React.ReactNode; children?: React.ReactNode }) {
+  return (
+    <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 px-5 py-3">
+      <div className="text-sm">{label}</div>
+      {children}
+    </div>
   )
 }
 
 /* ─────────────────── Main component ─────────────────── */
 export function SettingsClient({
-  userId,
   email,
   displayName,
   provider,
-  createdAt,
 }: SettingsClientProps) {
   const router = useRouter()
   const supabase = createClient()
@@ -93,7 +57,6 @@ export function SettingsClient({
   /* Password change */
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPasswords, setShowPasswords] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
 
   /* Display name change */
@@ -117,7 +80,7 @@ export function SettingsClient({
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Display name updated')
+      toast.success('Saved')
       router.refresh()
     }
   }
@@ -125,11 +88,11 @@ export function SettingsClient({
   /* ── Change password ── */
   const handleChangePassword = async () => {
     if (!newPassword || newPassword !== confirmPassword) {
-      toast.error('Passwords do not match')
+      toast.error('Passwords don’t match')
       return
     }
     if (newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters')
+      toast.error('Use at least 8 characters')
       return
     }
     setSavingPassword(true)
@@ -138,7 +101,7 @@ export function SettingsClient({
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Password updated successfully')
+      toast.success('Password updated')
       setNewPassword('')
       setConfirmPassword('')
     }
@@ -164,7 +127,7 @@ export function SettingsClient({
       link.download = `cardsense-data-export-${new Date().toISOString().slice(0, 10)}.json`
       link.click()
       URL.revokeObjectURL(url)
-      toast.success('Your complete data export is ready')
+      toast.success('Downloaded')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to export your data')
     } finally {
@@ -176,7 +139,6 @@ export function SettingsClient({
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     clearPrivateClientData()
-    toast.success('Signed out')
     router.push('/')
   }
 
@@ -189,7 +151,6 @@ export function SettingsClient({
       if (!res.ok) throw new Error(body.error || 'Failed to delete account')
       await supabase.auth.signOut()
       clearPrivateClientData()
-      toast.success('Account deleted')
       router.push('/')
     } catch (err: unknown) {
       toast.error((err as Error).message || 'Failed to delete account')
@@ -197,234 +158,95 @@ export function SettingsClient({
     }
   }
 
-  const memberSince = new Date(createdAt).toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-
   return (
-    <div className="w-full max-w-3xl space-y-6 sm:space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="mt-1 text-muted-foreground">
-          Manage your account, notifications, and app preferences
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl">
+      <PageHeader title="Settings" />
 
-      {/* Account */}
-      <Section title="Account" description="Update your personal information" icon={User}>
-        {/* Member since */}
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/30 bg-[#fdf3d7]/20 px-4 py-3">
-          <CheckCircle2 className="h-4 w-4 text-[#b8860b]" />
-          <div className="flex-1 text-sm text-muted-foreground">
-            Member since <span className="font-medium text-foreground">{memberSince}</span>
-          </div>
-          {isOAuthUser && (
-            <Badge variant="outline" className="border-[#d4a017]/40 text-[0.6rem] text-[#b8860b] capitalize">
-              {provider}
-            </Badge>
-          )}
-        </div>
-
-        {/* Email */}
-        <div className="space-y-1.5">
-          <Label className="text-sm font-medium">Email address</Label>
-          <Input value={email} readOnly className="bg-muted/30 text-muted-foreground" />
-          {isOAuthUser && (
-            <p className="text-xs text-muted-foreground">
-              Email is managed by your {provider} account.
-            </p>
-          )}
-        </div>
-
-        {/* Display name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="display-name" className="text-sm font-medium">Display name</Label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              id="display-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-            />
-            <Button
-              onClick={handleSaveName}
-              disabled={savingName || name.trim() === displayName}
-              className="cardsense-btn-primary w-full shrink-0 sm:w-auto"
-            >
+      <div className="space-y-10">
+        <Section title="Account">
+          <Row label="Email">
+            <span className="text-sm text-muted-foreground">{email}</span>
+          </Row>
+          <form
+            className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-end"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void handleSaveName()
+            }}
+          >
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="display-name">Name</Label>
+              <Input id="display-name" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <Button type="submit" variant="outline" disabled={savingName || name.trim() === displayName}>
               {savingName ? 'Saving…' : 'Save'}
             </Button>
-          </div>
-        </div>
-      </Section>
+          </form>
+        </Section>
 
-      {/* Security */}
-      <Section
-        title="Security"
-        description={isOAuthUser ? 'Your account is secured via your OAuth provider' : 'Update your password'}
-        icon={Lock}
-      >
-        {isOAuthUser ? (
-          <div className="flex items-center gap-3 rounded-xl border border-border/30 bg-muted/20 px-4 py-4">
-            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0" />
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground capitalize">
-                Signed in with {provider}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                To update your password, visit your {provider} account settings.
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" className="ml-auto shrink-0" asChild>
-              <a
-                href={
-                  provider === 'google'
-                    ? 'https://myaccount.google.com/security'
-                    : '#'
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Update your account password</p>
-              <button
-                type="button"
-                onClick={() => setShowPasswords((v) => !v)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPasswords ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                {showPasswords ? 'Hide' : 'Show'}
-              </button>
-            </div>
-
-            <div className="space-y-3">
+        <Section title="Password">
+          {isOAuthUser ? (
+            <Row label={<span className="capitalize">Signed in with {provider}</span>} />
+          ) : (
+            <form
+              className="space-y-3 px-5 py-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void handleChangePassword()
+              }}
+            >
               <div className="space-y-1.5">
-                <Label htmlFor="new-password" className="text-sm font-medium">New password</Label>
+                <Label htmlFor="new-password">New password</Label>
                 <Input
                   id="new-password"
-                  type={showPasswords ? 'text' : 'password'}
+                  type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   name="new-password"
                   autoComplete="new-password"
-                  placeholder="At least 8 characters…"
+                  minLength={8}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="confirm-password" className="text-sm font-medium">Confirm new password</Label>
+                <Label htmlFor="confirm-password">Confirm</Label>
                 <Input
                   id="confirm-password"
-                  type={showPasswords ? 'text' : 'password'}
+                  type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   name="confirm-password"
                   autoComplete="new-password"
-                  placeholder="Repeat your password…"
+                  aria-invalid={Boolean(confirmPassword) && newPassword !== confirmPassword}
                 />
               </div>
-            </div>
+              <div className="flex justify-end pt-1">
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={savingPassword || newPassword.length < 8 || newPassword !== confirmPassword}
+                >
+                  {savingPassword ? 'Updating…' : 'Update'}
+                </Button>
+              </div>
+            </form>
+          )}
+        </Section>
 
-            {newPassword && confirmPassword && newPassword !== confirmPassword && (
-              <p className="flex items-center gap-1.5 text-xs text-red-600">
-                <AlertCircle className="h-3 w-3" />
-                Passwords do not match
-              </p>
-            )}
-
-            <Button
-              onClick={handleChangePassword}
-              disabled={
-                savingPassword ||
-                !newPassword ||
-                newPassword !== confirmPassword ||
-                newPassword.length < 8
-              }
-              className="cardsense-btn-primary"
-            >
-              {savingPassword ? 'Updating…' : 'Update Password'}
+        <Section title="Data">
+          <Row label="Export">
+            <Button variant="outline" size="sm" onClick={handleExportData} disabled={exporting}>
+              {exporting ? 'Preparing…' : 'Download'}
             </Button>
-          </div>
-        )}
-      </Section>
-
-      {/* Privacy */}
-      <Section
-        title="Privacy & Data"
-        description="Export your data"
-        icon={Shield}
-      >
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium text-foreground">Export your data</p>
-            <p className="text-xs text-muted-foreground">
-              Download a copy of your CardSense data including preferences and analysis history
-            </p>
-          </div>
-          <div className="shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportData}
-              disabled={exporting}
-              className="w-full gap-1.5 sm:w-auto"
-            >
-              <Download className="h-3.5 w-3.5" />
-              {exporting ? 'Preparing…' : 'Download JSON'}
+          </Row>
+          <Row label="Sign out">
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              Sign out
             </Button>
-          </div>
-        </div>
-      </Section>
-
-      {/* Danger zone */}
-      <Section
-        title="Account Actions"
-        description="Sign out or permanently delete your account"
-        icon={Trash2}
-      >
-        <div className="space-y-4">
-          {/* Sign out */}
-          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground">Sign out</p>
-              <p className="text-xs text-muted-foreground">Sign out from this device</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="w-full shrink-0 gap-1.5 sm:w-auto"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Sign Out
-            </Button>
-          </div>
-
-          <div className="border-t border-border/40" />
-
-          {/* Delete account */}
-          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium text-red-600">Delete account</p>
-              <p className="text-xs text-muted-foreground">
-                Permanently delete your account and all associated data. This cannot be undone.
-              </p>
-            </div>
+          </Row>
+          <Row label={<span className="text-destructive">Delete account</span>}>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full shrink-0 gap-1.5 border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 sm:w-auto"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
+                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
                   Delete
                 </Button>
               </AlertDialogTrigger>
@@ -432,9 +254,7 @@ export function SettingsClient({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete account?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete your CardSense account, including all your card
-                    preferences, spending history, CIBIL score records, and advisor data. This
-                    action <strong>cannot be undone</strong>.
+                    Your profile, cards, spending and recommendations will be erased. This can’t be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -442,21 +262,16 @@ export function SettingsClient({
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
                     disabled={deleting}
-                    className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600"
+                    className="bg-destructive text-white hover:bg-destructive/90"
                   >
-                    {deleting ? 'Deleting…' : 'Yes, delete my account'}
+                    {deleting ? 'Deleting…' : 'Delete'}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
-        </div>
-      </Section>
-
-      {/* Footer note */}
-      <p className="text-center text-xs text-muted-foreground pb-4">
-        CardSense India &middot; User ID: {userId.slice(0, 8)}…
-      </p>
+          </Row>
+        </Section>
+      </div>
     </div>
   )
 }

@@ -27,12 +27,12 @@ export function DbHealthBannerClient({ missingTables }: DbHealthBannerClientProp
   }
 
   return (
-    <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+    <div className="mb-6 rounded-xl bg-accent px-4 py-3">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-700" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 text-primary" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-amber-900">Database setup incomplete</p>
-          <p className="mt-1 text-sm text-amber-800">
+          <p className="text-sm font-medium">Database setup incomplete</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Missing tables: <span className="font-medium">{missingTables.join(', ')}</span>.
             Run migrations (`001_initial_schema.sql`, `002_rls_policies.sql`, `003_triggers.sql`)
             in Supabase SQL editor.
@@ -42,7 +42,7 @@ export function DbHealthBannerClient({ missingTables }: DbHealthBannerClientProp
           type="button"
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-amber-700 hover:bg-amber-100"
+          className="h-7 w-7 text-muted-foreground"
           onClick={() => {
             setDismissed(true)
             try {
