@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { clickByRole, expectVisible } from './helpers/ui'
+import { answerAdvisor, clickByRole, expectVisible } from './helpers/ui'
 
 const makeDetailedCard = (id: string, name: string, bank: string) => ({
   id,
@@ -61,8 +61,8 @@ test('User signup flow', async ({ page }) => {
   const email = `playwright+${Date.now()}@example.com`
   const password = 'Playwright123'
 
-  await expectVisible(page.getByLabel('Full Name'), 'Signup full name input')
-  await page.getByLabel('Full Name').fill('Playwright QA User')
+  await expectVisible(page.getByLabel('Name', { exact: true }), 'Signup name input')
+  await page.getByLabel('Name', { exact: true }).fill('Playwright QA User')
   await expectVisible(page.getByLabel('Email'), 'Signup email input')
   await page.getByLabel('Email').fill(email)
   await expectVisible(page.getByLabel('Password'), 'Signup password input')
@@ -160,18 +160,11 @@ test('Recommendation generation flow', async ({ page }) => {
   await page.goto('/advisor?new=1')
 
   await expectVisible(page.getByRole('heading', { name: /Advisor/i }), 'Advisor page heading')
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 1)')
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 2)')
-
-  await expectVisible(
-    page.getByText(/Select your top spending categories/i),
-    'Advisor spending category prompt'
+  await answerAdvisor(
+    page,
+    [/^25–30$/, /^Above ₹6L a year$/, /^No$/, /^Groceries & essentials$/, /^Cashback$/],
+    '30000'
   )
-  await clickByRole(page, 'button', /Groceries/i, 'Advisor groceries category button')
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 3)')
-
-  await clickByRole(page, 'button', /Rewards and cashback/i, 'Advisor primary goal button')
-  await clickByRole(page, 'button', /Get recommendations/i, 'Advisor get recommendations button')
 
   await expect
     .poll(() => recommendCalled, {
@@ -180,10 +173,10 @@ test('Recommendation generation flow', async ({ page }) => {
     .toBeTruthy()
 
   await expectVisible(
-    page.getByRole('heading', { name: /Recommended Cards/i }),
+    page.getByRole('heading', { name: /Your matches/i }),
     'Advisor recommendations heading'
   )
-  await expectVisible(page.getByText('HDFC Test Card'), 'Recommended card title')
+  await expectVisible(page.getByRole('heading', { name: /HDFC Test Card/ }), 'Recommended card title')
 })
 
 test('Statement upload flow (mock file)', async ({ page }) => {
@@ -211,7 +204,7 @@ test('Statement upload flow (mock file)', async ({ page }) => {
   })
 
   await page.goto('/spending')
-  await expectVisible(page.getByRole('heading', { name: /Spending Tracker/i }), 'Spending page heading')
+  await expectVisible(page.getByRole('heading', { name: /^Spending$/ }), 'Spending page heading')
 
   const uploadResult = await page.evaluate(async () => {
     const csv = [
@@ -276,11 +269,11 @@ test('Cards browsing pagination', async ({ page }) => {
 
   await page.goto('/cards')
 
-  await expectVisible(page.getByRole('heading', { name: /Browse Credit Cards/i }), 'Cards page heading')
+  await expectVisible(page.getByRole('heading', { name: /^Cards$/ }), 'Cards page heading')
   await expect(
-    page.getByText(/Showing\s+25\s+cards/i),
-    'Broken selector: expected cards count summary to show total cards'
-  ).toBeVisible()
+    page.getByRole('button', { name: /^Compare / }),
+    'Broken selector: expected one compare toggle per card'
+  ).toHaveCount(25)
 
   const paginationResult = await page.evaluate(async () => {
     const first = await fetch('/api/cards?fields=summary&limit=10&offset=0').then((res) => res.json())
@@ -357,11 +350,11 @@ test('Compare page keeps persisted cards and does not redirect', async ({ page }
 
   await page.goto('/cards/compare')
   await expectVisible(
-    page.getByRole('heading', { name: /Card Comparison/i }),
+    page.getByRole('heading', { name: /Compare cards/i }),
     'Compare page heading'
   )
   await expect(page).toHaveURL(/\/cards\/compare/)
-  await expectVisible(page.getByText(/Comparing 2 cards side-by-side/i), 'Compare count text')
+  await expect(page.getByRole('table').locator('thead th'), 'Compare columns').toHaveCount(3)
 })
 
 test('Advisor spending step is prefilled from spending tracker data', async ({ page }) => {
@@ -421,12 +414,12 @@ test('Advisor spending step is prefilled from spending tracker data', async ({ p
 
   await page.goto('/advisor?new=1')
 
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 1)')
-  await clickByRole(page, 'button', /^Next(?: step)?$/i, 'Advisor next button (step 2)')
+  for (const option of [/^25–30$/, /^Up to ₹6L a year$/, /^No$/, /^Groceries & essentials$/, /^Cashback$/]) {
+    await clickByRole(page, 'radio', option, `Advisor option ${option}`)
+  }
 
-  await expectVisible(page.getByText(/Select your top spending categories/i), 'Spending step title')
-  await expectVisible(
-    page.getByText(/INR 22,000/i),
+  await expect(
+    page.getByLabel('Monthly card spend'),
     'Prefilled monthly spending total from tracker'
-  )
+  ).toHaveValue('22000')
 })

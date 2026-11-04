@@ -1,30 +1,27 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
-interface EmptyStateProps {
-  title: string;
-  description: string;
-  actionLabel?: string;
-  actionHref?: string;
-}
-
+/** What belongs here, and the one action that fills it. The only empty-state component. */
+/** `primary` only for the page's one main action; everything else stays a tinted secondary button. */
 export function EmptyState({
   title,
-  description,
   actionLabel,
   actionHref,
-}: EmptyStateProps) {
+  primary = false,
+}: {
+  title: string
+  actionLabel?: string
+  actionHref?: string
+  primary?: boolean
+}) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground max-w-md">
-        {description}
-      </p>
+    <div className="flex flex-col items-start gap-3 py-4">
+      <p className="text-muted-foreground">{title}</p>
       {actionLabel && actionHref && (
-        <Button asChild className="mt-6">
+        <Button asChild size="sm" variant={primary ? 'default' : 'outline'}>
           <Link href={actionHref}>{actionLabel}</Link>
         </Button>
       )}
     </div>
-  );
+  )
 }

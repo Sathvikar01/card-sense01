@@ -1,9 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { CheckCircle2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -151,10 +150,9 @@ export function OnboardingWizard({
         },
       })
 
-      toast.success('Profile setup completed')
       onCompleted()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to complete onboarding')
+      toast.error(error instanceof Error ? error.message : 'Unable to save your details. Check your connection and try again.')
     } finally {
       setSaving(false)
     }
@@ -162,29 +160,20 @@ export function OnboardingWizard({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : undefined)}>
-      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-2xl overflow-y-auto overscroll-contain border-[#d4a017]/30 bg-background/95 p-0 backdrop-blur-xl sm:max-h-[calc(100dvh-2rem)]" showCloseButton>
-        <div className="rounded-t-2xl border-b border-[#d4a017]/20 bg-gradient-to-r from-[#fdf3d7]/70 via-background to-[#fdf3d7]/60 p-6">
-          <DialogHeader className="text-left">
-            <DialogTitle className="flex items-center gap-2 text-xl text-foreground">
-              <Sparkles className="h-5 w-5 text-[#b8860b]" />
-              Complete Your Profile
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              One-time setup for better recommendations and smarter comparisons.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+      <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-1rem)] max-w-xl overflow-y-auto overscroll-contain p-0 sm:max-h-[calc(100dvh-2rem)]" showCloseButton>
+        <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle className="text-lg">About you</DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-5 p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="onboarding-name">Full Name</Label>
+              <Label htmlFor="onboarding-name">Name</Label>
               <Input
                 id="onboarding-name"
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
-                placeholder="Your full name"
-              />
+                              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="onboarding-city">City</Label>
@@ -192,17 +181,17 @@ export function OnboardingWizard({
                 id="onboarding-city"
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
-                placeholder="e.g. Mumbai"
+                placeholder="Mumbai"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Employment Type</Label>
+              <Label>Employment</Label>
               <Select value={employmentType} onValueChange={setEmploymentType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select employment type" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="salaried">Salaried</SelectItem>
@@ -217,33 +206,33 @@ export function OnboardingWizard({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="onboarding-income">Annual Income (INR)</Label>
+              <Label htmlFor="onboarding-income">Annual income (₹)</Label>
               <Input
                 id="onboarding-income"
                 type="number"
                 min={0}
                 value={annualIncome || ''}
                 onChange={(event) => setAnnualIncome(Number(event.target.value) || 0)}
-                placeholder="e.g. 600000"
+                placeholder="6,00,000"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="onboarding-bank">Primary Bank</Label>
+              <Label htmlFor="onboarding-bank">Primary bank</Label>
               <Input
                 id="onboarding-bank"
                 value={primaryBank}
                 onChange={(event) => setPrimaryBank(event.target.value)}
-                placeholder="e.g. HDFC Bank"
+                placeholder="HDFC Bank"
               />
             </div>
             <div className="space-y-2">
-              <Label>Credit Score Band</Label>
+              <Label>Credit score</Label>
               <Select value={creditBand} onValueChange={setCreditBand}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select score band" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   {CREDIT_BANDS.map((band) => (
@@ -256,13 +245,12 @@ export function OnboardingWizard({
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
-            <p className="text-sm font-medium text-foreground">Do you already own a credit card?</p>
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">Have a credit card?</p>
             <div className="flex gap-2">
               <Button
                 type="button"
                 variant={ownsCards ? 'default' : 'outline'}
-                className={ownsCards ? 'bg-[#b8860b] text-white hover:bg-[#9f7409]' : ''}
                 onClick={() => setOwnsCards(true)}
               >
                 Yes
@@ -282,23 +270,19 @@ export function OnboardingWizard({
                 <Input
                   value={cardBank}
                   onChange={(event) => setCardBank(event.target.value)}
-                  placeholder="Card bank"
+                  placeholder="Bank"
                 />
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
-          <p className="text-xs text-muted-foreground">You can update all details later from Profile.</p>
-          <Button
-            type="button"
-            disabled={saving || !canSubmit}
-            onClick={handleSubmit}
-            className="gap-2 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white"
-          >
-            {saving ? 'Saving...' : 'Complete Setup'}
-            {!saving && <CheckCircle2 className="h-4 w-4" />}
+        <div className="flex justify-end gap-2 px-6 pb-6">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Later
+          </Button>
+          <Button type="button" disabled={saving || !canSubmit} onClick={handleSubmit}>
+            {saving ? 'Saving…' : 'Done'}
           </Button>
         </div>
       </DialogContent>

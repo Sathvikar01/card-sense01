@@ -3,13 +3,10 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { TrendingUp, Plus, Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -17,14 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { CIBIL_SCORE_RANGES } from '@/lib/credit-score'
+import { getCibilScoreRating } from '@/lib/credit-score'
 
 interface CibilHistoryEntry {
   id: string
@@ -46,15 +36,13 @@ function parseScoreDate(value: string) {
   return new Date(value)
 }
 
-const SCORE_RANGES = CIBIL_SCORE_RANGES
-
 export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newScore, setNewScore] = useState('')
   const [scoreDate, setScoreDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [scoreSource, setScoreSource] = useState('manual')
-  const [notes, setNotes] = useState('')
+  const scoreSource = 'manual'
+  const notes = ''
 
   const chartData = useMemo(() => {
     const sorted = [...history].sort((a, b) => {
@@ -67,7 +55,6 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
       const parsed = parseScoreDate(entry.score_date)
       return {
         xKey: `${entry.score_date}-${entry.id}-${index}`,
-        tickLabel: format(parsed, 'MMM dd'),
         score: entry.credit_score,
         fullDateLabel: format(parsed, 'MMM dd, yyyy'),
         scoreSource: entry.score_source || 'manual',
@@ -75,27 +62,16 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
     })
   }, [history])
 
-  const getScoreColor = (score: number) => {
-    if (score >= 750) return '#2563eb'
-    if (score >= 700) return '#3b82f6'
-    if (score >= 650) return '#f59e0b'
-    return '#dc2626'
-  }
-
-  const latestScore = chartData.length > 0
-    ? chartData[chartData.length - 1]
-    : null
-
   const handleAddScore = async () => {
     const score = parseInt(newScore)
 
     if (!score || score < 300 || score > 900) {
-      toast.error('Please enter a valid CIBIL score between 300 and 900')
+      toast.error('Enter a score between 300 and 900')
       return
     }
 
     if (!scoreDate) {
-      toast.error('Please select a score date')
+      toast.error('Choose the date of the score')
       return
     }
 
@@ -123,23 +99,14 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
         throw new Error(message)
       }
 
-      const data = await response.json() as { warning?: string; entry?: unknown; message?: string }
-
-      if (data.warning) {
-        toast.success('CIBIL score saved to your profile')
-      } else {
-        toast.success('CIBIL score added successfully')
-      }
       setIsDialogOpen(false)
       setNewScore('')
       setScoreDate(format(new Date(), 'yyyy-MM-dd'))
-      setScoreSource('manual')
-      setNotes('')
       onUpdate?.()
     } catch (error) {
       console.error('Error adding CIBIL score:', error)
       toast.error(
-        error instanceof Error ? error.message : 'Failed to add CIBIL score. Please try again.'
+        error instanceof Error ? error.message : 'Unable to add the score. Check your connection and try again.'
       )
     } finally {
       setIsSubmitting(false)
@@ -149,45 +116,30 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
   const addScoreDialog = (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button
-          size="sm"
-          className="gap-1.5 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-sm hover:shadow-md"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {history.length === 0 ? 'Add Your First Score' : 'Add Score'}
+        <Button size="sm" variant={history.length === 0 ? 'default' : 'outline'}>
+          Add score
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Add CIBIL Score</DialogTitle>
-          <DialogDescription>
-            {history.length === 0
-              ? 'Enter your credit score to start tracking your credit health'
-              : 'Enter your credit score to continue tracking your credit health'}
-          </DialogDescription>
+          <DialogTitle>Add score</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="score" className="text-xs text-muted-foreground">
-                CIBIL Score <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="score">Score</Label>
               <Input
                 id="score"
                 type="number"
                 min={300}
                 max={900}
-                placeholder="e.g., 750"
+                placeholder="750"
                 className="h-10"
                 value={newScore}
                 onChange={(e) => setNewScore(e.target.value)}
               />
-              <p className="text-[0.7rem] text-muted-foreground">Between 300 and 900</p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="date" className="text-xs text-muted-foreground">
-                Score Date <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="date">Date</Label>
               <Input
                 id="date"
                 type="date"
@@ -197,34 +149,6 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
                 max={format(new Date(), 'yyyy-MM-dd')}
               />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="source" className="text-xs text-muted-foreground">Source</Label>
-              <Select value={scoreSource} onValueChange={setScoreSource}>
-                <SelectTrigger id="source" className="h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cibil">CIBIL Report</SelectItem>
-                  <SelectItem value="experian">Experian</SelectItem>
-                  <SelectItem value="equifax">Equifax</SelectItem>
-                  <SelectItem value="crif">CRIF</SelectItem>
-                  <SelectItem value="manual">Manual Entry</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="notes" className="text-xs text-muted-foreground">Notes</Label>
-              <Input
-                id="notes"
-                placeholder="Optional"
-                className="h-10"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-          </div>
         </div>
         <DialogFooter>
           <Button
@@ -237,14 +161,8 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
           <Button
             onClick={handleAddScore}
             disabled={isSubmitting}
-            className="gap-1.5 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white"
           >
-            {isSubmitting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Check className="h-3.5 w-3.5" />
-            )}
-            {isSubmitting ? 'Adding...' : 'Add Score'}
+            {isSubmitting ? 'Adding…' : 'Add'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -253,109 +171,30 @@ export function CibilHistoryChart({ history, onUpdate }: CibilHistoryChartProps)
 
   if (history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400/10 to-orange-500/10 mb-4">
-          <TrendingUp className="h-7 w-7 text-[#d4a017]/50" />
-        </div>
-        <p className="text-sm font-medium text-foreground mb-1">No CIBIL Score History</p>
-        <p className="text-xs text-muted-foreground mb-5 max-w-xs">
-          Start tracking your credit score to monitor improvements over time
-        </p>
+      <div className="flex items-center justify-between gap-4 py-3">
+        <p className="text-sm text-muted-foreground">No score yet</p>
         {addScoreDialog}
       </div>
     )
   }
 
+  // Newest first; the top row is the current score.
+  const rows = [...chartData].reverse()
+
   return (
-    <div className="space-y-5">
-      {/* Top bar: current score + add button */}
-      <div className="flex items-start justify-between gap-4">
-        {latestScore && (
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Current Score</p>
-              <p className="text-3xl font-bold tabular-nums" style={{ color: getScoreColor(latestScore.score) }}>
-                {latestScore.score}
-              </p>
-            </div>
-            <div className="h-10 w-px bg-border/60" />
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Rating</p>
-              <p className="text-sm font-semibold text-foreground">
-                {latestScore.score >= 750 ? 'Excellent' :
-                 latestScore.score >= 700 ? 'Good' :
-                 latestScore.score >= 650 ? 'Fair' : 'Poor'}
-              </p>
-              <p className="text-[0.65rem] text-muted-foreground mt-0.5">
-                {latestScore.fullDateLabel}
-                {latestScore.scoreSource && ` \u00b7 ${latestScore.scoreSource}`}
-              </p>
-            </div>
-          </div>
-        )}
-        {addScoreDialog}
-      </div>
-
-      {/* Chart */}
-      <div className="h-56 rounded-xl border border-border/40 bg-muted/20 p-3">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-            <XAxis
-              dataKey="xKey"
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(_, index) => chartData[index]?.tickLabel || ''}
-            />
-            <YAxis
-              domain={[300, 900]}
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              width={35}
-            />
-            <Tooltip
-              labelFormatter={(_, payload) => {
-                const point = payload?.[0]?.payload as { fullDateLabel?: string; scoreSource?: string } | undefined
-                if (!point) return ''
-                return point.scoreSource ? `${point.fullDateLabel} · ${point.scoreSource}` : (point.fullDateLabel || '')
-              }}
-              formatter={(value) => [`${value}`, 'Score']}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                fontSize: '12px',
-              }}
-              labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="score"
-              stroke="#3b82f6"
-              strokeWidth={2.5}
-              dot={{ fill: '#3b82f6', r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
-              activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Score Legend */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {SCORE_RANGES.map((range) => (
-          <div key={range.label} className="flex items-center gap-2">
-            <div className={`h-2.5 w-2.5 rounded-full ${range.bg}`} />
-            <span className="text-xs text-muted-foreground">
-              {range.min}-{range.max}: {range.label}
+    <div>
+      <ul>
+        {rows.map((entry, i) => (
+          <li key={entry.xKey} className="row py-2.5">
+            <span className={i === 0 ? 'text-2xl font-semibold tabular-nums' : 'tabular-nums'}>{entry.score}</span>
+            <span className="flex flex-1 flex-wrap gap-x-4 text-sm text-muted-foreground">
+              {i === 0 && <span>{getCibilScoreRating(entry.score)}</span>}
+              <span>{entry.fullDateLabel}</span>
             </span>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
+      <div className="pt-3">{addScoreDialog}</div>
     </div>
   )
 }

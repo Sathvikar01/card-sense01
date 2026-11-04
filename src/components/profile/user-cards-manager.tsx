@@ -3,14 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Trash2, CreditCard, Loader2, Check, ChevronsUpDown } from 'lucide-react'
+import { Chevron } from '@/components/shared/glyph'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -21,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Command,
   CommandEmpty,
@@ -53,7 +53,7 @@ export function UserCardsManager() {
   // Form state
   const [cardName, setCardName] = useState('')
   const [bankName, setBankName] = useState('')
-  const [notes, setNotes] = useState('')
+  const notes = ''
   const [comboboxOpen, setComboboxOpen] = useState(false)
   const [isManualEntry, setIsManualEntry] = useState(false)
 
@@ -90,13 +90,12 @@ export function UserCardsManager() {
   const resetForm = () => {
     setCardName('')
     setBankName('')
-    setNotes('')
     setIsManualEntry(false)
   }
 
   const handleAdd = async () => {
     if (!cardName.trim() || !bankName.trim()) {
-      toast.error('Card name and bank are required')
+      toast.error('Choose a card, or enter its name and bank')
       return
     }
 
@@ -115,34 +114,44 @@ export function UserCardsManager() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || 'Failed to add card')
+        throw new Error((err as { message?: string }).message || 'Unable to add the card. Check your connection and try again.')
       }
 
-      toast.success('Card added successfully')
       setDialogOpen(false)
       resetForm()
       await fetchCards()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to add card')
+      toast.error(error instanceof Error ? error.message : 'Unable to add the card. Check your connection and try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id)
+  // Remove at once and offer Undo, instead of asking first.
+  const handleDelete = async (card: UserCard) => {
+    setDeletingId(card.id)
     try {
-      const res = await fetch(`/api/cards/user?id=${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        toast.success('Card removed')
-        await fetchCards()
-        router.refresh()
-      } else {
-        toast.error('Failed to remove card')
-      }
+      const res = await fetch(`/api/cards/user?id=${card.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await fetchCards()
+      router.refresh()
+      toast(`${card.card_name} removed`, {
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            await fetch('/api/cards/user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ card_name: card.card_name, bank_name: card.bank_name, card_type: 'credit', notes: card.notes || '' }),
+            })
+            await fetchCards()
+            router.refresh()
+          },
+        },
+      })
     } catch {
-      toast.error('Error removing card')
+      toast.error('Unable to remove the card. Check your connection and try again.')
     } finally {
       setDeletingId(null)
     }
@@ -151,43 +160,36 @@ export function UserCardsManager() {
   const addCardDialog = (
     <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
       <DialogTrigger asChild>
-        <Button
-          size="sm"
-          className="gap-1.5 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white shadow-sm hover:shadow-md"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Card
+        <Button size="sm" variant={cards.length === 0 ? 'default' : 'outline'}>
+          Add card
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-2rem)]">
+      <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-2rem)]">
         <DialogHeader>
-          <DialogTitle>Add a Card</DialogTitle>
-          <DialogDescription>Add a credit card you currently own</DialogDescription>
+          <DialogTitle>Add card</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           {/* Card Name - Searchable Combobox */}
           {!isManualEntry ? (
             <div className="grid gap-2">
-              <Label className="text-xs text-muted-foreground">
-                Card Name <span className="text-red-500">*</span>
-              </Label>
+              <Label>Card</Label>
               <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={comboboxOpen}
-                    className="h-10 justify-between font-normal"
+                    className="h-10 justify-between rounded-xl font-normal"
                   >
                     <span className={cardName ? 'text-foreground' : 'text-muted-foreground'}>
-                      {cardName || 'Search for a card...'}
+                      {cardName || 'Choose a card'}
                     </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <Chevron className="ml-2 text-muted-foreground" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search cards..." />
+                    <CommandInput placeholder="Search cards" />
                     <CommandList>
                       <CommandEmpty>No card found.</CommandEmpty>
                       <CommandGroup>
@@ -230,32 +232,28 @@ export function UserCardsManager() {
             <>
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="card-name-manual" className="text-xs text-muted-foreground">
-                    Card Name <span className="text-red-500">*</span>
-                  </Label>
+                  <Label htmlFor="card-name-manual">Card</Label>
                   <button
                     type="button"
                     onClick={() => { setIsManualEntry(false); setCardName(''); setBankName('') }}
-                    className="text-[0.65rem] text-[#b8860b] hover:underline"
+                    className="text-[0.65rem] text-primary hover:underline"
                   >
                     Search from list
                   </button>
                 </div>
                 <Input
                   id="card-name-manual"
-                  placeholder="e.g., HDFC Regalia"
+                  placeholder="HDFC Regalia"
                   className="h-10"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="bank-name-manual" className="text-xs text-muted-foreground">
-                  Bank <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="bank-name-manual">Bank</Label>
                 <Input
                   id="bank-name-manual"
-                  placeholder="e.g., HDFC Bank"
+                  placeholder="HDFC Bank"
                   className="h-10"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
@@ -267,22 +265,11 @@ export function UserCardsManager() {
           {/* Bank (read-only when selected from catalog) */}
           {!isManualEntry && bankName && (
             <div className="grid gap-2">
-              <Label className="text-xs text-muted-foreground">Bank</Label>
-              <Input value={bankName} readOnly className="h-10 bg-muted/30 text-muted-foreground" />
+              <Label>Bank</Label>
+              <Input value={bankName} readOnly className="h-10 text-muted-foreground" />
             </div>
           )}
 
-          {/* Notes */}
-          <div className="grid gap-2">
-            <Label htmlFor="card-notes" className="text-xs text-muted-foreground">Notes</Label>
-            <Input
-              id="card-notes"
-              placeholder="Optional notes"
-              className="h-10"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
         </div>
         <DialogFooter>
           <Button
@@ -295,14 +282,8 @@ export function UserCardsManager() {
           <Button
             onClick={handleAdd}
             disabled={submitting || !cardName.trim() || !bankName.trim()}
-            className="gap-1.5 bg-gradient-to-r from-[#b8860b] to-[#d4a017] text-white"
           >
-            {submitting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Check className="h-3.5 w-3.5" />
-            )}
-            {submitting ? 'Adding...' : 'Add Card'}
+            {submitting ? 'Adding…' : 'Add'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -311,20 +292,17 @@ export function UserCardsManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-10">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="space-y-2 py-2">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-1/3" />
       </div>
     )
   }
 
   if (cards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-center">
-        <CreditCard className="mb-4 h-7 w-7 text-[#b8860b]" />
-        <p className="text-sm font-medium text-foreground mb-1">No cards added yet</p>
-        <p className="text-xs text-muted-foreground mb-5 max-w-xs">
-          Add your existing credit cards to get better recommendations and track your portfolio
-        </p>
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
+        <p className="text-sm text-muted-foreground">No cards yet</p>
         {addCardDialog}
       </div>
     )
@@ -332,44 +310,28 @@ export function UserCardsManager() {
 
   return (
     <div className="space-y-4">
-      {/* Top bar */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          {cards.length} card{cards.length !== 1 ? 's' : ''} in your wallet
-        </p>
-        {addCardDialog}
-      </div>
-
-      {/* Card list */}
-      <div className="space-y-2">
+      <ul>
         {cards.map((card) => (
-          <div
-            key={card.id}
-            className="flex items-center justify-between rounded-xl border border-border/50 p-3 hover:bg-muted/30 transition-colors"
-          >
+          <li key={card.id} className="row justify-between py-2.5">
             <div className="flex items-center gap-3 min-w-0">
-              <CreditCard className="h-5 w-5 shrink-0 text-[#b8860b]" />
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate text-foreground">{card.card_name}</p>
                 <p className="text-xs text-muted-foreground">{card.bank_name}</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={() => handleDelete(card.id)}
+            <button
+              type="button"
+              aria-label={`Remove ${card.card_name}`}
+              className="tap text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+              onClick={() => handleDelete(card)}
               disabled={deletingId === card.id}
             >
-              {deletingId === card.id ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Trash2 className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          </div>
+              Remove
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
+      {addCardDialog}
     </div>
   )
 }

@@ -1,60 +1,70 @@
 'use client'
 
 import { CardTile } from './card-tile'
-import { EmptyState } from '@/components/shared/empty-state'
+import { Button } from '@/components/ui/button'
 import type { CreditCardListItem } from '@/types/credit-card'
-import { motion } from 'framer-motion'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const GRID = 'grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2'
 
 interface CardGridProps {
   cards: CreditCardListItem[]
   loading: boolean
+  failed: boolean
+  query: string
+  hasFilters: boolean
+  onClear: () => void
 }
 
-export function CardGrid({ cards, loading }: CardGridProps) {
+/** Every data region has four states: loading, error, empty and full. */
+export function CardGrid({ cards, loading, failed, query, hasFilters, onClear }: CardGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="stat-card-premium space-y-4 p-5">
-            <div className="mx-auto h-[126px] w-[200px] shimmer rounded-xl" />
-            <div className="space-y-2">
-              <div className="h-3 w-1/3 shimmer rounded" />
-              <div className="h-5 w-3/4 shimmer rounded" />
-            </div>
-            <div className="space-y-2 pt-2">
-              <div className="h-4 w-full shimmer rounded" />
-              <div className="h-4 w-2/3 shimmer rounded" />
-            </div>
-            <div className="h-9 w-full shimmer rounded-xl" />
+      <div className={GRID} aria-busy="true" aria-label="Loading cards">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="flex flex-col gap-3">
+            <Skeleton className="aspect-[1.586] w-full rounded-xl" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-1/3" />
           </div>
         ))}
       </div>
     )
   }
 
+  if (failed) {
+    return (
+      <div role="alert" className="flex flex-col items-start gap-3 py-6">
+        <p>Unable to load cards. Check your connection and try again.</p>
+        <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+          Try again
+        </Button>
+      </div>
+    )
+  }
+
   if (cards.length === 0) {
     return (
-      <EmptyState
-        title="No cards found"
-        description="Try adjusting your search or filters to find more credit cards."
-      />
+      <div className="flex flex-col items-start gap-3 py-6">
+        <p className="text-muted-foreground">
+          {query ? `No cards match “${query}”.` : 'No cards match these filters.'}
+        </p>
+        {(query || hasFilters) && (
+          <Button variant="outline" size="sm" onClick={onClear}>
+            Clear filters
+          </Button>
+        )}
+      </div>
     )
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {cards.map((card, idx) => (
-          <motion.div
-            key={card.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
-          >
-            <CardTile card={card} />
-          </motion.div>
-        ))}
-      </div>
-    </div>
+    <ul className={GRID}>
+      {cards.map((card) => (
+        <li key={card.id}>
+          <CardTile card={card} />
+        </li>
+      ))}
+    </ul>
   )
 }

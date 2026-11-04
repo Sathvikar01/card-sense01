@@ -83,7 +83,8 @@ jobs:
   smoke:
     name: Playwright Smoke
     needs: app
-    runs-on: ubuntu-latest
+    # Playwright 1.58 cannot install Chromium on ubuntu-latest (26.04); pin until Playwright supports it.
+    runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
@@ -108,31 +109,7 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      - name: Start app
-        run: |
-          npm run start -- --port 3000 > /tmp/next-start.log 2>&1 &
-          echo $! > /tmp/next-start.pid
-
-      - name: Wait for app
-        run: |
-          for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:3000 > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "App did not start in time"
-          cat /tmp/next-start.log || true
-          exit 1
-
+      # playwright.config.ts starts `npm run start` itself (webServer), so the app is started in one place.
       - name: Run smoke test
-        env:
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
         run: npm run test:smoke
 
-      - name: Stop app
-        if: always()
-        run: |
-          if [ -f /tmp/next-start.pid ]; then
-            kill "$(cat /tmp/next-start.pid)" || true
-          fi

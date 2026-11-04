@@ -1,3 +1,4 @@
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Select,
   SelectContent,
@@ -7,17 +8,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { INDIAN_BANKS } from '@/lib/constants/banks'
-import { Building2, CreditCard, Wallet, ArrowUpDown, Globe } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 const CARD_TYPES = [
-  { value: 'entry_level', label: 'Entry Level' },
+  { value: 'entry_level', label: 'Entry level' },
   { value: 'cashback', label: 'Cashback' },
   { value: 'rewards', label: 'Rewards' },
   { value: 'travel', label: 'Travel' },
   { value: 'fuel', label: 'Fuel' },
   { value: 'premium', label: 'Premium' },
-  { value: 'super_premium', label: 'Super Premium' },
+  { value: 'super_premium', label: 'Super premium' },
   { value: 'business', label: 'Business' },
   { value: 'secured', label: 'Secured' },
 ]
@@ -41,11 +40,11 @@ const MAX_FEE_OPTIONS = [
 ]
 
 const SORT_OPTIONS = [
-  { value: 'popularity', label: 'Highest Rated' },
-  { value: 'fee_low', label: 'Fee: Low to High' },
-  { value: 'fee_high', label: 'Fee: High to Low' },
-  { value: 'reward_high', label: 'Estimated Return: High to Low' },
-  { value: 'name', label: 'Name: A to Z' },
+  { value: 'popularity', label: 'Popular' },
+  { value: 'fee_low', label: 'Lowest fee' },
+  { value: 'fee_high', label: 'Highest fee' },
+  { value: 'reward_high', label: 'Highest rewards' },
+  { value: 'name', label: 'Name' },
 ]
 
 interface CardFiltersProps {
@@ -77,17 +76,14 @@ export function CardFilters({
     <div className="p-5 space-y-6">
       {/* Bank */}
       <div className="space-y-2.5">
-        <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          <Building2 className="h-3.5 w-3.5" />
-          Bank
-        </label>
+        <p className="text-sm font-medium">Bank</p>
         <Select value={bank || 'all'} onValueChange={onBankChange}>
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="All Banks" />
+            <SelectValue placeholder="All banks" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value="all">All Banks</SelectItem>
+              <SelectItem value="all">All banks</SelectItem>
               {INDIAN_BANKS.map((bankName) => (
                 <SelectItem key={bankName} value={bankName}>
                   {bankName}
@@ -100,64 +96,41 @@ export function CardFilters({
 
       {/* Card Type */}
       <div className="space-y-2.5">
-        <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          <CreditCard className="h-3.5 w-3.5" />
-          Card Type
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {CARD_TYPES.map((type) => {
-            const isActive = cardType === type.value
-            return (
-              <button
-                key={type.value}
-                onClick={() => onCardTypeChange(isActive ? 'all' : type.value)}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-150',
-                  isActive
-                    ? 'bg-foreground text-background border-foreground shadow-sm'
-                    : 'bg-background text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground'
-                )}
-              >
-                {type.label}
-              </button>
-            )
-          })}
-        </div>
+        <p className="text-sm font-medium">Type</p>
+        <ToggleGroup
+          type="single"
+          aria-label="Type"
+          value={cardType || ''}
+          onValueChange={(value) => onCardTypeChange(value || 'all')}
+        >
+          {CARD_TYPES.map((type) => (
+            <ToggleGroupItem key={type.value} value={type.value}>
+              {type.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       {/* Card Network */}
       <div className="space-y-2.5">
-        <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          <Globe className="h-3.5 w-3.5" />
-          Card Network
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {NETWORK_OPTIONS.map((option) => {
-            const isActive = network === option.value
-            return (
-              <button
-                key={option.value}
-                onClick={() => onNetworkChange(isActive ? 'all' : option.value)}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-[color,background-color,border-color,opacity,box-shadow,transform,width] duration-150',
-                  isActive
-                    ? 'bg-foreground text-background border-foreground shadow-sm'
-                    : 'bg-background text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground'
-                )}
-              >
-                {option.label}
-              </button>
-            )
-          })}
-        </div>
+        <p className="text-sm font-medium">Network</p>
+        <ToggleGroup
+          type="single"
+          aria-label="Network"
+          value={network || ''}
+          onValueChange={(value) => onNetworkChange(value || 'all')}
+        >
+          {NETWORK_OPTIONS.map((option) => (
+            <ToggleGroupItem key={option.value} value={option.value}>
+              {option.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       {/* Max Annual Fee */}
       <div className="space-y-2.5">
-        <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          <Wallet className="h-3.5 w-3.5" />
-          Max Annual Fee
-        </label>
+        <p className="text-sm font-medium">Annual fee</p>
         <Select value={maxFee || 'all'} onValueChange={onMaxFeeChange}>
           <SelectTrigger className="h-10 text-sm">
             <SelectValue placeholder="Any" />
@@ -177,13 +150,10 @@ export function CardFilters({
 
       {/* Sort */}
       <div className="space-y-2.5">
-        <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          <ArrowUpDown className="h-3.5 w-3.5" />
-          Sort By
-        </label>
+        <p className="text-sm font-medium">Sort</p>
         <Select value={sortBy || 'popularity'} onValueChange={onSortByChange}>
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="Highest Rated" />
+            <SelectValue placeholder="Popular" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

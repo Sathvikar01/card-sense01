@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { getCardDesign, type CardDesign } from '@/data/card-designs'
 import { NetworkLogo, ContactlessIcon } from './network-logos'
-import { useRef, useState, useCallback, useMemo } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import Image from 'next/image'
 
@@ -128,9 +128,9 @@ export function CreditCardVisual({
     setImageFailed(true)
   }, [])
 
-  const textColor = design.textColor === 'white' ? 'text-white' : 'text-gray-900'
-  const textMuted = design.textColor === 'white' ? 'text-white/60' : 'text-gray-500'
-  const textSubtle = design.textColor === 'white' ? 'text-white/40' : 'text-gray-400'
+  const textColor = design.textColor === 'white' ? 'text-white' : 'text-foreground'
+  const textMuted = design.textColor === 'white' ? 'text-white/60' : 'text-muted-foreground'
+  const textSubtle = design.textColor === 'white' ? 'text-white/40' : 'text-muted-foreground'
 
   const chipGradient =
     design.chipStyle === 'gold'
@@ -139,19 +139,10 @@ export function CreditCardVisual({
 
   const chipContactLines = design.chipStyle === 'gold' ? 'rgba(180, 140, 50, 0.4)' : 'rgba(140, 145, 150, 0.4)'
 
-  const isPremium = useMemo(() => {
-    const premiumKeywords = ['black', 'platinum', 'gold', 'regalia', 'sapphiro', 'legend', 'diners']
-    const id = cardId.toLowerCase()
-    return premiumKeywords.some((k) => id.includes(k))
-  }, [cardId])
-
   const cardFront = (
     <div
       style={{ background: design.gradient }}
-      className={cn(
-        'credit-card-visual relative h-full w-full select-none overflow-hidden rounded-xl',
-        isPremium && 'card-holographic'
-      )}
+      className="credit-card-visual relative h-full w-full select-none overflow-hidden rounded-xl"
     >
       {hasCardArtwork ? (
         <Image
@@ -168,59 +159,6 @@ export function CreditCardVisual({
 
       {!hasCardArtwork && (
         <>
-      {/* Subtle noise texture overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Pattern overlay */}
-      {design.pattern === 'diagonal' && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(45deg, transparent, transparent 4px, currentColor 4px, currentColor 5px)',
-          }}
-        />
-      )}
-      {design.pattern === 'wave' && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.35) 0%, transparent 60%)',
-          }}
-        />
-      )}
-      {design.pattern === 'dots' && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, currentColor 0.5px, transparent 0.5px)',
-            backgroundSize: '8px 8px',
-          }}
-        />
-      )}
-
-      {/* Accent stripe */}
-      {design.accent && (
-        <div
-          className="pointer-events-none absolute right-0 top-0 h-full w-1.5"
-          style={{
-            background: `linear-gradient(180deg, ${design.accent}88, ${design.accent}, ${design.accent}88)`,
-          }}
-        />
-      )}
-
-      {/* Top edge shine */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-
-      {/* Left edge shine */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-white/15 via-white/5 to-transparent" />
-
       {/* Light reflection overlay - follows mouse */}
       {interactive && (
         <motion.div
@@ -351,7 +289,7 @@ export function CreditCardVisual({
             }}
           />
         </div>
-        <div className="ml-2 rounded bg-white/90 px-2 py-1 text-[8px] font-bold text-gray-800">
+        <div className="ml-2 rounded bg-card px-2 py-1 text-[8px] font-bold text-foreground">
           CVV
         </div>
       </div>

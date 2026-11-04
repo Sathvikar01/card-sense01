@@ -1,0 +1,57 @@
+# CardSense for iOS
+
+The CardSense app for iPhone, built with Expo. Same four colours, type and card art as the website.
+
+- **Home:** four everyday spenders and the card that suits each. No prices, no inputs.
+- **Cards:** the full catalogue from the website's public API, with search, pull to refresh and a page per card.
+- **Account:** sign in with your CardSense email and password, reset it, sign out, or delete the account. Links to the privacy policy and terms.
+
+"Find my card" opens the website's advisor in an in-app Safari sheet.
+
+## Try it on your iPhone (no Mac needed)
+
+1. Install **Expo Go** from the App Store.
+2. On a computer with Node 20+:
+
+   ```bash
+   cd ios-app
+   npm install
+   cp .env.example .env.local   # fill in the three values
+   npx expo start --tunnel
+   ```
+
+3. Scan the QR code with the iPhone camera. The app opens in Expo Go.
+
+`.env.local` takes `EXPO_PUBLIC_WEB_URL` (the website's production address, which is all the catalogue needs) and, for native sign-in, the website's public `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`. See `.env.example`.
+
+## Share a preview (QR code for Expo Go)
+
+The project is linked to Expo as `@sathvikar01/cardsense`. Publishing sends the current code to Expo's servers; anyone with Expo Go can then open it from a QR code, with no computer running.
+
+```bash
+EXPO_TOKEN=<token> npx eas-cli@latest update --branch preview --platform ios --message "What changed"
+```
+
+The link for Expo Go is `exp://u.expo.dev/<project id>/group/<update group id>`; the command prints the group id. `runtimeVersion` stays on the `sdkVersion` policy so Expo Go accepts the update.
+
+## Put it on the App Store
+
+Needs an Apple Developer account and a free Expo account. EAS builds in the cloud, so no Mac is needed.
+
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest build --platform ios --profile production
+npx eas-cli@latest submit --platform ios
+```
+
+Set the three `EXPO_PUBLIC_*` values as EAS environment variables first (`npx eas-cli@latest env:create`).
+
+## Develop
+
+```bash
+npm run typecheck
+npm run lint
+npx expo export --platform ios   # bundles the app; fails on a broken import
+```
+
+Shared with the website, not copied: the estimator's rates (`../src/components/landing/hero-cards.ts`) and the card art designs (`../src/data/card-designs.ts`). `metro.config.js` watches only those two folders.

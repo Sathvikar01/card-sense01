@@ -27,15 +27,15 @@ export function formatCurrency(
     if (amount >= 10000000) {
       // 1 Crore or more
       const crores = amount / 10000000;
-      return `${symbol}${crores.toFixed(decimalPlaces)}Cr`;
+      return `${symbol}${Number(crores.toFixed(decimalPlaces))}Cr`;
     } else if (amount >= 100000) {
       // 1 Lakh or more
       const lakhs = amount / 100000;
-      return `${symbol}${lakhs.toFixed(decimalPlaces)}L`;
+      return `${symbol}${Number(lakhs.toFixed(decimalPlaces))}L`;
     } else if (amount >= 1000) {
       // 1 Thousand or more
       const thousands = amount / 1000;
-      return `${symbol}${thousands.toFixed(decimalPlaces)}K`;
+      return `${symbol}${Number(thousands.toFixed(decimalPlaces))}K`;
     }
   }
 
