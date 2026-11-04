@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics'
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { colors, font } from '@/theme'
 
-/** A single-choice set of pills on the pine field: the web's ToggleGroup "field" variant. */
+/** A single-choice set of pills: the web's ToggleGroup "chip" variant. The chosen one is the gold fill. */
 export function Chips<T extends string>({ options, value, onChange, label }: { options: { value: T; label: string }[]; value: T; onChange: (value: T) => void; label: string }) {
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.row}>
@@ -19,9 +19,9 @@ export function Chips<T extends string>({ options, value, onChange, label }: { o
               onChange(o.value)
             }}
             hitSlop={4}
-            style={({ pressed }) => [styles.chip, { backgroundColor: on ? colors.gold : pressed ? colors.fieldTintStrong : colors.fieldTint }]}
+            style={({ pressed }) => [styles.chip, { backgroundColor: on ? colors.gold : pressed ? colors.tintStrong : colors.tint }]}
           >
-            <Text style={[styles.text, { color: on ? colors.pine : colors.paper }]}>{o.label}</Text>
+            <Text style={[styles.text, { color: colors.pine }]}>{o.label}</Text>
           </Pressable>
         )
       })}

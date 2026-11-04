@@ -13,7 +13,7 @@ import { EDGE, colors, font } from '@/theme'
 const inr = (value: number) => `₹${Math.max(0, value).toLocaleString('en-IN')}`
 
 /**
- * The website's hero, native: pick your biggest spend and the card that pays you most
+ * The website's estimator, native and light: pick your biggest spend and the card that pays you most
  * comes to the front. Same rates and ranking as the web (shared from hero-cards.ts).
  */
 export default function Home() {
@@ -23,12 +23,12 @@ export default function Home() {
   const ranked = useMemo(() => rankCards(category, monthly), [category, monthly])
   const [best, second] = ranked
 
-  useFocusEffect(useCallback(() => setStatusBarStyle('light'), []))
+  useFocusEffect(useCallback(() => setStatusBarStyle('dark'), []))
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
       <Text accessibilityRole="header" style={styles.headline}>
-        Pay yourself back.
+        Find the card that{' '}<Text style={styles.highlight}>pays you back.</Text>
       </Text>
 
       <View style={styles.stage}>
@@ -52,9 +52,9 @@ export default function Home() {
           step={1000}
           value={monthly}
           onValueChange={setMonthly}
-          minimumTrackTintColor={colors.gold}
-          maximumTrackTintColor={colors.fieldTintStrong}
-          thumbTintColor={colors.paper}
+          minimumTrackTintColor={colors.pine}
+          maximumTrackTintColor={colors.tintStrong}
+          thumbTintColor={colors.white}
           style={styles.slider}
         />
       </View>
@@ -72,7 +72,7 @@ export default function Home() {
         </View>
       </View>
 
-      <Button variant="accent" onPress={() => openWeb('/advisor')}>
+      <Button onPress={() => openWeb('/advisor')}>
         Find my card
       </Button>
     </ScrollView>
@@ -80,19 +80,21 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.pine },
+  screen: { flex: 1, backgroundColor: colors.paper },
   content: { paddingHorizontal: EDGE, paddingTop: 24, paddingBottom: 40, gap: 24 },
-  headline: { fontFamily: font.semibold, fontSize: 56, lineHeight: 54, letterSpacing: -2.6, color: colors.paper },
+  headline: { fontFamily: font.semibold, fontSize: 46, lineHeight: 50, letterSpacing: -2, color: colors.pine },
+  // The promise sits on gold, as on the website: gold is a fill under pine text, never text itself.
+  highlight: { backgroundColor: colors.gold },
   stage: { alignItems: 'center', marginVertical: 8 },
-  lead: { fontFamily: font.regular, fontSize: 18, lineHeight: 26, color: colors.paper },
+  lead: { fontFamily: font.regular, fontSize: 18, lineHeight: 26, color: colors.pine },
   amount: { gap: 4 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 },
-  body: { fontFamily: font.regular, fontSize: 17, lineHeight: 24, color: colors.paper },
+  body: { fontFamily: font.regular, fontSize: 17, lineHeight: 24, color: colors.pine },
   strong: { fontFamily: font.semibold, fontVariant: ['tabular-nums'] },
   slider: { height: 44 },
   result: { alignItems: 'flex-end' },
   shrink: { flexShrink: 1 },
-  figure: { fontFamily: font.semibold, fontSize: 48, lineHeight: 52, letterSpacing: -1, color: colors.gold, fontVariant: ['tabular-nums'] },
+  figure: { fontFamily: font.semibold, fontSize: 48, lineHeight: 52, letterSpacing: -1, color: colors.pine, fontVariant: ['tabular-nums'] },
   next: { alignItems: 'flex-end', paddingBottom: 2 },
-  small: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.paper, fontVariant: ['tabular-nums'] },
+  small: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.pine, fontVariant: ['tabular-nums'] },
 })

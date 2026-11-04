@@ -3,13 +3,12 @@ import type { ReactNode } from 'react'
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text } from 'react-native'
 import { colors, font } from '@/theme'
 
-type Variant = 'primary' | 'accent' | 'quiet' | 'field'
+type Variant = 'primary' | 'accent' | 'quiet'
 
 const look: Record<Variant, { bg: string; pressed: string; ink: string }> = {
   primary: { bg: colors.pine, pressed: '#0f231f', ink: colors.paper },
   accent: { bg: colors.gold, pressed: '#c99a2e', ink: colors.pine },
   quiet: { bg: colors.tint, pressed: colors.tintStrong, ink: colors.pine },
-  field: { bg: colors.fieldTint, pressed: colors.fieldTintStrong, ink: colors.paper },
 }
 
 /** A 50pt pill: the web's Button, at iOS touch size. Presses scale to 0.97 with a light tap. */

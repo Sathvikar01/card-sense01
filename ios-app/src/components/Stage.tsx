@@ -36,7 +36,7 @@ function StageCard({ card, rank, k }: { card: HeroCard; rank: number; k: number 
     <Animated.View
       entering={FadeIn.duration(250).reduceMotion(ReduceMotion.System)}
       exiting={FadeOut.duration(200).reduceMotion(ReduceMotion.System)}
-      style={[{ position: 'absolute', left: 0, top: 0, zIndex: place.z, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 22 * k, shadowOffset: { width: 0, height: 18 * k } }, style]}
+      style={[{ position: 'absolute', left: 0, top: 0, zIndex: place.z, shadowColor: '#16302b', shadowOpacity: 0.22, shadowRadius: 22 * k, shadowOffset: { width: 0, height: 18 * k } }, style]}
     >
       <CardArt cardId={card.id} bankName={card.bank} cardName={card.name} width={400 * k} />
     </Animated.View>

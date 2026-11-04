@@ -26,7 +26,6 @@ Derived, not extra colours: `--ink-muted` (ink mixed toward the ground: 7.4:1), 
 | `primary` / `primary-foreground` | The one filled button |
 | `accent` / `accent-foreground` | Selected state, gold chip |
 | `inverse` / `inverse-foreground` | Compare bar, toasts (flips with the mode) |
-| `field` / `field-foreground` | The landing hero and footer: pine, gold reads on it as text (6.5:1) |
 | `ring` | Focus outline, 2px, offset 2px |
 
 Gold fails contrast as text (2.2:1 on white). Never write text in gold; put pine text on gold (6.5:1).

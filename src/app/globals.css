@@ -25,9 +25,6 @@
   --color-accent-foreground: var(--pine);
   --color-inverse: var(--ink);
   --color-inverse-foreground: var(--ground);
-  /* The brand field: pine in both modes (landing hero). */
-  --color-field: var(--pine);
-  --color-field-foreground: #f4f3ef;
   --color-destructive: var(--ink);
   --color-border: var(--tint-strong);
   --color-input: var(--tint-strong);
@@ -242,6 +239,46 @@
   @media (prefers-reduced-motion: no-preference) {
     .shimmer {
       animation: pulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  /*
+   * Landing card rows. The track holds the list twice and slides by half its width, so the loop
+   * is seamless. The edges fade into the paper. With reduced motion the row stands still and
+   * scrolls by hand instead.
+   */
+  .marquee-row {
+    overflow-x: auto;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee-row::-webkit-scrollbar {
+    display: none;
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 1.25rem;
+    padding-block: 2.5rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marquee-row {
+      overflow-x: clip;
+    }
+    .marquee-track {
+      animation: marquee 70s linear infinite;
+    }
+    .marquee-reverse {
+      animation-direction: reverse;
+      animation-duration: 80s;
+    }
+    .marquee-row:hover .marquee-track {
+      animation-play-state: paused;
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(calc(-50% - 0.625rem));
     }
   }
 
