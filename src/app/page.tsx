@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -75,31 +76,41 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="facts-heading" className="pb-24 sm:pb-32" style={{ paddingInline: EDGE }}>
-        <h2 id="facts-heading" className="text-3xl font-semibold tracking-tight sm:text-5xl">
-          What we check for you.
-        </h2>
-        <ul className="mt-10 flex max-w-3xl flex-col gap-5 text-[clamp(1.375rem,2.2vw,1.75rem)] leading-snug">
-          {FACTS.map((fact) => (
-            <li key={fact}>{fact}</li>
-          ))}
-        </ul>
-        <div className="mt-12 flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" onClick={() => setAuthRedirect('/advisor')}>
-            Find my card
-          </Button>
-          <Button size="lg" variant="outline" onClick={() => setAuthRedirect('/cards')}>
-            Browse all cards
-          </Button>
+      <section aria-labelledby="facts-heading" className="grid gap-12 pb-24 sm:pb-32 lg:grid-cols-12 lg:items-center lg:gap-8" style={{ paddingInline: EDGE }}>
+        <div className="lg:col-span-7">
+          <h2 id="facts-heading" className="text-3xl font-semibold tracking-tight sm:text-5xl">
+            What we check for you.
+          </h2>
+          <ul className="mt-10 flex max-w-3xl flex-col gap-5 text-[clamp(1.375rem,2.2vw,1.75rem)] leading-snug">
+            {FACTS.map((fact) => (
+              <li key={fact}>{fact}</li>
+            ))}
+          </ul>
+          <div className="mt-12 flex flex-col gap-3 sm:flex-row">
+            <Button size="lg" onClick={() => setAuthRedirect('/advisor')}>
+              Find my card
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => setAuthRedirect('/cards')}>
+              Browse all cards
+            </Button>
+          </div>
+        </div>
+        {/* Generated still life, graded so its paper is the page's paper; the soft mask hides any seam. */}
+        <div className="relative aspect-[3/2] [mask-image:radial-gradient(ellipse_closest-side_at_center,#000_70%,transparent)] lg:col-span-5 lg:aspect-square">
+          <Image src="/images/landing/card-on-receipt.webp" alt="" fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
         </div>
       </section>
 
-      <footer className="mt-auto bg-field text-field-foreground">
-        <div className="pb-8 pt-24 sm:pt-32" style={{ paddingInline: EDGE }}>
+      <footer className="relative mt-auto overflow-hidden bg-field text-field-foreground">
+        {/* Generated still life on pine felt: a band above the wordmark on phones, the right of the footer on wide screens. */}
+        <div className="absolute inset-x-0 top-0 h-64 [mask-image:linear-gradient(to_bottom,#000_50%,transparent)] sm:h-80 lg:inset-y-0 lg:left-auto lg:h-auto lg:w-[64%] lg:[mask-image:linear-gradient(to_right,transparent,#000_40%)]">
+          <Image src="/images/landing/cards-on-felt.webp" alt="" fill sizes="(min-width: 1024px) 64vw, 100vw" className="object-cover object-right" />
+        </div>
+        <div className="relative pb-8 pt-60 sm:pt-72 lg:pt-48" style={{ paddingInline: EDGE }}>
           <p aria-hidden="true" className="text-[clamp(3.5rem,16vw,6rem)] font-semibold leading-none tracking-[-0.04em]">
             CardSense
           </p>
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 text-sm">
+          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 text-sm">
             <span>Not financial advice. Estimates use published rates, before caps and offers.</span>
             <nav aria-label="Legal" className="flex gap-6">
               <Link href="/privacy" className="tap hover:underline">Privacy</Link>

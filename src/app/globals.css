@@ -49,11 +49,11 @@
 }
 
 /*
- * Palette: four colours. Light and dark use the same four, in their bright and dim variants.
- *   paper  the ground                         (dark: deep pine)
- *   white  controls and floating layers        (dark: raised pine)
- *   pine   text and primary actions            (dark: paper)
- *   gold   the one accent, a fill under pine text, in both modes
+ * Palette: four colours, light only.
+ *   paper  the ground
+ *   white  controls and floating layers
+ *   pine   text and primary actions
+ *   gold   the one accent, a fill under pine text
  * Muted text is ink mixed toward the ground at 7:1 or better (Apple HIG for small text).
  */
 :root {
@@ -69,18 +69,6 @@
 
   --radius: 0.625rem;
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ground: #0e1714;
-    --raised: #16221e;
-    --ink: #ecebe6;
-    --ink-muted: color-mix(in srgb, var(--ink) 70%, var(--ground));
-    --tint: color-mix(in srgb, var(--ink) 8%, transparent);
-    --tint-strong: color-mix(in srgb, var(--ink) 14%, transparent);
-    color-scheme: dark;
-  }
 }
 
 @layer base {

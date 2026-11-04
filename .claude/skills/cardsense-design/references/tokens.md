@@ -4,14 +4,16 @@ Source of truth: `src/app/globals.css`. Tailwind exposes each role as `bg-*` / `
 
 ## The four colours
 
-| Colour | Light | Dark | Role |
-| --- | --- | --- | --- |
-| Paper | `#f4f3ef` | `#0e1714` | Ground (`--ground`) |
-| White | `#ffffff` | `#16221e` | Controls and floating layers (`--raised`) |
-| Pine | `#16302b` | `#ecebe6` | Ink: text and primary actions (`--ink`) |
-| Gold | `#d9a93a` | `#d9a93a` | Accent fill, always with pine text on top |
+Light theme only: there is no dark mode, and nothing reads `prefers-color-scheme`.
 
-Derived, not extra colours: `--ink-muted` (ink mixed toward the ground: 7.4:1 light, 7.9:1 dark), `--tint` (ink at 6–8%, fills) and `--tint-strong` (ink at 11–14%, hover fills).
+| Colour | Value | Role |
+| --- | --- | --- |
+| Paper | `#f4f3ef` | Ground (`--ground`) |
+| White | `#ffffff` | Controls and floating layers (`--raised`) |
+| Pine | `#16302b` | Ink: text and primary actions (`--ink`) |
+| Gold | `#d9a93a` | Accent fill, always with pine text on top |
+
+Derived, not extra colours: `--ink-muted` (ink mixed toward the ground: 7.4:1), `--tint` (ink at 6%, fills) and `--tint-strong` (ink at 11%, hover fills).
 
 ## Semantic roles (use these)
 
@@ -24,7 +26,7 @@ Derived, not extra colours: `--ink-muted` (ink mixed toward the ground: 7.4:1 li
 | `primary` / `primary-foreground` | The one filled button |
 | `accent` / `accent-foreground` | Selected state, gold chip |
 | `inverse` / `inverse-foreground` | Compare bar, toasts (flips with the mode) |
-| `field` / `field-foreground` | The landing hero and footer: pine in both modes, gold reads on it as text (6.5:1) |
+| `field` / `field-foreground` | The landing hero and footer: pine, gold reads on it as text (6.5:1) |
 | `ring` | Focus outline, 2px, offset 2px |
 
 Gold fails contrast as text (2.2:1 on white). Never write text in gold; put pine text on gold (6.5:1).

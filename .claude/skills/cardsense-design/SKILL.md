@@ -17,7 +17,7 @@ A quiet ledger for one decision: which credit card. The interface is paper and i
 4. **Gold means chosen.** The accent fills only the selected answer, the active filter, the top match score, the avatar and the logo chip.
 5. **Type carries the numbers.** Money and scores are type with tabular figures, never tiles, gauges or charts.
 6. **Forgiving by default.** Removals act at once and offer Undo; forms validate on submit with the error next to the field.
-7. **Follows the system.** Light and dark come from the OS, motion follows "reduce motion", and nothing autoplays.
+7. **Follows the system.** One light theme on purpose; motion follows "reduce motion", and nothing autoplays.
 
 ## Craft rules
 
@@ -37,7 +37,7 @@ A quiet ledger for one decision: which credit card. The interface is paper and i
 
 **Colour.** Four colours, mapped to semantic tokens. Components never name a colour, only a role (`bg-accent`, `text-muted-foreground`). See `references/tokens.md`.
 
-**Composition.** Every app page is `PageHeader`, an optional row of figures, then at most three `Section`s. The landing page is the one exception (`components/landing/hero.tsx`, rates in `hero-cards.ts`): on pine, a one-line headline, then the spend controls opposite a stage holding the two best cards for that spend, winner in front. Changing the spend makes the cards trade places; that is the page's one live thing. Below it on paper: a fanned hand of real card art, four facts in large type, then a pine wordmark footer. Card art is always shown whole, never cropped into tiles.
+**Composition.** Every app page is `PageHeader`, an optional row of figures, then at most three `Section`s. The landing page is the one exception (`components/landing/hero.tsx`, rates in `hero-cards.ts`): on pine, a one-line headline, then the spend controls opposite a stage holding the two best cards for that spend, winner in front. Changing the spend makes the cards trade places; that is the page's one live thing. Below it on paper: a fanned hand of real card art, four facts in large type beside a still life, then a pine wordmark footer over a second still life. The two photographs (`public/images/landing/`) were generated and colour-graded so their grounds are exactly paper and pine; a soft mask hides the seam. New imagery follows the same rule: one object, the palette's own colours, no text. Card art is always shown whole, never cropped into tiles.
 
 **Squint test.** Blur your eyes: you should see a title, a few blocks of text, and maybe one gold spot. If you see boxes or lines, remove them.
 
@@ -61,5 +61,5 @@ A quiet ledger for one decision: which credit card. The interface is paper and i
 1. Read `references/tokens.md` and `references/components.md`.
 2. Build from `PageHeader`, `Section`, `.row`, `EmptyState`, `BackLink`, `Button`, `ToggleGroup`, `Skeleton`.
 3. Give every data region four states: loading (`Skeleton`), empty (`EmptyState`), error (what broke, how to recover) and full.
-4. Check light and dark, 390px and 1440px, keyboard only.
+4. Check 390px and 1440px, keyboard only.
 5. Run `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e`.

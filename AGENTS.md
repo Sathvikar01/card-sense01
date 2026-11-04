@@ -24,7 +24,7 @@ Helps people in India pick a credit card for how they spend. Next.js App Router,
 
 The full design language (principles, tokens, components, patterns) is the project skill at `.claude/skills/cardsense-design/`. Read it before any UI change. The short version:
 
-- Four colours (paper, white, pine, gold) through semantic tokens only; light and dark follow the OS.
+- Four colours (paper, white, pine, gold) through semantic tokens only; light theme only.
 - No lines, no panels, no icon library, no charts, no helper text.
 - Every page: `PageHeader`, then a few `Section`s in a 768px column.
 - Validate on submit, offer Undo on removal, four states for every data region.
